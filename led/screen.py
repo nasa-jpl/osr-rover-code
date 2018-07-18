@@ -101,7 +101,7 @@ def main():
 			lastdata = datagram
 		except socket.error as err:
 			if err.errno == 11:
-				#print "here"
+				#print "here", err
 				datagram = lastdata
 		except:
 			myScreenUpdater.updater.set_all_to_null(0)

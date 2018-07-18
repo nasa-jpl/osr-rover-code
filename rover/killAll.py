@@ -1,3 +1,3 @@
-import Rover
+import motor_controller
 
-Rover.killMotors()
+motor_controller.killMotors()
