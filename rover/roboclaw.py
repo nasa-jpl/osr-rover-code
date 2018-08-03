@@ -107,11 +107,11 @@ class Roboclaw:
 		FLAGBOOTLOADER = 255
 			
 	#Private Functions
-	def crc_clear(self):
+	def _crc_clear(self):
 		self._crc = 0
 		return
 		
-	def crc_update(self,data):
+	def _crc_update(self, data):
 		self._crc = self._crc ^ (data << 8)
 		for bit in range(0, 8):
 			if (self._crc&0x8000)  == 0x8000:
@@ -121,10 +121,10 @@ class Roboclaw:
 		return
 
 	def _sendcommand(self,address,command):
-		self.crc_clear()
-		self.crc_update(address)
+		self._crc_clear()
+		self._crc_update(address)
 		self._port.write(chr(address))
-		self.crc_update(command)
+		self._crc_update(command)
 		self._port.write(chr(command))
 		return
 
@@ -139,7 +139,7 @@ class Roboclaw:
 		data = self._port.read(1)
 		if len(data):
 			val = ord(data)
-			self.crc_update(val)
+			self._crc_update(val)
 			return (1,val)	
 		return (0,0)
 		
@@ -172,7 +172,7 @@ class Roboclaw:
 		return (0,0)
 
 	def _writebyte(self,val):
-		self.crc_update(val&0xFF)
+		self._crc_update(val & 0xFF)
 		self._port.write(chr(val&0xFF))
 
 	def _writesbyte(self,val):
@@ -711,7 +711,7 @@ class Roboclaw:
 				data = self._port.read(1)
 				if len(data):
 					val = ord(data)
-					self.crc_update(val)
+					self._crc_update(val)
 					if(val==0):
 						break
 					str+=data[0]
