@@ -5,8 +5,9 @@ This repository houses the source code for the controller for JPL's Open Source 
 ## Contributing
 
 1. Read https://code.nasa.gov/#/guide
-2. Fork it 
-3. Create your feature branch (`git checkout -b your-name/issue-number-feature`)
-4. Commit your changes (`git commit -am 'Add some logarithms'`)
-5. Push to the branch (`git push origin feature/logarithms`)
-6. Create a new Pull Request
+2. Open an issue on this repo and explain what you plan to contribute. This helps avoid duplicate efforts.
+3. Fork it.
+4. Create your feature branch (`git checkout -b your-name/issue-number-feature`)
+5. Commit your changes (`git commit -m 'Add some feature'`)
+6. Push to the branch (`git push origin branch-name`)
+7. Create a new Pull Request.
