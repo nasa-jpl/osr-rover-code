@@ -1,3 +1,4 @@
+# TODO: add version numbers
 RPi.GPIO
 numpy
 pybluez
