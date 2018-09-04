@@ -2,3 +2,4 @@
 RPi.GPIO
 numpy
 pybluez
+pyserial
