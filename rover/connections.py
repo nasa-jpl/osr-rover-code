@@ -6,7 +6,6 @@ from bluetooth import *
 import xbox
 
 
-
 class Connections(object):
 	'''
 	Sets up all the connections for running the rover, from a bluetooth app, xbox controller, and a unix socket for
@@ -38,10 +37,10 @@ class Connections(object):
 						   service_classes = [uuid, SERIAL_PORT_CLASS],
 						   profiles = [SERIAL_PORT_PROFILE],
 						   )
-		print "waiting for connection on RFCOMM channel %d" % port
+		print(f"waiting for connection on RFCOMM channel {port}")
 		client_socket, client_info = server_sock.accept()
 		client_socket.setblocking(0)
-		print "Accepted connection from ", client_info
+		print(f"Accepted connection from {client_info}")
 		self.bt_sock = client_socket
 		self.bt_sock.settimeout(1)
 
@@ -50,10 +49,10 @@ class Connections(object):
 		Initializes a listener for the Xbox controller
 		'''
 		self.joy = xbox.Joystick()
-		print 'Waiting on Xbox connect'
+		print('Waiting on Xbox connect')
 		while not self.joy.connected():
 			time.sleep(1)
-		print 'Accepted connection from  Xbox controller', self.joy.connected()
+		print('Accepted connection from  Xbox controller', self.joy.connected())
 
 	def _btVals(self):
 		'''
@@ -104,9 +103,9 @@ class Connections(object):
 			client = socket.socket(socket.AF_UNIX,socket.SOCK_DGRAM)
 			client.connect(self.config['UNIX_SOCKET_CONFIG']['path'])
 			self.unix_sock = client
-			print "Sucessfully connected to Unix Socket at: ", self.config['UNIX_SOCKET_CONFIG']['path']
+			print("Sucessfully connected to Unix Socket at: ", self.config['UNIX_SOCKET_CONFIG']['path'])
 		else:
-			print "Couldn't connect to Unix Socket at: ", self.config['UNIX_SOCKET_CONFIG']['path']
+			print("Couldn't connect to Unix Socket at: ", self.config['UNIX_SOCKET_CONFIG']['path'])
 
 	def connectController(self):
 		'''
