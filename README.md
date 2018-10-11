@@ -1,6 +1,7 @@
 # JPL's Open Source Rover Control Code
 This repository houses the source code for the controller for JPL's Open Source Rover.  Please see the Open Source Rover's [main repository](https://github.com/nasa-jpl/open-source-rover) for instructions on how to obtain and use the contents of this repository.
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Build Status](https://travis-ci.com/nasa-jpl/osr-rover-code.svg?branch=master)](https://travis-ci.com/nasa-jpl/osr-rover-code)
 
 # Installing
