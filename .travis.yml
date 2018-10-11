@@ -6,6 +6,9 @@ python:
   - "3.6"
   - "3.6-dev"  # 3.6 development branch
   # - "3.7-dev"  # 3.7 development branch
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install bluetooth libbluetooth-dev python-dev
 install:
   - pip install --upgrade pip
   # - pip install coverage
