@@ -1,0 +1,21 @@
+language: python
+python:
+  - "3.4"
+  - "3.5"
+  - "3.5-dev"  # 3.5 development branch
+  - "3.6"
+  - "3.6-dev"  # 3.6 development branch
+  # - "3.7-dev"  # 3.7 development branch
+install:
+  - pip install --upgrade pip
+  # - pip install coverage
+  # - pip install python-coveralls
+  - pip install pytest
+  # - pip install pytest-cov
+  - pip install pytest-pep8
+  - pip install -r requirements.txt
+script:
+  # - python setup.y install
+  - pytest -vv --pep8 # --cov-report term-missing --cov=rover
+# after_success:
+#   - coveralls

@@ -17,4 +17,3 @@ Specifically section `1.2.1`
 5. Commit your changes (`git commit -m 'Add some feature'`)
 6. Push to the branch (`git push origin branch-name`)
 7. Create a new Pull Request.
-
