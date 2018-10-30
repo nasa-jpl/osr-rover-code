@@ -11,6 +11,7 @@ sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__),
     os.path.pardir)))
 
+from io import StringIO
 from unittest.mock import patch
 from unittest import TestCase
 
@@ -34,11 +35,17 @@ class BluetoothConnectionTest(TestCase):
         self.config['BLUETOOTH_SOCKET_CONFIG']['UUID'] = '123'
         self.config['BLUETOOTH_SOCKET_CONFIG']['name'] = 'test'
         self.conn = Connections(self.config)
+
+        # pipe stdout to assert with print
+        self.stdout_output = StringIO()
+        sys.stdout = self.stdout_output
     
     @patch('bluetooth.BluetoothSocket')
     def test_btConnect(self, mock_bt):
         self.conn._btConnect()
         self.assertTrue(self.conn.bt_sock)
+        self.assertTrue('waiting for connection on RFCOMM channel' in self.stdout_output.getvalue())
+        self.assertTrue('Accepted connection from' in self.stdout_output.getvalue())
 
     @patch('xbox.Joystick')
     def test_xBoxConnect(self, mock_xbox):
@@ -47,6 +54,7 @@ class BluetoothConnectionTest(TestCase):
 
     def tearDown(self):
         self.module_patcher.stop()
+        sys.stdout = sys.__stdout__
 
 
 if __name__ == '__main__':
