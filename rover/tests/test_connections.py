@@ -51,6 +51,9 @@ class BluetoothConnectionTest(TestCase):
     def test_xBoxConnect(self, mock_xbox):
         self.conn._xBoxConnect()
         self.assertTrue(self.conn.joy.connected())
+        self.assertTrue('Waiting on Xbox connect' in self.stdout_output.getvalue())
+        self.assertTrue('Accepted connection from  Xbox controller' in self.stdout_output.getvalue())
+
 
     def tearDown(self):
         self.module_patcher.stop()
