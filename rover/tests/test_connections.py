@@ -11,38 +11,37 @@ sys.path.append(
     os.path.abspath(os.path.join(os.path.dirname(__file__),
     os.path.pardir)))
 
-import unittest
+from unittest.mock import patch
+from unittest import TestCase
 
-from connections import Connections
+from mocks import MockBlueTooth
 
-class TestConnections(unittest.TestCase):
-    """ 
-    Note: Requires hardware to complete writing tests
-    """
+
+class BluetoothConnectionTest(TestCase):
 
     def setUp(self):
+        # mocked bluetooth module to avoid
+        # install issues between development environments
+        # on OSX installing bluetooth is a chore.
+        # mocking provides same outcome and avoids pain :)
+        modules = {'bluetooth': MockBlueTooth}
+        self.module_patcher = patch.dict("sys.modules", modules)
+        self.module_patcher.start()
+        from connections import Connections
+        
         self.config = {}
-        self.connections = Connections(self.config)
+        self.config['BLUETOOTH_SOCKET_CONFIG'] = {}
+        self.config['BLUETOOTH_SOCKET_CONFIG']['UUID'] = '123'
+        self.config['BLUETOOTH_SOCKET_CONFIG']['name'] = 'test'
+        self.conn = Connections(self.config)
+    
+    @patch('bluetooth.BluetoothSocket')
+    def test_btConnect(self, mock_bt):
+        self.conn._btConnect()
+        self.assertTrue(type(self.conn.bt_sock))
 
-    def test_connection_config_is_initialized(self):
-        """ Is the bluetooth argument False by default? """
-        self.assertTrue(self.connections.config == self.config)
-
-    def test_connection_joystick_is_initialized_as_none(self):
-        """ Is the joystick initialized as None? """
-        self.assertIsNone(self.connections.joy)
-
-    def test_connection_bluetooth_socket_is_initialized_as_none(self):
-        """ Is the bluetooth socket initialized as None? """
-        self.assertIsNone(self.connections.bt_sock)
-
-    def test_connection_led_is_initialized_as_zero(self):
-        """ Is the bluetooth socket initialized as zero (0)? """
-        self.assertTrue(self.connections.led == 0)
-
-    def test_connection_unix_socket_is_initialized_as_none(self):
-        """ Is the unix socket initialized as None? """
-        self.assertIsNone(self.connections.unix_sock)
+    def tearDown(self):
+        self.module_patcher.stop()
 
 
 if __name__ == '__main__':
