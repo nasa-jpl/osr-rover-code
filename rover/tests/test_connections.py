@@ -38,7 +38,7 @@ class BluetoothConnectionTest(TestCase):
     @patch('bluetooth.BluetoothSocket')
     def test_btConnect(self, mock_bt):
         self.conn._btConnect()
-        self.assertTrue(type(self.conn.bt_sock))
+        self.assertTrue(self.conn.bt_sock)
 
     @patch('xbox.Joystick')
     def test_xBoxConnect(self, mock_xbox):
