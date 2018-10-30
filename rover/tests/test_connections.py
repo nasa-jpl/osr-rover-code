@@ -14,7 +14,7 @@ sys.path.append(
 from unittest.mock import patch
 from unittest import TestCase
 
-from mocks import MockBlueTooth
+from mocks import MockBlueTooth, MockXbox
 
 
 class BluetoothConnectionTest(TestCase):
@@ -24,7 +24,7 @@ class BluetoothConnectionTest(TestCase):
         # install issues between development environments
         # on OSX installing bluetooth is a chore.
         # mocking provides same outcome and avoids pain :)
-        modules = {'bluetooth': MockBlueTooth}
+        modules = {'bluetooth': MockBlueTooth, 'xbox': MockXbox}
         self.module_patcher = patch.dict("sys.modules", modules)
         self.module_patcher.start()
         from connections import Connections
@@ -39,6 +39,10 @@ class BluetoothConnectionTest(TestCase):
     def test_btConnect(self, mock_bt):
         self.conn._btConnect()
         self.assertTrue(type(self.conn.bt_sock))
+
+    @patch('xbox.Joystick')
+    def test_xBoxConnect(self, mock_xbox):
+        self.conn._xBoxConnect()
 
     def tearDown(self):
         self.module_patcher.stop()

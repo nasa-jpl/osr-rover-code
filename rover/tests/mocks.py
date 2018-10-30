@@ -43,3 +43,9 @@ class MockBlueTooth():
                     return  self.ClientSocket, self.ClientInfo
         
 
+class MockXbox():
+    def __init__(self, *args, **kwargs):
+            pass
+
+    class Joystick():
+        pass
