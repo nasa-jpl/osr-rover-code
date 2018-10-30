@@ -43,6 +43,7 @@ class BluetoothConnectionTest(TestCase):
     @patch('xbox.Joystick')
     def test_xBoxConnect(self, mock_xbox):
         self.conn._xBoxConnect()
+        self.assertTrue(self.conn.joy.connected())
 
     def tearDown(self):
         self.module_patcher.stop()
