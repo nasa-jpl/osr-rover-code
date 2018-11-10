@@ -24,7 +24,6 @@ class BluetoothConnectionTest(TestCase):
         # mocked bluetooth module to avoid
         # install issues between development environments
         # on OSX installing bluetooth is a chore.
-        # mocking provides same outcome and avoids pain :)
         modules = {
             'bluetooth': MockBlueTooth,
             'xbox': MockXbox,
@@ -46,28 +45,28 @@ class BluetoothConnectionTest(TestCase):
         self.conn = Connections(self.config)
 
         # pipe stdout to assert with print
-        #self.stdout_output = StringIO()
-        #sys.stdout = self.stdout_output
+        self.stdout_output = StringIO()
+        sys.stdout = self.stdout_output
     
     @patch('bluetooth.BluetoothSocket')
     def test_btConnect(self, mock_bt):
         self.conn._btConnect()
         self.assertTrue(self.conn.bt_sock)
-        #self.assertTrue('waiting for connection on RFCOMM channel' in self.stdout_output.getvalue())
-        #self.assertTrue('Accepted connection from' in self.stdout_output.getvalue())
+        self.assertTrue('waiting for connection on RFCOMM channel' in self.stdout_output.getvalue())
+        self.assertTrue('Accepted connection from' in self.stdout_output.getvalue())
 
     @patch('xbox.Joystick')
     def test_xBoxConnect(self, mock_xbox):
         self.conn._xBoxConnect()
         self.assertTrue(self.conn.joy.connected())
-        #self.assertTrue('Waiting on Xbox connect' in self.stdout_output.getvalue())
-        #self.assertTrue('Accepted connection from  Xbox controller' in self.stdout_output.getvalue())
+        self.assertTrue('Waiting on Xbox connect' in self.stdout_output.getvalue())
+        self.assertTrue('Accepted connection from  Xbox controller' in self.stdout_output.getvalue())
 
     @patch('bluetooth.BluetoothSocket')
     def test_btVals(self, mock_bt):
         self.conn._btConnect()
         self.assertTrue(self.conn.bt_sock)
-        self.assertTrue(self.conn._btVals())
+        self.assertTrue(self.conn._btVals() == (-3, 8))
         self.assertTrue(self.conn.led)
 
     @patch('xbox.Joystick')
@@ -81,6 +80,51 @@ class BluetoothConnectionTest(TestCase):
     def test_unixSockConnect(self, mock_os, mock_socket):
         self.conn.unixSockConnect()
         self.assertTrue(self.conn.unix_sock)
+
+    @patch('bluetooth.BluetoothSocket')
+    def test_connectController_bluetooth(self, mock_bt):
+        self.conn.connection_type = 'b'
+        self.conn.connectController()
+        self.assertTrue(self.conn.bt_sock)
+        self.assertTrue('waiting for connection on RFCOMM channel' in self.stdout_output.getvalue())
+        self.assertTrue('Accepted connection from' in self.stdout_output.getvalue())
+
+    @patch('xbox.Joystick')
+    def test_connectController_xbox(self, mock_xbox):
+        self.conn.connection_type = 'x'
+        self.conn.connectController()
+        self.assertTrue(self.conn.joy.connected())
+        self.assertTrue('Waiting on Xbox connect' in self.stdout_output.getvalue())
+        self.assertTrue('Accepted connection from  Xbox controller' in self.stdout_output.getvalue())
+
+    def test_connectController_returns_minus_one_with_wrong_conn_type(self):
+        self.conn.connection_type = 'test'
+        self.assertTrue(self.conn.connectController() == -1)
+
+    @patch('bluetooth.BluetoothSocket')
+    def test_getDriveVals_bluetooth(self, mock_bt):
+        self.conn.connection_type = 'b'
+        self.conn._btConnect()
+        values = self.conn.getDriveVals()
+        self.assertTrue(values == (-3, 8))
+
+    @patch('xbox.Joystick')
+    def test_getDriveVals_xbox(self, mock_xbox):
+        self.conn.connection_type = 'x'
+        self.conn._xBoxConnect()
+        values = self.conn.getDriveVals()
+        self.assertTrue(values == (2, 1))
+
+    @patch('os.path.exists')
+    @patch('socket.socket')
+    def test_sendUnixData(self, mock_socket, mock_os):
+        self.conn.unixSockConnect()
+        self.conn.sendUnixData()
+        self.assertTrue(self.conn.led == 0)
+
+    def test_closeConnections(self):
+        self.assertIsNone(self.conn.closeConnections())
+
 
     def tearDown(self):
         self.module_patcher.stop()

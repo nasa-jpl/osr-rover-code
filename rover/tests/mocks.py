@@ -41,16 +41,16 @@ class MockBlueTooth:
             pass
         
         def bind(self, *args):
-                pass
+            pass
             
         def listen(self, *args):
-                pass
+            pass
         
         def getsockname(self, *args):
-                return [0, 0]
+            return [0, 0]
         
         def accept(self, *args):
-                return  self.ClientSocket, self.ClientInfo
+            return  self.ClientSocket, self.ClientInfo
 
 
 class MockXbox:
@@ -70,6 +70,9 @@ class MockXbox:
             return True
         
         def dpadRight(*args):
+            return True
+        
+        def connected(*args):
             return True
 
 
@@ -105,3 +108,6 @@ class MockSocket:
         class socket:
             def __init__(self, *args, **kwargs):
                     pass
+        
+            def send(self, *args, **kwargs):
+                pass
