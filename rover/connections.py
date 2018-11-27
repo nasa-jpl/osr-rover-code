@@ -105,10 +105,17 @@ class Connections(object):
 			client = socket.socket(socket.AF_UNIX,socket.SOCK_DGRAM)
 			client.connect(self.config['UNIX_SOCKET_CONFIG']['path'])
 			self.unix_sock = client
+<<<<<<< HEAD
 			print("Sucessfully connected to Unix Socket at: ",
 				self.config['UNIX_SOCKET_CONFIG']['path'])
 		else:
 			print("Couldn't connect to Unix Socket at: ",
+=======
+			print("Sucessfully connected to Unix Socket at: ", 
+				self.config['UNIX_SOCKET_CONFIG']['path'])
+		else:
+			print("Couldn't connect to Unix Socket at: ", 
+>>>>>>> ecd99e9067fa774b0ca483f6b239672675bb064f
 				self.config['UNIX_SOCKET_CONFIG']['path'])
 
 	def connectController(self):
