@@ -1,3 +1,4 @@
+from __future__ import print_function
 import time
 import serial
 import threading
@@ -26,14 +27,14 @@ def ReadData(self):
 	while 1:
 		try:
 			x=self.ser.readline()
-			print 'Sucessful data recieved over serial!'
+			print("Successful data recieved over serial!")
 			counter+=1
 		except:
-			print 'No serial data read, check wiring and software steps'
+			print("No serial data read, check wiring and software steps")
 			self.kill=0
 			break
 		if counter >= 3:
-			print "Serial communication verified! \nExiting"
+			print("Serial communication verified! \nExiting")
 			self.kill=0
 			break
 

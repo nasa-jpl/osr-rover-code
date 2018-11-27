@@ -1,3 +1,4 @@
+from __future__ import print_function
 import time
 from rover import Robot
 from connections import Connections
@@ -36,7 +37,7 @@ class Rover(Robot, Connections):
 			self.cleanup()
 
 		except Exception as e:
-			print e
+			print(e)
 			self.cleanup()
 			time.sleep(0.5)
 			self.connectController()
@@ -45,7 +46,7 @@ class Rover(Robot, Connections):
 			try:
 				self.sendUnixData()
 			except Exception as e:
-				print e
+				print(e)
 				self.unix_flag = 0
 			
 			

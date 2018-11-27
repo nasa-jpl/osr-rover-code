@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 from robot import Robot
 from connections import Connections
 
@@ -59,7 +60,7 @@ class Rover(Robot, Connections):
 		try:
 			self.sendUnixData()
 		except Exception as e:
-			print e
+			print(e)
 			self.unix_flag = 0
 				
 	def cleanup(self):
