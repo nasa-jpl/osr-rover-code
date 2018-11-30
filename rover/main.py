@@ -18,7 +18,7 @@ An example line running this script to run the LED screen and with an Xbox contr
 
 def main():
 	args = Arguments()
-	with open('/home/pi/os/rover/config.json') as f:
+	with open('/home/pi/osr/rover/config.json') as f:
 		config = json.load(f)
 
 	rover = Rover(config,args.bt_flag,args.xbox_flag,args.unix_flag)
