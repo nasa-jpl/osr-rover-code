@@ -6,7 +6,7 @@ import threading
 class Threads():
 	def __init__(self):
 		self.kill = 1
-		ser = serial.Serial(
+		self.ser = serial.Serial(
 			port='/dev/ttyS0',
 			baudrate=9600,
 			parity=serial.PARITY_NONE,
@@ -15,28 +15,30 @@ class Threads():
 			timeout=1
 			)
 
-def SendData(self):
-	counter=0
-	while self.kill:
-		socket.write(str(counter))
-		time.sleep(1)
-		counter +=1
+        def SendData(self):
+                counter=0
+                while self.kill:
+                        self.ser.write(str(counter))
+                        self.ser.flush()
+                        time.sleep(1)
+                        counter +=1
 
-def ReadData(self):
-	counter=0
-	while 1:
-		try:
-			x=self.ser.readline()
-			print("Successful data recieved over serial!")
-			counter+=1
-		except:
-			print("No serial data read, check wiring and software steps")
-			self.kill=0
-			break
-		if counter >= 3:
-			print("Serial communication verified! \nExiting")
-			self.kill=0
-			break
+        def ReadData(self):
+                counter=0
+                while 1:
+                        try:
+                                x=self.ser.readline()
+                                if (counter == int(x)):
+                                    print 'Sucessful data recieved over serial!'
+                                    counter+=1
+                        except:
+                                print 'No serial data read, check wiring and software steps'
+                                self.kill=0
+                                break
+                        if counter >= 3:
+                                print "Serial communication verified! \nExiting"
+                                self.kill=0
+                                break
 
 def main():
 	mythread = Threads()
