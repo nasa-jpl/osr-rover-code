@@ -1,3 +1,4 @@
+from __future__ import print_function
 import time
 import serial
 import math
@@ -78,7 +79,7 @@ def getEnc(motorID):
 	elif (motorID % 2 == 1):
 		command = rc.ReadEncM2
 	else:
-		print "MotorID error"
+		print("MotorID error")
 		return
 	cmd = command(addr[motorID])[1]
 	if motorID == 5:

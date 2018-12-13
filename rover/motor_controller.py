@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 from roboclaw import Roboclaw
 import time
 import serial
@@ -33,7 +34,7 @@ class Motor(object):
 			version = version & self.rc.ReadVersion(address)[0]
 
 		if version != 0:
-			print "[Motor__init__] Sucessfully connected to RoboClaw motor controllers"
+			print("[Motor__init__] Sucessfully connected to RoboClaw motor controllers")
 		else:
 			raise Exception("Unable to establish connection to Roboclaw motor controllers")
 
@@ -66,7 +67,7 @@ class Motor(object):
 
 		voltage = self.rc.ReadMainBatteryVoltage(0x80)[1]/10.0
 		if voltage >= config['BATTERY_CONFIG']['low_voltage']:
-			print "[Motor__init__] Voltage is safe at: ",voltage, "V"
+			print("[Motor__init__] Voltage is safe at: ",voltage, "V")
 		else:
 			raise Exception("Unsafe Voltage of" + voltage + " Volts") 
 

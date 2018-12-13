@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import time
 from osr import Rover
 from arguments import Arguments
@@ -29,7 +30,7 @@ def main():
 			time.sleep(0.1)
 
 		except Exception as e:
-			print e
+			print(e)
 			rover.cleanup()
 			time.sleep(0.5)
 			rover.connectController()
