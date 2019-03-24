@@ -11,7 +11,9 @@ First you must install ROS onto your Raspberry Pi. Instructions for this can be 
 On your Raspberry Pi run the following commands in a terminal
 
 `mkdir -p ~/osr_ws/src`
+
 `cd ~/osr_ws/src`
+
 `git clone https://github.com/nasa-jpl/osr-rover-code/tree/osr-ROS/ROS`
 
 
@@ -28,6 +30,7 @@ On your development machine (not Raspberry Pi) first you need to install Arduino
   * [https://www.arduino.cc/en/Main/Software](https://www.arduino.cc/en/Main/Software)
 
   * Clone the arduino library
+  
   `git clone https://github.com/nasa-jpl/osr-rover-code/tree/osr-ROS/Arduino OsrScreen`
 
   * Select the OsrScreen folder and create a .ZIP folder out of it
