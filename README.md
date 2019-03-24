@@ -1,20 +1,23 @@
-# JPL's Open Source Rover Control Code
-This repository houses the source code for the controller for JPL's Open Source Rover.  Please see the Open Source Rover's [main repository](https://github.com/nasa-jpl/open-source-rover) for instructions on how to obtain and use the contents of this repository.
+# JPL's Open Source Rover ROS Control Code
+This branch is an in-development version of the Open Source Rover Code, running in ROS Kinetic. This will be updated with more in depth instructions on how the code works as well as instructions as its' development progresses. 
 
-# Installing
+## Installing
+First you must install ROS onto your Raspberry Pi. Instructions for this can be found at:
+  * [http://wiki.ros.org/ROSberryPi/Installing%20ROS%20Kinetic%20on%20the%20Raspberry%20Pi](http://wiki.ros.org/ROSberryPi/Installing%20ROS%20Kinetic%20on%20the%20Raspberry%20Pi)
 
-Make sure to read the install instructions on the main rover repo: https://github.com/nasa-jpl/open-source-rover/blob/master/Software/Software%20Steps.pdf
 
-Specifically section `1.2.1`
-=======
+On your Raspberry Pi run the following commands in a terminal
 
-## Contributing
+`mkdir -p ~/osr_ws/src`
+`cd ~/osr_ws/src`
+`git clone https://github.com/nasa-jpl/osr-rover-code/tree/osr-ROS`
 
-1. Read https://code.nasa.gov/#/guide
-2. Open an issue on this repo and explain what you plan to contribute. This helps avoid duplicate efforts.
-3. Fork it.
-4. Create your feature branch (`git checkout -b your-name/issue-number-feature`)
-5. Commit your changes (`git commit -m 'Add some feature'`)
-6. Push to the branch (`git push origin branch-name`)
-7. Create a new Pull Request.
+
+## Running
+
+There is a roslaunch file that will start all of the nodes in the ROS system, to run it:
+
+`roslaunch osr_bringup osr.launch`
+
+
 

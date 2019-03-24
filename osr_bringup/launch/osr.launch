@@ -1,0 +1,31 @@
+<launch>
+	<param name="/baud_rate" type="int" value="115200" />
+	<param name="/motor_controller_device" type="string" value="/dev/serial0" />
+	<param name="/motor_controller_addresses" type="string" value="128,129,130,131,132" />
+
+	<param name="/enc_min" type="string" value="550,420,360,325" />
+	<param name="/enc_max" type="string" value="1480,1755,1240,1230" />
+
+	<param name="/qpps" type="string" value="0,0,0,0" />
+	<param name="/accel" type="string" value="0,0,0,0" />
+	<param name="battery_low" type="int" value="11" />
+	<param name="battery_high" type="int" value="18" />
+	<param name="mech_dist" type="string" value="7.254,10.5,10.5,10.073" />
+
+
+	<!-- Nodes to run the Open Source Rover -->
+	<node name="motor_controller" pkg="osr" type="motor_controller.py" respawn="true"/>
+	<node name="joystick" pkg="osr" type="joystick.py" respawn="true"/>
+	<node name="rover" pkg="osr" type="rover.py" respawn="true" />
+	<!--
+	<node name="led_screen" pkg="led_screen" type="ros_screen.py" respawn="true" />
+	-->
+	<node respawn="false" pkg="joy"
+			type="joy_node" name="joy_node">
+
+		<param name="autorepeat_rate"   value="1.0"/>
+		<param name="coalesce_interval" value="0.05"/>
+
+	</node>
+</launch>
+	

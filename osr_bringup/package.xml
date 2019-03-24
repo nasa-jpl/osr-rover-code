@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>osr_bringup</name>
+  <version>1.0.0</version>
+  <description>ROS package for booting up the Open Source Rover</description>
+  <maintainer email="eric.junkins@jpl.nasa.gov">Eric Junkins</maintainer>
+  <license>MIT</license>
+  <url type="website">https://github.com/nasa-jpl/open-source-rover</url>
+  <author email="eric.junkins@jpl.nasa.gov">Eric Junkins</author>
+  
+  <buildtool_depend>catkin</buildtool_depend>
+
+</package>
