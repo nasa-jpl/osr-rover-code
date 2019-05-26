@@ -1,7 +1,7 @@
 #ifndef OsrScreen
 #define OsrScreen
 
-#include "../RGB-matrix-Panel-master/RGBmatrixPanel.h"
+#include "../RGB_matrix_Panel/RGBmatrixPanel.h"
 
 
 #define BIT_MAX  				15

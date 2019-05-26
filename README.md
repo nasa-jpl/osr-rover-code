@@ -126,20 +126,25 @@ There is a roslaunch file that will start all of the nodes in the ROS system, to
 ## Arduino
 
 ### Installing
-On your development machine (not Raspberry Pi) first you need to install Arduino IDE
-  * [https://www.arduino.cc/en/Main/Software](https://www.arduino.cc/en/Main/Software)
-
-  * Clone the arduino library
-  
-  `git clone https://github.com/nasa-jpl/osr-rover-code/tree/osr-ROS/Arduino OsrScreen`
-
-  * Select the OsrScreen folder and create a .ZIP folder out of it
-  * Open arduiono IDE
-    * Sketch -> Include Library -> Add .ZIP Library
-      * Select the OsrScreen.ZIP folder
-
-  * To load the example in Arduino IDE
-    * File -> Examples -> Osr-Screen -> Osr-Screen
+- On your development machine (not the Raspberry Pi), you need to install Arduino IDE from [https://www.arduino.cc/en/Main/Software](https://www.arduino.cc/en/Main/Software)
+- You will also need to install a couple open source libraries, provided by Adafruit, that we use to manage the LED panel.
+  * In the Arduino IDE open the Library Manager (on a Mac, it is in Tools > Manage Libraries)
+  * In the Library Manager, search for and install the latest version of the "RGB Matrix Panel" library from Adafruit.
+  * Then search for and install the latest version of the "Adafruit GFX" library.
+- Clone the OSR code repo
+  * `git clone https://github.com/nasa-jpl/osr-rover-code.git`
+  * `git checkout osr-ROS`
+  * `git pull`
+- Build our custom library
+  - Select the downloaded _Arduino_ folder and create a ZIP out of it
+  - Rename the zip file to OsrScreen.zip
+- Load the sketch onto the Arduino
+  - Connect the Arduino to your development machine with a USB cable
+  - Open the Arduino IDE
+  - Select Sketch -> Include Library -> Add .ZIP Library
+  - Select the OsrScreen.zip file
+  - Go to File -> Examples -> Arduino -> Osr_Screen
+  - Click the Upload button in the Sketch window
 
 ### Communication Packet Structure
 
