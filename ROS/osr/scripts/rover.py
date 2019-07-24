@@ -13,7 +13,7 @@ encs = [0]*4
 
 def joy_callback(message):
 	global encs
-	cmds = MotorCommands()
+	cmds = Commands()
 	out_cmds = osr.generateCommands(message.vel,message.steering,encs)
 	cmds.drive_motor  = out_cmds[0]
 	cmds.corner_motor = out_cmds[1]
