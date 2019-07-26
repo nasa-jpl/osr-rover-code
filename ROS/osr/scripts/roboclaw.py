@@ -104,14 +104,16 @@ class Roboclaw:
 		GETM2MAXCURRENT = 136
 		SETPWMMODE = 148
 		GETPWMMODE = 149
+		READEEPROM = 252
+		WRITEEEPROM = 253
 		FLAGBOOTLOADER = 255
 			
 	#Private Functions
-	def _crc_clear(self):
+	def crc_clear(self):
 		self._crc = 0
 		return
 		
-	def _crc_update(self, data):
+	def crc_update(self,data):
 		self._crc = self._crc ^ (data << 8)
 		for bit in range(0, 8):
 			if (self._crc&0x8000)  == 0x8000:
@@ -121,10 +123,10 @@ class Roboclaw:
 		return
 
 	def _sendcommand(self,address,command):
-		self._crc_clear()
-		self._crc_update(address)
+		self.crc_clear()
+		self.crc_update(address)
 		self._port.write(chr(address))
-		self._crc_update(command)
+		self.crc_update(command)
 		self._port.write(chr(command))
 		return
 
@@ -139,7 +141,7 @@ class Roboclaw:
 		data = self._port.read(1)
 		if len(data):
 			val = ord(data)
-			self._crc_update(val)
+			self.crc_update(val)
 			return (1,val)	
 		return (0,0)
 		
@@ -172,7 +174,7 @@ class Roboclaw:
 		return (0,0)
 
 	def _writebyte(self,val):
-		self._crc_update(val & 0xFF)
+		self.crc_update(val&0xFF)
 		self._port.write(chr(val&0xFF))
 
 	def _writesbyte(self,val):
@@ -711,7 +713,7 @@ class Roboclaw:
 				data = self._port.read(1)
 				if len(data):
 					val = ord(data)
-					self._crc_update(val)
+					self.crc_update(val)
 					if(val==0):
 						break
 					str+=data[0]
@@ -761,10 +763,10 @@ class Roboclaw:
 		return self._read4_1(address,self.Cmd.GETM2ISPEED)
 
 	def DutyM1(self,address,val):
-		return self._simplFunctionS2(address,self.Cmd.M1DUTY,val)
+		return self._writeS2(address,self.Cmd.M1DUTY,val)
 
 	def DutyM2(self,address,val):
-		return self._simplFunctionS2(address,self.Cmd.M2DUTY,val)
+		return self._writeS2(address,self.Cmd.M2DUTY,val)
 
 	def DutyM1M2(self,address,m1,m2):
 		return self._writeS2S2(address,self.Cmd.MIXEDDUTY,m1,m2)
@@ -848,7 +850,7 @@ class Roboclaw:
 		return self._writeS24(address,self.Cmd.M2DUTYACCEL,duty,accel)
 
 	def DutyAccelM1M2(self,address,accel1,duty1,accel2,duty2):
-		return self._writeS24S24(self.Cmd.MIXEDDUTYACCEL,duty1,accel1,duty2,accel2)
+		return self._writeS24S24(address,self.Cmd.MIXEDDUTYACCEL,duty1,accel1,duty2,accel2)
 		
 	def ReadM1VelocityPID(self,address):
 		data = self._read_n(address,self.Cmd.READM1PID,4)
@@ -972,7 +974,7 @@ class Roboclaw:
 		return self._read2(address,self.Cmd.GETTEMP2)
 
 	def ReadError(self,address):
-		return self._read2(address,self.Cmd.GETERROR)
+		return self._read4(address,self.Cmd.GETERROR)
 
 	def ReadEncoderModes(self,address):
 		val = self._read2(address,self.Cmd.GETENCODERMODE)
@@ -1027,6 +1029,40 @@ class Roboclaw:
 	def ReadPWMMode(self,address):
 		return self._read1(address,self.Cmd.GETPWMMODE)
 
+	def ReadEeprom(self,address,ee_address):
+		trys = self._trystimeout
+		while 1:
+			self._port.flushInput()
+			self._sendcommand(address,self.Cmd.READEEPROM)
+			self.crc_update(ee_address)
+			self._port.write(chr(ee_address))
+			val1 = self._readword()
+			if val1[0]:
+				crc = self._readchecksumword()
+				if crc[0]:
+					if self._crc&0xFFFF!=crc[1]&0xFFFF:
+						return (0,0)
+					return (1,val1[1])
+			trys-=1
+			if trys==0:
+				break
+		return (0,0)
+
+	def WriteEeprom(self,address,ee_address,ee_word):
+		retval = self._write111(address,self.Cmd.WRITEEEPROM,ee_address,ee_word>>8,ee_word&0xFF)
+		if retval==True:
+			trys = self._trystimeout
+			while 1:
+				self._port.flushInput()
+				val1 = self._readbyte()
+				if val1[0]:
+					if val1[1]==0xaa:
+						return True
+				trys-=1
+				if trys==0:
+					break
+		return False	
+		
 	def Open(self):
 		try:
 			self._port = serial.Serial(port=self.comport, baudrate=self.rate, timeout=1, interCharTimeout=self.timeout)
