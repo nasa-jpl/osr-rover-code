@@ -17,9 +17,7 @@
 	<node name="motor_controller" pkg="osr" type="motor_controller.py" respawn="true"/>
 	<node name="joystick" pkg="osr" type="joystick.py" respawn="true"/>
 	<node name="rover" pkg="osr" type="rover.py" respawn="true" />
-	<!--
-	<node name="led_screen" pkg="led_screen" type="ros_screen.py" respawn="true" />
-	-->
+	<node name="led_screen" pkg="led_screen" type="screen.py" respawn="true" />
 	<node respawn="false" pkg="joy"
 			type="joy_node" name="joy_node">
 
