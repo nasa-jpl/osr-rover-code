@@ -34,7 +34,7 @@ if __name__ == "__main__":
 	rospy.init_node("motor_controller")
 	rospy.loginfo("Starting the motor_controller node")
 	rospy.on_shutdown(shutdown)
-	sub = rospy.Subscriber("/robot_cmds",Commands,callback)
+	sub = rospy.Subscriber("/robot_commands",Commands,callback)
 	enc_pub = rospy.Publisher("/encoder", Encoder, queue_size =1)
 	status_pub = rospy.Publisher("/status", Status, queue_size =1)
 
