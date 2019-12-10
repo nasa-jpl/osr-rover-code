@@ -4,7 +4,7 @@ This branch is an in-development version of the Open Source Rover Code. It conta
 ## ROS
 
 ### Installing
-To install and run the updated software in this branch, please follow the instructions in the [Software Steps.pdf document in the ros-rework branch of the master repository](https://github.com/nasa-jpl/open-source-rover/blob/ros-rework/Software/Software%20Steps.pdf).
+To install and run the updated software in this branch, please follow the instructions in the [Software Steps.pdf document in the ros-rework branch of the master repository](https://github.com/nasa-jpl/open-source-rover/blob/differential-pivot-rework/Software/Software%20Steps.pdf.
 
 
 <img src="img/OSR_ROS_Diagram.png" width="100%">
