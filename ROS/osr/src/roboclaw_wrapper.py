@@ -5,18 +5,10 @@ import serial
 import math
 import rospy
 
+
 class MotorControllers(object):
+	"""Interface between the roboclaw motor drivers and the higher level rover code"""
 
-	'''
-	Motor class contains the methods necessary to send commands to the motor controllers
-
-	for the corner and drive motors. There are many other ways of commanding the motors
-
-	from the RoboClaw, we suggest trying to write your own Closed loop feedback method for
-
-	the drive motors!
-
-	'''
 	def __init__(self):
 		## MAKE SURE TO FIX CONFIG.JSON WHEN PORTED TO THE ROVER!
 		#self.rc = Roboclaw( config['CONTROLLER_CONFIG']['device'],
@@ -73,13 +65,13 @@ class MotorControllers(object):
 
 		for address in self.address:
 			self.rc.ReadNVM(address)
-		'''
-		voltage = self.rc.ReadMainBatteryVoltage(0x80)[1]/10.0
-		if voltage >= rospy.get_param('low_voltage',11):
-			print "[Motor__init__] Voltage is safe at: ",voltage, "V"
-		else:
-			raise Exception("Unsafe Voltage of" + voltage + " Volts")
-		'''
+		
+		# voltage = self.rc.ReadMainBatteryVoltage(0x80)[1]/10.0
+		# if voltage >= rospy.get_param('low_voltage',11):
+		# 	print "[Motor__init__] Voltage is safe at: ",voltage, "V"
+		# else:
+		# 	raise Exception("Unsafe Voltage of" + voltage + " Volts")
+
 		i = 0
 
 		for address in self.address:
@@ -102,13 +94,12 @@ class MotorControllers(object):
 		self.killMotors()
 
 	def cornerToPosition(self,tick):
-		'''
-		Method to send position commands to the corner motor
+		"""
+		Send position commands to the corner motor
 
 		:param list tick: A list of ticks for each of the corner motors to
 		move to, if tick[i] is 0 it instead stops that motor from moving
-
-		'''
+		"""
 		speed, accel = 1000,2000            #These values could potentially need tuning still
 		for i in range(4):
 			index = int(math.ceil((i+1)/2.0)+2)
@@ -123,7 +114,7 @@ class MotorControllers(object):
 
 
 	def sendMotorDuty(self, motorID, speed):
-		'''
+		"""
 		Wrapper method for an easier interface to control the drive motors,
 
 		sends open-loop commands to the motors
@@ -131,7 +122,7 @@ class MotorControllers(object):
 		:param int motorID: number that corresponds to each physical motor
 		:param int speed: Speed for each motor, range from 0-127
 
-		'''
+		"""
 		#speed = speed/100.0
 		#speed *= 0.5
 		addr = self.address[int(motorID/2)]
@@ -172,14 +163,13 @@ class MotorControllers(object):
 
 	@staticmethod
 	def tick2deg(tick,e_min,e_max):
-		'''
+		"""
 		Converts a tick to physical degrees
 
 		:param int tick : Current encoder tick
 		:param int e_min: The minimum encoder value based on physical stop
 		:param int e_max: The maximum encoder value based on physical stop
-
-		'''
+		"""
 		return (tick - (e_max + e_min)/2.0) * (90.0/(e_max - e_min))
 
 	def getCornerEncAngle(self):
@@ -222,17 +212,13 @@ class MotorControllers(object):
 		return self.err
 
 	def killMotors(self):
-		'''
-		Stops all motors on Rover
-		'''
+		"""Stops all motors on Rover"""
 		for i in range(5):
 			self.rc.ForwardM1(self.address[i],0)
 			self.rc.ForwardM2(self.address[i],0)
 
 	def errorCheck(self):
-		'''
-		Checks error status of each motor controller, returns 0 if any errors occur
-		'''
+		"""Checks error status of each motor controller, returns 0 if any errors occur"""
 
 		for i in range(len(self.address)):
 			self.err[i] = self.rc.ReadError(self.address[i])[1]
@@ -244,9 +230,7 @@ class MotorControllers(object):
 		return 1
 
 	def writeError(self):
-		'''
-		Writes the list of errors to a text file for later examination
-		'''
+		"""Writes the list of errors to a text file for later examination"""
 
 		f = open('errorLog.txt','a')
 		errors = ','.join(str(e) for e in self.err)
