@@ -23,9 +23,8 @@ class MotorControllers(object):
 		#					config['CONTROLLER_CONFIG']['baud_rate']
 		#					)
 		rospy.loginfo( "Initializing motor controllers")
-		#self.rc = Roboclaw( rospy.get_param('motor_controller_device', "/dev/serial0"),
-		#					rospy.get_param('baud_rate', 115200))
-		self.rc = Roboclaw("/dev/ttyAMA0",115200)
+		self.rc = Roboclaw(rospy.get_param('motor_controller_device', "/dev/serial0"),
+				   rospy.get_param('baud_rate', 115200))
 		self.rc.Open()
 		self.accel           = [0]    * 10
 		self.qpps            = [None] * 10
