@@ -2,11 +2,11 @@
 import time
 import rospy
 from osr_msgs.msg import Commands, Encoder, Status
-from roboclaw_wrapper import MotorControllers
+from roboclaw_wrapper import RoboclawWrapper
 
 global mutex
 mutex = False
-motorcontrollers = MotorControllers()
+roboclaw_wrapper = RoboclawWrapper()
 
 def callback(cmds):
 	global mutex	
@@ -16,17 +16,17 @@ def callback(cmds):
 		#print "cmds are being buffered"
 	mutex = True
 	# PUT THIS BACK IN
-	motorcontrollers.cornerToPosition(cmds.corner_motor)
+	roboclaw_wrapper.cornerToPosition(cmds.corner_motor)
 	for i in range(6):
 		# PUT THIS BACK IN
-		#motorcontrollers.sendMotorDuty(i,cmds.drive_motor[i])
-		motorcontrollers.sendSignedDutyAccel(i,cmds.drive_motor[i])
+		#roboclaw_wrapper.sendMotorDuty(i,cmds.drive_motor[i])
+		roboclaw_wrapper.sendSignedDutyAccel(i,cmds.drive_motor[i])
 		pass
 	mutex = False
 
 def shutdown():
 	print "killing motors"
-	motorcontrollers.killMotors()
+	roboclaw_wrapper.killMotors()
 
 
 if __name__ == "__main__":
@@ -56,14 +56,14 @@ if __name__ == "__main__":
 		while mutex:
 			time.sleep(0.001)
 		mutex = True
-		enc.abs_enc = motorcontrollers.getCornerEnc()
-		#mc_data.abs_enc_angles = motorcontrollers.getCornerEncAngle()
+		enc.abs_enc = roboclaw_wrapper.getCornerEnc()
+		#mc_data.abs_enc_angles = roboclaw_wrapper.getCornerEncAngle()
 		if (counter >= 10):
 			
-			status.battery = motorcontrollers.getBattery()
-			status.temp = motorcontrollers.getTemp()
-			status.current = motorcontrollers.getCurrents()
-			status.error_status = motorcontrollers.getErrors()
+			status.battery = roboclaw_wrapper.getBattery()
+			status.temp = roboclaw_wrapper.getTemp()
+			status.current = roboclaw_wrapper.getCurrents()
+			status.error_status = roboclaw_wrapper.getErrors()
 			status_pub.publish(status)
 			counter = 0
 			

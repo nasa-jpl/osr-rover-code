@@ -6,7 +6,7 @@ import math
 import rospy
 
 
-class MotorControllers(object):
+class RoboclawWrapper(object):
 	"""Interface between the roboclaw motor drivers and the higher level rover code"""
 
 	def __init__(self):
@@ -65,7 +65,7 @@ class MotorControllers(object):
 
 		for address in self.address:
 			self.rc.ReadNVM(address)
-		
+
 		# voltage = self.rc.ReadMainBatteryVoltage(0x80)[1]/10.0
 		# if voltage >= rospy.get_param('low_voltage',11):
 		# 	print "[Motor__init__] Voltage is safe at: ",voltage, "V"
