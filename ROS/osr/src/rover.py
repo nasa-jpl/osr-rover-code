@@ -43,9 +43,9 @@ class Rover(object):
 
 		self.robot_cmd_pub = rospy.Publisher("/robot_commands", Commands, queue_size=1)
 
-	def joystick_callback(self, message):
+	def joystick_callback(self, msg):
 		cmds = Commands()
-		out_cmds = self.generateCommands(message.vel, message.steering)
+		out_cmds = self.generateCommands(msg.vel, msg.steering)
 		cmds.drive_motor = out_cmds[0]
 		cmds.corner_motor = out_cmds[1]
 		try:
@@ -53,10 +53,10 @@ class Rover(object):
 		except Exception as e:
 			rospy.logwarn_throttle(2, "Could not publish to /robot_commands topic: {}".format(e))
 
-	def enc_callback(self, message):
+	def enc_callback(self, msg):
 		temp_enc_vals = [0] * 4
 		for i in range(4):
-			temp_enc_vals[i] = message.abs_enc[i] + 1
+			temp_enc_vals[i] = msg.abs_enc[i] + 1
 
 		self.encs = temp_enc_vals
 
