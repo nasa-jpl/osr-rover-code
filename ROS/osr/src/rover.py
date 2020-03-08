@@ -142,7 +142,7 @@ class Rover(object):
 		if radius == 0:
 			r = 250
 		elif -100 <= radius <= 100 and radius != 0:
-			r = 220 - abs(radius)*(250/100)
+			r = 220 - abs(radius) * 250 / 100
 		else:
 			r = 250
 
@@ -159,13 +159,13 @@ class Rover(object):
 		for i in range(4):
 			if angles[i] < -45:
 				angles[i] = -43
-			elif angles[i] >  45:
-				angles[i] =  43
+			elif angles[i] > 45:
+				angles[i] = 43
 
 		if radius > 0:
-			return [ang2,-ang1,-ang4,ang3]
+			return [ang2, -ang1, -ang4, ang3]
 		else:
-			return [-ang4,ang3,ang2,-ang1]
+			return [-ang4, ang3, ang2, -ang1]
 
 	def getCornerEnc(self):
 		"""Returns a list of the tick value of each corner encoder"""
