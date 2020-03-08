@@ -5,7 +5,7 @@ import time
 import math
 
 
-class Robot(object):
+class Rover(object):
 	"""
 	Math and motor control algorithms to move the rover
 
