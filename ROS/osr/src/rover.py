@@ -38,12 +38,12 @@ class Rover(object):
 		for i in range(4):
 			self.mids[i] = (self.enc_max[i] + self.enc_min[i])/2
 
-		rospy.Subscriber("/joystick", Joystick, self.joy_callback)
+		rospy.Subscriber("/joystick", Joystick, self.joystick_callback)
 		rospy.Subscriber("/encoder", Encoder, self.enc_callback)
 
 		self.robot_cmd_pub = rospy.Publisher("/robot_commands", Commands, queue_size=1)
 
-	def joy_callback(self, message):
+	def joystick_callback(self, message):
 		cmds = Commands()
 		out_cmds = self.generateCommands(message.vel, message.steering)
 		cmds.drive_motor = out_cmds[0]
