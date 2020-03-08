@@ -1,44 +1,156 @@
 #!/usr/bin/env python
-from roboclaw import Roboclaw
+
 import time
 import serial
 import math
 import rospy
+
+from roboclaw import Roboclaw
+
+from osr_msgs.msg import Commands, Encoder, Status
 
 
 class RoboclawWrapper(object):
 	"""Interface between the roboclaw motor drivers and the higher level rover code"""
 
 	def __init__(self):
-		## MAKE SURE TO FIX CONFIG.JSON WHEN PORTED TO THE ROVER!
-		#self.rc = Roboclaw( config['CONTROLLER_CONFIG']['device'],
-		#					config['CONTROLLER_CONFIG']['baud_rate']
-		#					)
 		rospy.loginfo( "Initializing motor controllers")
+
+		# initialize attributes
+		self.rc = None
+		self.accel = [0] * 10
+		self.qpps = [None] * 10
+		self.err = [None] * 5
+		self.address = []
+		self.enc_min = []
+		self.enc_max = []
+		self.enc = [None]*4
+		self.mutex = False
+
+		self.establish_roboclaw_connections()
+		self.killMotors()  # don't move at start
+		self.setup_encoders()
+
+		# save settings to non-volatile (permanent) memory
+		for address in self.address:
+			self.rc.WriteNVM(address)
+
+		for address in self.address:
+			self.rc.ReadNVM(address)
+
+		index = 0
+		for address in self.address:
+			self.qpps[index] = self.rc.ReadM1VelocityPID(address)[4]
+			self.accel[index] = int(self.qpps[index]*2)
+			self.qpps[index+1]  = self.rc.ReadM2VelocityPID(address)[4]
+			self.accel[index+1] = int(self.qpps[index]*2)
+			index+=2
+
+		accel_max = 655359
+		accel_rate = 0.5
+		self.accel_pos = int((accel_max /2) + accel_max * accel_rate)
+		self.accel_neg = int((accel_max /2) - accel_max * accel_rate)
+		self.errorCheck()
+		mids = [None]*4
+
+		# calculate middle for corner motors based on max and min values read from the roboclaws
+		for i in range(4):
+			mids[i] = (self.enc_max[i] + self.enc_min[i])/2
+		#self.cornerToPosition(mids)
+		time.sleep(2)
+		self.killMotors()
+
+		# set up publishers and subscribers
+		self.cmd_sub = rospy.Subscriber("/robot_commands", Commands, self.robot_cmd_cb)
+		self.enc_pub = rospy.Publisher("/encoder", Encoder, queue_size=1)
+		self.status_pub = rospy.Publisher("/status", Status, queue_size=1)
+
+	def run(self):
+		"""Blocking loop which runs after initialization has completed"""
+		rate = rospy.Rate(5)
+
+		status = Status()
+		enc = Encoder()
+
+		enc.abs_enc = [1000] * 4
+		enc.abs_enc_angles = [-100] * 4
+		status.battery = 0
+		status.temp = [0] * 5
+		status.current = [0] * 10
+		status.error_status = [0] * 5
+
+		counter = 0
+		while not rospy.is_shutdown():
+
+			while self.mutex:
+				rate.sleep()
+			self.mutex = True
+
+			enc.abs_enc = self.getCornerEnc()
+			# mc_data.abs_enc_angles = self.getCornerEncAngle()
+			if (counter >= 10):
+				status.battery = self.getBattery()
+				status.temp = self.getTemp()
+				status.current = self.getCurrents()
+				status.error_status = self.getErrors()
+				status_pub.publish(status)
+				counter = 0
+
+			self.mutex = False
+			enc_pub.publish(enc)
+			counter += 1
+			rate.sleep()
+
+	def robot_cmd_cb(cmds):
+		r = rospy.Rate(10)
+		rospy.logdebug("Robot command callback received: {}".format(cmds))
+
+		while self.mutex:
+			r.sleep()
+
+		self.mutex = True
+		self.cornerToPosition(cmds.corner_motor)
+
+		for i in range(6):
+			# PUT THIS BACK IN
+			# self.sendMotorDuty(i,cmds.drive_motor[i])
+			self.sendSignedDutyAccel(i, cmds.drive_motor[i])
+			pass
+		self.mutex = False
+
+	def establish_roboclaw_connections(self):
+		"""
+		Attempt connecting to the roboclaws
+
+		:raises Exception: when connection to one or more of the roboclaws is unsuccessful
+		"""
 		self.rc = Roboclaw(rospy.get_param('motor_controller_device', "/dev/serial0"),
-				   rospy.get_param('baud_rate', 115200))
+						   rospy.get_param('baud_rate', 115200))
 		self.rc.Open()
-		self.accel           = [0]    * 10
-		self.qpps            = [None] * 10
-		self.err             = [None] * 5
+
 		address_raw = rospy.get_param('motor_controller_addresses')
 		address_list = (address_raw.split(','))
 		self.address = [None]*len(address_list)
 		for i in range(len(address_list)):
 			self.address[i] = int(address_list[i])
 
-		version = 1
+		# initialize connection status to successful
+		all_connected = True
 		for address in self.address:
-			print ("Attempting to talk to motor controller",address)
-			version = version & self.rc.ReadVersion(address)[0]
-			print version
-		if version != 0:
-			print "[Motor__init__] Sucessfully connected to RoboClaw motor controllers"
+			rospy.logdebug("Attempting to talk to motor controller", address)
+			connected = bool(self.rc.ReadVersion(address)[0])
+			if not connected:
+				rospy.logerror("Unable to connect to roboclaw at '{}'".format(address))
+				all_connected = False
+			else:
+				rospy.logdebug("Roboclaw version for address '{}': '{}'".format(address, version))
+		if all_connected:
+			rospy.loginfo("[Motor__init__] Sucessfully connected to RoboClaw motor controllers")
 		else:
-			raise Exception("Unable to establish connection to Roboclaw motor controllers")
-		self.killMotors()
-		self.enc_min =[]
-		self.enc_max =[]
+			raise Exception("Unable to establish connection to one or more of the Roboclaw motor controllers")
+
+	def setup_encoders(self):
+		"""Set up the encoders for use in init"""
 		for address in self.address:
 			#self.rc.SetMainVoltages(address, rospy.get_param('battery_low', 11)*10), rospy.get_param('battery_high', 18)*10))
 
@@ -56,42 +168,8 @@ class RoboclawWrapper(object):
 				#self.rc.SetM2MaxCurrent(address, int(config['MOTOR_CONFIG']['max_drive_current']*100))
 				self.rc.ResetEncoders(address)
 
-
 		rospy.set_param('enc_min', str(self.enc_min)[1:-1])
 		rospy.set_param('enc_max', str(self.enc_max)[1:-1])
-
-		for address in self.address:
-			self.rc.WriteNVM(address)
-
-		for address in self.address:
-			self.rc.ReadNVM(address)
-
-		# voltage = self.rc.ReadMainBatteryVoltage(0x80)[1]/10.0
-		# if voltage >= rospy.get_param('low_voltage',11):
-		# 	print "[Motor__init__] Voltage is safe at: ",voltage, "V"
-		# else:
-		# 	raise Exception("Unsafe Voltage of" + voltage + " Volts")
-
-		i = 0
-
-		for address in self.address:
-			self.qpps[i]    = self.rc.ReadM1VelocityPID(address)[4]
-			self.accel[i]   = int(self.qpps[i]*2)
-			self.qpps[i+1]  = self.rc.ReadM2VelocityPID(address)[4]
-			self.accel[i+1] = int(self.qpps[i]*2)
-			i+=2
-		accel_max = 655359
-		accel_rate = 0.5
-		self.accel_pos = int((accel_max /2) + accel_max * accel_rate)
-		self.accel_neg = int((accel_max /2) - accel_max * accel_rate)
-		self.errorCheck()
-		mids = [None]*4
-		self.enc = [None]*4
-		for i in range(4):
-			mids[i] = (self.enc_max[i] + self.enc_min[i])/2
-		#self.cornerToPosition(mids)
-		time.sleep(2)
-		self.killMotors()
 
 	def cornerToPosition(self,tick):
 		"""
@@ -100,16 +178,22 @@ class RoboclawWrapper(object):
 		:param list tick: A list of ticks for each of the corner motors to
 		move to, if tick[i] is 0 it instead stops that motor from moving
 		"""
-		speed, accel = 1000,2000            #These values could potentially need tuning still
+		# These values could potentially need tuning still
+		speed = 1000
+		accel = 2000
 		for i in range(4):
 			index = int(math.ceil((i+1)/2.0)+2)
 
 			if tick[i] != -1:
-				if (i % 2):  self.rc.SpeedAccelDeccelPositionM2(self.address[index],accel,speed,accel,tick[i],1)
-				else:        self.rc.SpeedAccelDeccelPositionM1(self.address[index],accel,speed,accel,tick[i],1)				
+				if (i % 2):
+					self.rc.SpeedAccelDeccelPositionM2(self.address[index],accel,speed,accel,tick[i],1)
+				else:
+					self.rc.SpeedAccelDeccelPositionM1(self.address[index],accel,speed,accel,tick[i],1)
 			else:
-				if not (i % 2): self.rc.ForwardM1(self.address[index],0)
-				else:           self.rc.ForwardM2(self.address[index],0)
+				if not (i % 2):
+					self.rc.ForwardM1(self.address[index],0)
+				else:
+					self.rc.ForwardM2(self.address[index],0)
 
 
 
@@ -238,5 +322,10 @@ class RoboclawWrapper(object):
 		f.close()
 
 
+if __name__ == "__main__":
+	rospy.init_node("roboclaw wrapper", log_level=rospy.DEBUG)
+	rospy.loginfo("Starting the roboclaw wrapper node")
 
-
+	wrapper = RoboclawWrapper()
+	rospy.on_shutdown(wrapper.killMotors)
+	wrapper.run()
