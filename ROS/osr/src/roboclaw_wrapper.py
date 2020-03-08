@@ -93,11 +93,11 @@ class RoboclawWrapper(object):
 				status.temp = self.getTemp()
 				status.current = self.getCurrents()
 				status.error_status = self.getErrors()
-				status_pub.publish(status)
+				self.status_pub.publish(status)
 				counter = 0
 
 			self.mutex = False
-			enc_pub.publish(enc)
+			self.enc_pub.publish(enc)
 			counter += 1
 			rate.sleep()
 
@@ -137,15 +137,16 @@ class RoboclawWrapper(object):
 		# initialize connection status to successful
 		all_connected = True
 		for address in self.address:
-			rospy.logdebug("Attempting to talk to motor controller", address)
-			connected = bool(self.rc.ReadVersion(address)[0])
+			rospy.logdebug("Attempting to talk to motor controller ''".format(address))
+                        version_response = self.rc.ReadVersion(address)
+			connected = bool(version_response[0])
 			if not connected:
 				rospy.logerror("Unable to connect to roboclaw at '{}'".format(address))
 				all_connected = False
 			else:
-				rospy.logdebug("Roboclaw version for address '{}': '{}'".format(address, version))
+				rospy.logdebug("Roboclaw version for address '{}': '{}'".format(address, version_response[1]))
 		if all_connected:
-			rospy.loginfo("[Motor__init__] Sucessfully connected to RoboClaw motor controllers")
+			rospy.loginfo("Sucessfully connected to RoboClaw motor controllers")
 		else:
 			raise Exception("Unable to establish connection to one or more of the Roboclaw motor controllers")
 
