@@ -101,7 +101,7 @@ class RoboclawWrapper(object):
 			counter += 1
 			rate.sleep()
 
-	def robot_cmd_cb(cmds):
+	def robot_cmd_cb(self, cmds):
 		r = rospy.Rate(10)
 		rospy.logdebug("Robot command callback received: {}".format(cmds))
 
