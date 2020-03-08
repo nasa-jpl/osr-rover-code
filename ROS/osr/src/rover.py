@@ -1,19 +1,17 @@
-
 #!/usr/bin/env python
+
 import rospy
 import time
 import math
 
-class Robot():
-	'''
-	Robot class contains all the math and motor control algorithms to move the rover
+
+class Robot(object):
+	"""
+	Math and motor control algorithms to move the rover
 
 	In order to call command the robot the only method necessary is the sendCommands() method
-
 	with drive velocity and turning amount
-
-
-	'''
+	"""
 	def __init__(self):
 		distances = rospy.get_param('mech_dist','7.254,10.5,10.5,10.073').split(",")
 		self.d1 = float(distances[0])
@@ -38,14 +36,13 @@ class Robot():
 
 	@staticmethod
 	def tick2deg(tick,e_min,e_max):
-		'''
+		"""
 		Converts a tick to physical degrees
 
 		:param int tick : Current encoder tick
 		:param int e_min: The minimum encoder value based on physical stop
 		:param int e_max: The maximum encoder value based on physical stop
-
-		'''
+		"""
 		try:
 			temp =(tick - (e_max + e_min)/2.0) * (90.0/(e_max - e_min))
 			return temp
@@ -54,14 +51,13 @@ class Robot():
 
 	@staticmethod
 	def deg2tick(deg,e_min,e_max):
-		'''
+		"""
 		Converts a degrees to tick value
 
 		:param int deg  : Degrees value desired
 		:param int e_min: The minimum encoder value based on physical stop
 		:param int e_max: The maximum encoder value based on physical stop
-
-		'''
+		"""
 		temp = (e_max + e_min)/2 + ((e_max - e_min)/90)*deg
 		if temp < e_min: temp = e_min
 		elif temp > e_max: temp = e_max
@@ -69,13 +65,12 @@ class Robot():
 		return temp
 
 	def calculateVelocity(self,v,r):
-		'''
+		"""
 		Returns a list of speeds for each individual drive motor based on current turning radius
 
 		:param int v: Drive speed command range from -100 to 100
 		:param int r: Current turning radius range from -250 to 250
-
-		'''
+		"""
 
 		if (v == 0):
 			return [0]*6
@@ -110,12 +105,11 @@ class Robot():
 			return velocity
 
 	def calculateTargetDeg(self,radius):
-		'''
+		"""
 		Takes a turning radius and calculates what angle [degrees] each corner should be at
 
 		:param int radius: Radius drive command, ranges from -100 (turning left) to 100 (turning right)
-
-		'''
+		"""
 		#Scaled from 250 to 20 inches. For more information on these numbers look at the Software Controls.pdf
 		if radius == 0: r = 250
 		elif -100 <= radius <= 100: r = 220 - abs(radius)*(250/100)
@@ -142,10 +136,7 @@ class Robot():
 			return [-ang4,ang3,ang2,-ang1]
 
 	def getCornerEnc(self):
-		'''
-		Returns a list of the tick value of each corner encoder
-
-		'''
+		"""Returns a list of the tick value of each corner encoder"""
 		enc = []
 		for i in range(4):
 			index = int(math.ceil((i+1)/2.0)+2)
@@ -156,10 +147,7 @@ class Robot():
 		return enc
 
 	def getCornerDeg(self,enc):
-		'''
-		Returns a list of what degrees each corner currently is at
-
-		'''
+		"""Returns a list of what degrees each corner currently is at"""
 		deg = [None] *4
 
 		for i in range(4):
@@ -168,12 +156,11 @@ class Robot():
 		return deg
 
 	def approxTurningRadius(self,deg):
-		'''
+		"""
 		Takes the list of current corner angles and approximates the current turning radius [inches]
 
 		:param list [int] enc: List of encoder ticks for each corner motor
-
-		'''
+		"""
 		if deg[0] == None:
 			return 250
 
@@ -198,11 +185,11 @@ class Robot():
 			return 250
 
 	def calculateTargetTick(self, tar_enc, cur_enc):
-		'''
+		"""
 		Takes the target angle and gets what encoder tick that value is for position control
 
 		:param list [int] tar_enc: List of target angles in degrees for each corner
-		'''
+		"""
 		tick = []
 		for i in range(4):
 			tick.append(self.deg2tick(tar_enc[i],self.enc_min[i],self.enc_max[i]))
@@ -216,19 +203,16 @@ class Robot():
 		return tick
 
 	def generateCommands(self,v,r,encs):
-		'''
+		"""
 		Driving method for the Rover, rover will not do any commands if any motor controller
 		throws an error
 
 		:param int v: driving velocity command, % based from -100 (backward) to 100 (forward)
 		:param int r: driving turning radius command, % based from -100 (left) to 100 (right)
-
-		'''
+		"""
 		#fix params list above ^^
 		#cur_radius = self.approxTurningRadius(self.getCornerDeg(encs))
 		velocity   = self.calculateVelocity(v,r)
 		ticks      = self.calculateTargetTick(self.calculateTargetDeg(r),encs)
 
 		return (velocity,ticks)
-
-
