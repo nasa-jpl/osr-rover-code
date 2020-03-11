@@ -126,10 +126,9 @@ class Rover(object):
 			v6 = int((speed * math.sqrt(b + c)) / rmax_float)
 
 			if (current_radius < 0):
-				velocity = [v1, v2, v3, v4, v5, v6]
+                                velocity = [v4, v5, v6, v1, v2, v3]
 			elif (current_radius > 0):
-				velocity = [v6, v5, v4, v3, v2, v1]
-
+                                velocity = [v3, v2, v1, v6, v5, v4]
 			return velocity
 
 	def calculateTargetDeg(self,radius):
@@ -163,9 +162,9 @@ class Rover(object):
 				angles[i] = 43
 
 		if radius > 0:
-			return [ang2, -ang1, -ang4, ang3]
+                        return [ang4, -ang3, -ang2, ang1]
 		else:
-			return [-ang4, ang3, ang2, -ang1]
+                        return [-ang2, ang1, ang4, -ang3]
 
 	def getCornerEnc(self):
 		"""Returns a list of the tick value of each corner encoder"""
