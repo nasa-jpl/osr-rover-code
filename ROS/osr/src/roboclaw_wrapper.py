@@ -141,7 +141,7 @@ class RoboclawWrapper(object):
                         version_response = self.rc.ReadVersion(address)
 			connected = bool(version_response[0])
 			if not connected:
-				rospy.logerror("Unable to connect to roboclaw at '{}'".format(address))
+				rospy.logerr("Unable to connect to roboclaw at '{}'".format(address))
 				all_connected = False
 			else:
 				rospy.logdebug("Roboclaw version for address '{}': '{}'".format(address, version_response[1]))
