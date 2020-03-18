@@ -191,13 +191,6 @@ class RoboclawWrapper(object):
 					self.rc.SpeedAccelDeccelPositionM2(self.address[index],accel,speed,accel,tick[i],1)
 				else:
 					self.rc.SpeedAccelDeccelPositionM1(self.address[index],accel,speed,accel,tick[i],1)
-			else:  # tell the motors not to move
-				if not (i % 2):
-					self.rc.SpeedDistanceM1(self.address[index], 0, 0, 1)
-				else:
-                                        self.rc.SpeedDistanceM2(self.address[index], 0, 0, 1)
-
-
 
 	def sendMotorDuty(self, motorID, speed):
 		"""
