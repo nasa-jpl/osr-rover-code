@@ -82,7 +82,7 @@ class RoboclawWrapper(object):
 		counter = 0
 		while not rospy.is_shutdown():
 
-			while self.mutex:
+			while self.mutex and not rospy.is_shutdown():
 				rate.sleep()
 			self.mutex = True
 
@@ -105,7 +105,7 @@ class RoboclawWrapper(object):
 		r = rospy.Rate(10)
 		rospy.logdebug("Robot command callback received: {}".format(cmds))
 
-		while self.mutex:
+		while self.mutex and not rospy.is_shutdown():
 			r.sleep()
 
 		self.mutex = True
@@ -183,18 +183,19 @@ class RoboclawWrapper(object):
 		speed = 1000
 		accel = 2000
 		for i in range(4):
+                        # roboclaw index: 3 or 4 --> roboclaw 4 or 5 (starts at 0)
 			index = int(math.ceil((i+1)/2.0)+2)
-
+			
 			if tick[i] != -1:
 				if (i % 2):
 					self.rc.SpeedAccelDeccelPositionM2(self.address[index],accel,speed,accel,tick[i],1)
 				else:
 					self.rc.SpeedAccelDeccelPositionM1(self.address[index],accel,speed,accel,tick[i],1)
-			else:
+			else:  # tell the motors not to move
 				if not (i % 2):
-					self.rc.ForwardM1(self.address[index],0)
+					self.rc.SpeedDistanceM1(self.address[index], 0, 0, 1)
 				else:
-					self.rc.ForwardM2(self.address[index],0)
+                                        self.rc.SpeedDistanceM2(self.address[index], 0, 0, 1)
 
 
 
