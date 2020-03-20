@@ -1,2 +1,12 @@
-int64[] drive_motor
-int64[] corner_motor
+drive:
+  left_front
+  left_middle
+  left_back
+  right_front
+  right_middle
+  right_back
+corner:
+  left_front
+  left_back
+  right_front
+  right_back
