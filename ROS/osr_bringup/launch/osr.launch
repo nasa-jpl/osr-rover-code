@@ -3,24 +3,24 @@
 	<param name="/motor_controller_device" type="string" value="/dev/serial0" />
 	<param name="/motor_controller_addresses" type="string" value="128,129,130,131,132" />
 
-	<param name="/enc_min" type="string" value="550,420,360,325" />
-	<param name="/enc_max" type="string" value="1480,1755,1240,1230" />
-
 	<param name="/qpps" type="string" value="0,0,0,0" />
 	<param name="/accel" type="string" value="0,0,0,0" />
 	<param name="battery_low" type="int" value="11" />
 	<param name="battery_high" type="int" value="18" />
 	<param name="mech_dist" type="string" value="7.254,10.5,10.5,10.073" />
 
+	<!-- order: 131M1, 131M2, 132M1, 132M2 -->
+	<param name="/enc_min" type="string" value="229,224,235,273" />
+	<param name="/enc_max" type="string" value="1532,1568,1531,1559" />	
 
 	<!-- Nodes to run the Open Source Rover -->
-	<node name="roboclaw_wrapper" pkg="osr" type="roboclaw_wrapper.py" respawn="true">
+	<node name="roboclaw_wrapper" pkg="osr" type="roboclaw_wrapper.py" output="screen">
 		<rosparam command="load" file="$(find osr_bringup)/config/roboclaw_params.yaml"/>
 	</node>
-	<node name="joystick" pkg="osr" type="joystick.py" respawn="true"/>
-	<node name="rover" pkg="osr" type="rover.py" respawn="true" />
-	<node name="led_screen" pkg="led_screen" type="screen.py" respawn="true" />
-	<node respawn="false" pkg="joy"
+	<node name="joystick" pkg="osr" type="joystick.py" output="screen"/>
+	<node name="rover" pkg="osr" type="rover.py" output="screen"/>
+	<node name="led_screen" pkg="led_screen" type="screen.py"/>
+	<node pkg="joy"
 			type="joy_node" name="joy_node">
 
 		<param name="autorepeat_rate"   value="1.0"/>

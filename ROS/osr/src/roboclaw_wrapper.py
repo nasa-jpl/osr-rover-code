@@ -24,12 +24,11 @@ class RoboclawWrapper(object):
 		self.current_enc_vals = None
 		self.mutex = False
 
+		self.roboclaw_mapping = rospy.get_param('~roboclaw_mapping')
+		self.encoder_limits = {}
 		self.establish_roboclaw_connections()
 		self.killMotors()  # don't move at start
 		self.setup_encoders()
-
-		self.roboclaw_mapping = rospy.get_param('/roboclaw_mapping')
-		self.encoder_limits = {}
 
 		# save settings to non-volatile (permanent) memory
 		for address in self.address:
@@ -38,6 +37,8 @@ class RoboclawWrapper(object):
 		for address in self.address:
 			self.rc.ReadNVM(address)
 
+                self.corner_max_vel = 1000
+                self.corner_accel = 2000
 		accel_max = 655359
 		accel_rate = 0.5
 		self.accel_pos = int((accel_max /2) + accel_max * accel_rate)
@@ -48,14 +49,15 @@ class RoboclawWrapper(object):
 		self.killMotors()
 
 		# set up publishers and subscribers
-		self.cmd_sub = rospy.Subscriber("/cmd_corner", CommandCorner, self.corner_cmd_cb)
-		self.cmd_sub = rospy.Subscriber("/cmd_drive", CommandDrive, self.drive_cmd_cb)
+		self.corner_cmd_sub = rospy.Subscriber("/cmd_corner", CommandCorner, self.corner_cmd_cb, queue_size=1)
+		self.drive_cmd_sub = rospy.Subscriber("/cmd_drive", CommandDrive, self.drive_cmd_cb, queue_size=1)
 		self.enc_pub = rospy.Publisher("/encoder", JointState, queue_size=1)
 		self.status_pub = rospy.Publisher("/status", Status, queue_size=1)
 
 	def run(self):
 		"""Blocking loop which runs after initialization has completed"""
 		rate = rospy.Rate(5)
+                mutex_rate = rospy.Rate(10)
 
 		status = Status()
 
@@ -63,12 +65,15 @@ class RoboclawWrapper(object):
 		while not rospy.is_shutdown():
 
 			while self.mutex and not rospy.is_shutdown():
-				rate.sleep()
+				mutex_rate.sleep()
 			self.mutex = True
 
 			# read from roboclaws and publish
-			self.read_encoder_values()
-			self.enc_pub.publish(self.current_enc_vals)
+                        try:
+                            self.read_encoder_values()
+			    self.enc_pub.publish(self.current_enc_vals)
+                        except AssertionError as read_exc:
+                            rospy.logwarn( "Failed to read encoder values")
 
 			if (counter >= 10):
 				status.battery = self.getBattery()
@@ -116,25 +121,26 @@ class RoboclawWrapper(object):
 
 	def setup_encoders(self):
 		"""Set up the encoders"""
-		for motor_name, properties in self.roboclaw_mapping:
+		for motor_name, properties in self.roboclaw_mapping.iteritems():
 			if "corner" in motor_name:
 				enc_min, enc_max = self.read_encoder_limits(properties["address"], properties["channel"])
-				self.encoder_limits["motor_name"] = (enc_min, enc_max)
+				self.encoder_limits[motor_name] = (enc_min, enc_max)
 			else:
+                                self.encoder_limits[motor_name] = (None, None)
 				self.rc.ResetEncoders(properties["address"])
 
 	def read_encoder_values(self):
 		"""Query roboclaws and update current motors status in encoder ticks"""
 		enc_msg = JointState()
 		enc_msg.header.stamp = rospy.Time.now()
-		for motor_name, properties in self.roboclaw_mapping:
+		for motor_name, properties in self.roboclaw_mapping.iteritems():
 			enc_msg.name.append(motor_name)
 			position = self.read_encoder_position(properties["address"], properties["channel"])
 			velocity = self.read_encoder_velocity(properties["address"], properties["channel"])
 			current = self.read_encoder_current(properties["address"], properties["channel"])
 			enc_msg.position.append(self.tick2position(position,
-													   properties['enc_min'],
-													   properties['enc_max'],
+													   self.encoder_limits[motor_name][0],
+													   self.encoder_limits[motor_name][1],
 													   properties['ticks_per_rev']))
 			enc_msg.velocity.append(self.qpps2velocity(velocity,
 													   properties['ticks_per_rev'],
@@ -187,6 +193,8 @@ class RoboclawWrapper(object):
 		while self.mutex and not rospy.is_shutdown():
 			r.sleep()
 
+                self.mutex = True
+
 		props = self.roboclaw_mapping["drive_left_front"]
 		vel_cmd = self.velocity2qpps(cmd.left_front_vel, props["ticks_per_rev"], props["gear_ratio"])
 		self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
@@ -211,15 +219,17 @@ class RoboclawWrapper(object):
 		vel_cmd = self.velocity2qpps(cmd.right_front_vel, props["ticks_per_rev"], props["gear_ratio"])
 		self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
 
+                self.mutex = False
+
 	def send_position_cmd(self, address, channel, target_tick):
 		"""
 		Wrapper around one of the send position commands
 
 		:param address:
 		:param channel:
-		:param target_tick:
+		:param target_tick: int
 		"""
-		cmd_args = [self.default_accel, self.corner_max_vel, self.default_accel, target_tick, 1]
+		cmd_args = [self.corner_accel, self.corner_max_vel, self.corner_accel, target_tick, 1]
 		if channel == "M1":
 			return self.rc.SpeedAccelDeccelPositionM1(address, *cmd_args)
 		elif channel == "M2":
@@ -230,11 +240,15 @@ class RoboclawWrapper(object):
 	def read_encoder_position(self, address, channel):
 		"""Wrapper around self.rc.ReadEncM1 and self.rcReadEncM2 to simplify code"""
 		if channel == "M1":
-			return self.rc.ReadEncM1(address)
+			val = self.rc.ReadEncM1(address)
 		elif channel == "M2":
-			return self.rc.ReadEncM2(address)
+			val = self.rc.ReadEncM2(address)
 		else:
 			raise AttributeError("Received unknown channel '{}'. Expected M1 or M2".format(channel))
+
+                assert val[0] == 1
+                return val[1]
+
 
 	def read_encoder_limits(self, address, channel):
 		"""Wrapper around self.rc.ReadPositionPID and returns subset of the data
@@ -248,6 +262,7 @@ class RoboclawWrapper(object):
 		else:
 			raise AttributeError("Received unknown channel '{}'. Expected M1 or M2".format(channel))
 
+                assert result[0] == 1
 		return (result[-2], result[-1])
 
 	def send_velocity_cmd(self, address, channel, target_qpps):
@@ -256,7 +271,7 @@ class RoboclawWrapper(object):
 
 		:param address:
 		:param channel:
-		:param target_qpps:
+		:param target_qpps: int
 		"""
 		accel = self.accel_pos
 		if target_qpps < 0:
@@ -271,11 +286,14 @@ class RoboclawWrapper(object):
 	def read_encoder_velocity(self, address, channel):
 		"""Wrapper around self.rc.ReadSpeedM1 and self.rcReadSpeedM2 to simplify code"""
 		if channel == "M1":
-			return self.rc.ReadSpeedM1(address)
+			val = self.rc.ReadSpeedM1(address)
 		elif channel == "M2":
-			return self.rc.ReadSpeedM2(address)
+			val = self.rc.ReadSpeedM2(address)
 		else:
 			raise AttributeError("Received unknown channel '{}'. Expected M1 or M2".format(channel))
+
+                assert val[0] == 1
+                return val[1]
 
 	def read_encoder_current(self, address, channel):
 		"""Wrapper around self.rc.ReadCurrents to simplify code"""
@@ -297,6 +315,8 @@ class RoboclawWrapper(object):
 		:return:
 		"""
 		ticks_per_rad = ticks_per_rev / (2 * math.pi)
+                if enc_min is None or enc_max is None:
+                    return tick / ticks_per_rad
 		mid = enc_min + (enc_max - enc_min) / 2
 		return (tick - mid) / ticks_per_rad
 
@@ -311,14 +331,16 @@ class RoboclawWrapper(object):
 		:return:
 		"""
 		ticks_per_rad = ticks_per_rev / (2 * math.pi)
+                if enc_min is None or enc_max is None:
+                    return position * ticks_per_rad
 		mid = enc_min + (enc_max - enc_min) / 2
-		return mid + position * ticks_per_rad
+		return int(mid + position * ticks_per_rad)
 
 	def qpps2velocity(self, qpps, ticks_per_rev, gear_ratio):
 		"""
 		Convert the given quadrature pulses per second to radian/s
 
-		:param qpps:
+		:param qpps: int
 		:param ticks_per_rev:
 		:param gear_ratio:
 		:return:
@@ -332,9 +354,9 @@ class RoboclawWrapper(object):
 		:param velocity: rad/s
 		:param ticks_per_rev:
 		:param gear_ratio:
-		:return:
+		:return: int
 		"""
-		return velocity * 2 * math.pi * gear_ratio * ticks_per_rev
+		return int(velocity * 2 * math.pi * gear_ratio * ticks_per_rev)
 
 	def getBattery(self):
 		return self.rc.ReadMainBatteryVoltage(self.address[0])[1]
