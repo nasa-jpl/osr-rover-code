@@ -7,7 +7,8 @@ import rospy
 
 from roboclaw import Roboclaw
 
-from osr_msgs.msg import Commands, Encoder, Status
+from sensor_msgs.msg import JointState
+from osr_msgs.msg import CommandDrive, CommandCorner, Status
 
 
 class RoboclawWrapper(object):
@@ -18,18 +19,17 @@ class RoboclawWrapper(object):
 
 		# initialize attributes
 		self.rc = None
-		self.accel = [0] * 10
-		self.qpps = [None] * 10
 		self.err = [None] * 5
 		self.address = []
-		self.enc_min = []
-		self.enc_max = []
-		self.enc = [None]*4
+		self.current_enc_vals = None
 		self.mutex = False
 
 		self.establish_roboclaw_connections()
 		self.killMotors()  # don't move at start
 		self.setup_encoders()
+
+		self.roboclaw_mapping = rospy.get_param('/roboclaw_mapping')
+		self.encoder_limits = {}
 
 		# save settings to non-volatile (permanent) memory
 		for address in self.address:
@@ -38,31 +38,19 @@ class RoboclawWrapper(object):
 		for address in self.address:
 			self.rc.ReadNVM(address)
 
-		index = 0
-		for address in self.address:
-			self.qpps[index] = self.rc.ReadM1VelocityPID(address)[4]
-			self.accel[index] = int(self.qpps[index]*2)
-			self.qpps[index+1]  = self.rc.ReadM2VelocityPID(address)[4]
-			self.accel[index+1] = int(self.qpps[index]*2)
-			index+=2
-
 		accel_max = 655359
 		accel_rate = 0.5
 		self.accel_pos = int((accel_max /2) + accel_max * accel_rate)
 		self.accel_neg = int((accel_max /2) - accel_max * accel_rate)
 		self.errorCheck()
-		mids = [None]*4
 
-		# calculate middle for corner motors based on max and min values read from the roboclaws
-		for i in range(4):
-			mids[i] = (self.enc_max[i] + self.enc_min[i])/2
-		#self.cornerToPosition(mids)
 		time.sleep(2)
 		self.killMotors()
 
 		# set up publishers and subscribers
-		self.cmd_sub = rospy.Subscriber("/robot_commands", Commands, self.robot_cmd_cb)
-		self.enc_pub = rospy.Publisher("/encoder", Encoder, queue_size=1)
+		self.cmd_sub = rospy.Subscriber("/cmd_corner", CommandCorner, self.corner_cmd_cb)
+		self.cmd_sub = rospy.Subscriber("/cmd_drive", CommandDrive, self.drive_cmd_cb)
+		self.enc_pub = rospy.Publisher("/encoder", JointState, queue_size=1)
 		self.status_pub = rospy.Publisher("/status", Status, queue_size=1)
 
 	def run(self):
@@ -70,14 +58,6 @@ class RoboclawWrapper(object):
 		rate = rospy.Rate(5)
 
 		status = Status()
-		enc = Encoder()
-
-		enc.abs_enc = [1000] * 4
-		enc.abs_enc_angles = [-100] * 4
-		status.battery = 0
-		status.temp = [0] * 5
-		status.current = [0] * 10
-		status.error_status = [0] * 5
 
 		counter = 0
 		while not rospy.is_shutdown():
@@ -86,8 +66,10 @@ class RoboclawWrapper(object):
 				rate.sleep()
 			self.mutex = True
 
-			enc.abs_enc = self.getCornerEnc()
-			# mc_data.abs_enc_angles = self.getCornerEncAngle()
+			# read from roboclaws and publish
+			self.read_encoder_values()
+			self.enc_pub.publish(self.current_enc_vals)
+
 			if (counter >= 10):
 				status.battery = self.getBattery()
 				status.temp = self.getTemp()
@@ -97,26 +79,8 @@ class RoboclawWrapper(object):
 				counter = 0
 
 			self.mutex = False
-			self.enc_pub.publish(enc)
 			counter += 1
 			rate.sleep()
-
-	def robot_cmd_cb(self, cmds):
-		r = rospy.Rate(10)
-		rospy.logdebug("Robot command callback received: {}".format(cmds))
-
-		while self.mutex and not rospy.is_shutdown():
-			r.sleep()
-
-		self.mutex = True
-		self.cornerToPosition(cmds.corner_motor)
-
-		for i in range(6):
-			# PUT THIS BACK IN
-			# self.sendMotorDuty(i,cmds.drive_motor[i])
-			self.sendSignedDutyAccel(i, cmds.drive_motor[i])
-			pass
-		self.mutex = False
 
 	def establish_roboclaw_connections(self):
 		"""
@@ -151,124 +115,226 @@ class RoboclawWrapper(object):
 			raise Exception("Unable to establish connection to one or more of the Roboclaw motor controllers")
 
 	def setup_encoders(self):
-		"""Set up the encoders for use in init"""
-		for address in self.address:
-			#self.rc.SetMainVoltages(address, rospy.get_param('battery_low', 11)*10), rospy.get_param('battery_high', 18)*10))
-
-			if address == 131 or address == 132:
-				#self.rc.SetM1MaxCurrent(address, int(config['MOTOR_CONFIG']['max_corner_current']*100))
-				#self.rc.SetM2MaxCurrent(address, int(config['MOTOR_CONFIG']['max_corner_current']*100))
-
-				self.enc_min.append(self.rc.ReadM1PositionPID(address)[-2])
-				self.enc_min.append(self.rc.ReadM2PositionPID(address)[-2])
-				self.enc_max.append(self.rc.ReadM1PositionPID(address)[-1])
-				self.enc_max.append(self.rc.ReadM2PositionPID(address)[-1])
-
+		"""Set up the encoders"""
+		for motor_name, properties in self.roboclaw_mapping:
+			if "corner" in motor_name:
+				enc_min, enc_max = self.read_encoder_limits(properties["address"], properties["channel"])
+				self.encoder_limits["motor_name"] = (enc_min, enc_max)
 			else:
-				#self.rc.SetM1MaxCurrent(address, int(config['MOTOR_CONFIG']['max_drive_current']*100))
-				#self.rc.SetM2MaxCurrent(address, int(config['MOTOR_CONFIG']['max_drive_current']*100))
-				self.rc.ResetEncoders(address)
+				self.rc.ResetEncoders(properties["address"])
 
-		rospy.set_param('enc_min', str(self.enc_min)[1:-1])
-		rospy.set_param('enc_max', str(self.enc_max)[1:-1])
+	def read_encoder_values(self):
+		"""Query roboclaws and update current motors status in encoder ticks"""
+		enc_msg = JointState()
+		enc_msg.header.stamp = rospy.Time.now()
+		for motor_name, properties in self.roboclaw_mapping:
+			enc_msg.name.append(motor_name)
+			position = self.read_encoder_position(properties["address"], properties["channel"])
+			velocity = self.read_encoder_velocity(properties["address"], properties["channel"])
+			current = self.read_encoder_current(properties["address"], properties["channel"])
+			enc_msg.position.append(self.tick2position(position,
+													   properties['enc_min'],
+													   properties['enc_max'],
+													   properties['ticks_per_rev']))
+			enc_msg.velocity.append(self.qpps2velocity(velocity,
+													   properties['ticks_per_rev'],
+													   properties['gear_ratio']))
+			enc_msg.effort.append(current)
 
-	def cornerToPosition(self,tick):
+		self.current_enc_vals = enc_msg
+
+	def corner_cmd_cb(self, cmd):
+		r = rospy.Rate(10)
+		rospy.logdebug("Corner command callback received: {}".format(cmd))
+
+		while self.mutex and not rospy.is_shutdown():
+			r.sleep()
+
+		self.mutex = True
+
+		# convert position to tick
+		encmin, encmax = self.encoder_limits["corner_left_front"]
+		left_front_tick = self.position2tick(cmd.left_front_pos, encmin, encmax,
+											 self.roboclaw_mapping["corner_left_front"]["ticks_per_rev"])
+		encmin, encmax = self.encoder_limits["corner_left_back"]
+		left_back_tick = self.position2tick(cmd.left_back_pos, encmin, encmax,
+											self.roboclaw_mapping["corner_left_back"]["ticks_per_rev"])
+		encmin, encmax = self.encoder_limits["corner_left_back"]
+		right_back_tick = self.position2tick(cmd.right_back_pos, encmin, encmax,
+											 self.roboclaw_mapping["corner_right_back"]["ticks_per_rev"])
+		encmin, encmax = self.encoder_limits["corner_left_back"]
+		right_front_tick = self.position2tick(cmd.right_front_pos, encmin, encmax,
+											  self.roboclaw_mapping["corner_right_front"]["ticks_per_rev"])
+
+		self.send_position_cmd(self.roboclaw_mapping["corner_left_front"]["address"],
+							   self.roboclaw_mapping["corner_left_front"]["channel"],
+							   left_front_tick)
+		self.send_position_cmd(self.roboclaw_mapping["corner_left_back"]["address"],
+							   self.roboclaw_mapping["corner_left_back"]["channel"],
+							   left_back_tick)
+		self.send_position_cmd(self.roboclaw_mapping["corner_right_back"]["address"],
+							   self.roboclaw_mapping["corner_right_back"]["channel"],
+							   right_back_tick)
+		self.send_position_cmd(self.roboclaw_mapping["corner_right_front"]["address"],
+							   self.roboclaw_mapping["corner_right_front"]["channel"],
+							   right_front_tick)
+		self.mutex = False
+
+	def drive_cmd_cb(self, cmd):
+		r = rospy.Rate(10)
+		rospy.logdebug("Drive command callback received: {}".format(cmd))
+
+		while self.mutex and not rospy.is_shutdown():
+			r.sleep()
+
+		props = self.roboclaw_mapping["drive_left_front"]
+		vel_cmd = self.velocity2qpps(cmd.left_front_vel, props["ticks_per_rev"], props["gear_ratio"])
+		self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
+
+		props = self.roboclaw_mapping["drive_left_middle"]
+		vel_cmd = self.velocity2qpps(cmd.left_middle_vel, props["ticks_per_rev"], props["gear_ratio"])
+		self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
+
+		props = self.roboclaw_mapping["drive_left_back"]
+		vel_cmd = self.velocity2qpps(cmd.left_back_vel, props["ticks_per_rev"], props["gear_ratio"])
+		self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
+
+		props = self.roboclaw_mapping["drive_right_back"]
+		vel_cmd = self.velocity2qpps(cmd.right_back_vel, props["ticks_per_rev"], props["gear_ratio"])
+		self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
+
+		props = self.roboclaw_mapping["drive_right_middle"]
+		vel_cmd = self.velocity2qpps(cmd.right_middle_vel, props["ticks_per_rev"], props["gear_ratio"])
+		self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
+
+		props = self.roboclaw_mapping["drive_right_front"]
+		vel_cmd = self.velocity2qpps(cmd.right_front_vel, props["ticks_per_rev"], props["gear_ratio"])
+		self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
+
+	def send_position_cmd(self, address, channel, target_tick):
 		"""
-		Send position commands to the corner motor
+		Wrapper around one of the send position commands
 
-		:param list tick: A list of ticks for each of the corner motors to
-		move to, if tick[i] is 0 it instead stops that motor from moving
+		:param address:
+		:param channel:
+		:param target_tick:
 		"""
-		# These values could potentially need tuning still
-		speed = 1000
-		accel = 2000
-		for i in range(4):
-                        # roboclaw index: 3 or 4 --> roboclaw 4 or 5 (starts at 0)
-			index = int(math.ceil((i+1)/2.0)+2)
-			
-			if tick[i] != -1:
-				if (i % 2):
-					self.rc.SpeedAccelDeccelPositionM2(self.address[index],accel,speed,accel,tick[i],1)
-				else:
-					self.rc.SpeedAccelDeccelPositionM1(self.address[index],accel,speed,accel,tick[i],1)
-
-	def sendMotorDuty(self, motorID, speed):
-		"""
-		Wrapper method for an easier interface to control the drive motors,
-
-		sends open-loop commands to the motors
-
-		:param int motorID: number that corresponds to each physical motor
-		:param int speed: Speed for each motor, range from 0-127
-
-		"""
-		#speed = speed/100.0
-		#speed *= 0.5
-		addr = self.address[int(motorID/2)]
-		if speed > 0:
-			if not motorID % 2: command = self.rc.ForwardM1
-			else:               command = self.rc.ForwardM2
+		cmd_args = [self.default_accel, self.corner_max_vel, self.default_accel, target_tick, 1]
+		if channel == "M1":
+			return self.rc.SpeedAccelDeccelPositionM1(address, *cmd_args)
+		elif channel == "M2":
+			return self.rc.SpeedAccelDeccelPositionM2(address, *cmd_args)
 		else:
-			if not motorID % 2: command = self.rc.BackwardM1
-			else:               command = self.rc.BackwardM2
+			raise AttributeError("Received unknown channel '{}'. Expected M1 or M2".format(channel))
 
-		speed = abs(int(speed * 127))
+	def read_encoder_position(self, address, channel):
+		"""Wrapper around self.rc.ReadEncM1 and self.rcReadEncM2 to simplify code"""
+		if channel == "M1":
+			return self.rc.ReadEncM1(address)
+		elif channel == "M2":
+			return self.rc.ReadEncM2(address)
+		else:
+			raise AttributeError("Received unknown channel '{}'. Expected M1 or M2".format(channel))
 
-		return command(addr,speed)
+	def read_encoder_limits(self, address, channel):
+		"""Wrapper around self.rc.ReadPositionPID and returns subset of the data
 
-	def sendSignedDutyAccel(self,motorID,speed):
-		addr = self.address[int(motorID/2)]
-
-		if speed >0: accel = self.accel_pos
-		else: accel = self.accel_neg
-
-		if not motorID % 2: command = self.rc.DutyAccelM1
-		else:               command = self.rc.DutyAccelM2
-
-		speed = int(32767 * speed/100.0)
-		return command(addr,accel,speed)
-
-	def getCornerEnc(self):
-		enc = []
-		for i in range(4):
-			index = int(math.ceil((i+1)/2.0)+2)
-			if not (i % 2):
-				enc.append(self.rc.ReadEncM1(self.address[index])[1])
-			else:
-				enc.append(self.rc.ReadEncM2(self.address[index])[1])
-		self.enc = enc
-		return enc
-
-
-	@staticmethod
-	def tick2deg(tick,e_min,e_max):
+		:return: (enc_min, enc_max)
 		"""
-		Converts a tick to physical degrees
+		if channel == "M1":
+			result = self.rc.ReadM1PositionPID(address)
+		elif channel == "M2":
+			result = self.rc.ReadM2PositionPID(address)
+		else:
+			raise AttributeError("Received unknown channel '{}'. Expected M1 or M2".format(channel))
 
-		:param int tick : Current encoder tick
-		:param int e_min: The minimum encoder value based on physical stop
-		:param int e_max: The maximum encoder value based on physical stop
+		return (result[-2], result[-1])
+
+	def send_velocity_cmd(self, address, channel, target_qpps):
 		"""
-		return (tick - (e_max + e_min)/2.0) * (90.0/(e_max - e_min))
+		Wrapper around one of the send velocity commands
 
-	def getCornerEncAngle(self):
-		if self.enc[0] == None:
-			return -1
-		deg = [None] *4
+		:param address:
+		:param channel:
+		:param target_qpps:
+		"""
+		accel = self.accel_pos
+		if target_qpps < 0:
+			accel = self.accel_neg
+		if channel == "M1":
+			return self.rc.DutyAccelM1(address, accel, target_qpps)
+		elif channel == "M2":
+			return self.rc.DutyAccelM2(address, accel, target_qpps)
+		else:
+			raise AttributeError("Received unknown channel '{}'. Expected M1 or M2".format(channel))
 
-		for i in range(4):
-			deg[i] = int(self.tick2deg(self.enc[i],self.enc_min[i],self.enc_max[i]))
+	def read_encoder_velocity(self, address, channel):
+		"""Wrapper around self.rc.ReadSpeedM1 and self.rcReadSpeedM2 to simplify code"""
+		if channel == "M1":
+			return self.rc.ReadSpeedM1(address)
+		elif channel == "M2":
+			return self.rc.ReadSpeedM2(address)
+		else:
+			raise AttributeError("Received unknown channel '{}'. Expected M1 or M2".format(channel))
 
-		return deg
+	def read_encoder_current(self, address, channel):
+		"""Wrapper around self.rc.ReadCurrents to simplify code"""
+		if channel == "M1":
+			return self.rc.ReadCurrents(address)[0]
+		elif channel == "M2":
+			return self.rc.ReadCurrents(address)[1]
+		else:
+			raise AttributeError("Received unknown channel '{}'. Expected M1 or M2".format(channel))
 
-	def getDriveEnc(self):
-		enc = [None]*6
-		for i in range(6):
-			if not (i % 2):
-				enc[i] = self.rc.ReadEncM1(self.address[int(math.ceil(i/2))])[1]
-			else:
-				enc[i] = self.rc.ReadEncM2(self.address[int(math.ceil(i/2))])[1]
-		return enc
+	def tick2position(self, tick, enc_min, enc_max, ticks_per_rev):
+		"""
+		Convert the absolute position from ticks to radian relative to the middle position
+
+		:param tick:
+		:param enc_min:
+		:param enc_max:
+		:param ticks_per_rev:
+		:return:
+		"""
+		ticks_per_rad = ticks_per_rev / (2 * math.pi)
+		mid = enc_min + (enc_max - enc_min) / 2
+		return (tick - mid) / ticks_per_rad
+
+	def position2tick(self, position, enc_min, enc_max, ticks_per_rev):
+		"""
+		Convert the absolute position from radian relative to the middle position to ticks
+
+		:param position:
+		:param enc_min:
+		:param enc_max:
+		:param ticks_per_rev:
+		:return:
+		"""
+		ticks_per_rad = ticks_per_rev / (2 * math.pi)
+		mid = enc_min + (enc_max - enc_min) / 2
+		return mid + position * ticks_per_rad
+
+	def qpps2velocity(self, qpps, ticks_per_rev, gear_ratio):
+		"""
+		Convert the given quadrature pulses per second to radian/s
+
+		:param qpps:
+		:param ticks_per_rev:
+		:param gear_ratio:
+		:return:
+		"""
+		return qpps / (2 * math.pi * gear_ratio * ticks_per_rev)
+
+	def velocity2qpps(self, velocity, ticks_per_rev, gear_ratio):
+		"""
+		Convert the given velocity to quadrature pulses per second
+
+		:param velocity: rad/s
+		:param ticks_per_rev:
+		:param gear_ratio:
+		:return:
+		"""
+		return velocity * 2 * math.pi * gear_ratio * ticks_per_rev
 
 	def getBattery(self):
 		return self.rc.ReadMainBatteryVoltage(self.address[0])[1]
@@ -304,17 +370,8 @@ class RoboclawWrapper(object):
 		for error in self.err:
 			if error:
 				self.killMotors()
-				#self.writeError()
-				rospy.loginfo("Motor controller Error", error)
+				rospy.logerr("Motor controller Error: \n'{}'".format(error))
 		return 1
-
-	def writeError(self):
-		"""Writes the list of errors to a text file for later examination"""
-
-		f = open('errorLog.txt','a')
-		errors = ','.join(str(e) for e in self.err)
-		f.write('\n' + 'Errors: ' + '[' + errors + ']' + ' at: ' + str(datetime.datetime.now()))
-		f.close()
 
 
 if __name__ == "__main__":

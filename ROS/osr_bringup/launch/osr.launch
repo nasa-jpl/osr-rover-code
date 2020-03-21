@@ -14,7 +14,9 @@
 
 
 	<!-- Nodes to run the Open Source Rover -->
-	<node name="roboclaw_wrapper" pkg="osr" type="roboclaw_wrapper.py" respawn="true"/>
+	<node name="roboclaw_wrapper" pkg="osr" type="roboclaw_wrapper.py" respawn="true">
+		<rosparam command="load" file="$(find osr_bringup)/config/roboclaw_params.yaml"/>
+	</node>
 	<node name="joystick" pkg="osr" type="joystick.py" respawn="true"/>
 	<node name="rover" pkg="osr" type="rover.py" respawn="true" />
 	<node name="led_screen" pkg="led_screen" type="screen.py" respawn="true" />
