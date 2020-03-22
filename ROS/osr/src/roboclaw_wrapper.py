@@ -39,6 +39,7 @@ class RoboclawWrapper(object):
 
                 self.corner_max_vel = 1000
                 self.corner_accel = 2000
+                self.roboclaw_overflow = 2**15-1
 		accel_max = 655359
 		accel_rate = 0.5
 		self.accel_pos = int((accel_max /2) + accel_max * accel_rate)
@@ -273,6 +274,8 @@ class RoboclawWrapper(object):
 		:param channel:
 		:param target_qpps: int
 		"""
+                # clip values
+                target_qpps = max(-self.roboclaw_overflow, min(self.roboclaw_overflow, target_qpps))
 		accel = self.accel_pos
 		if target_qpps < 0:
 			accel = self.accel_neg

@@ -17,7 +17,9 @@ class Rover(object):
 		self.d3 = float(distances[2])
 		self.d4 = float(distances[3])
 
-                self.no_cmd_thresh = 0.03  # rad
+                self.no_cmd_thresh = 0.05  # [rad]
+                maxvel = 0.075 * 130/60 * 2 * math.pi  # wheel radius * omega_no_load [m/s]
+                self.max_vel = rospy.get_param("~max_translational_velocity", maxvel)  # [m/s]
 
 		rospy.Subscriber("/joystick", Joystick, self.cmd_cb)
                 rospy.Subscriber("/encoder", JointState, self.enc_cb)
@@ -27,8 +29,14 @@ class Rover(object):
 
 	def cmd_cb(self, msg):
 		corner_cmd_msg = self.calculate_corner_positions(msg.steering)
-		drive_cmd_msg = self.calculate_drive_velocities(msg.vel, msg.steering)
-               	if self.corner_cmd_threshold(corner_cmd_msg):
+                # temporarily convert (-50, 50) velocity range to actual velocity in m/s
+                velocity = msg.vel * self.max_vel / 50
+                rospy.loginfo("velocity drive cmd: {}".format(velocity))
+                # TODO shouldn't supply commanded steering, should supply current steering.
+		drive_cmd_msg = self.calculate_drive_velocities(velocity, msg.steering)
+                rospy.loginfo("Steering: {}".format(msg.steering))
+                rospy.loginfo("drive cmd: {}".format(drive_cmd_msg))
+               	if True: #self.corner_cmd_threshold(corner_cmd_msg):
                     self.corner_cmd_pub.publish(corner_cmd_msg)
 		self.drive_cmd_pub.publish(drive_cmd_msg)
 
@@ -54,14 +62,16 @@ class Rover(object):
 		"""
 		Calculate target velocities for the drive motors based on desired speed and current turning radius
 
-		:param int speed: Drive speed command range from -100 to 100
+		:param int speed: Drive speed command range from -max_vel to max_vel
 		:param int radius: Current turning radius range from -250 to 250
 		"""
+                # clip the value to the maximum allowed velocity
+                speed = max(-self.max_vel, min(self.max_vel, speed))
 		cmd_msg = CommandDrive()
 		if (speed == 0):
 			return cmd_msg
 
-		if (abs(current_radius) <= 5):  # No turning radius, all wheels same speed
+		elif (abs(current_radius) <= 5):  # No turning radius, all wheels same speed
 			cmd_msg.left_front_vel = speed
 			cmd_msg.left_middle_vel = speed
 			cmd_msg.left_back_vel = speed
@@ -83,12 +93,12 @@ class Rover(object):
 			e = abs(radius) - self.d4
 			rmax_float = float(rmax)
 
-			v1 = int(speed * (math.sqrt(b + d)) / rmax_float)
-			v2 = int(speed * e / rmax_float)  # Slowest wheel
-			v3 = int((speed * math.sqrt(a + d)) / rmax_float)
-			v4 = int((speed * math.sqrt(a + c)) / rmax_float)
-			v5 = int(speed)  # Fastest wheel
-			v6 = int((speed * math.sqrt(b + c)) / rmax_float)
+			v1 = speed * math.sqrt(b + d) / rmax_float
+			v2 = speed * e / rmax_float  # Slowest wheel
+			v3 = speed * math.sqrt(a + d) / rmax_float
+			v4 = speed * math.sqrt(a + c) / rmax_float
+			v5 = speed  # Fastest wheel
+			v6 = speed * math.sqrt(b + c) / rmax_float
 
 			if current_radius < 0:
 				cmd_msg.left_front_vel = v4
@@ -107,29 +117,21 @@ class Rover(object):
 
 			return cmd_msg
 
-	def calculate_corner_positions(self, radius):
+	def calculate_corner_positions(self, direction):
 		"""
-		Takes a turning radius and calculates what angle [rad] each corner should be at
+		Takes a turning direction and computes the required angle for each corner motor
 
-		:param int radius: Radius drive command, ranges from -100 (turning left) to 100 (turning right)
+		:param int direction: ranges from -100 (turning left) to 100 (turning right)
 		"""
-		#Scaled from 250 to 20 inches. For more information on these numbers look at the Software Controls.pdf
 		cmd_msg = CommandCorner()
 
-		if radius == 0:
-			r = 250
-		elif -100 <= radius <= 100 and radius != 0:
-			r = 220 - abs(radius) * 250 / 100
-		else:
-			r = 250
-
-		if r == 250:
+		if direction == 0:
 			return cmd_msg
 
-		ang1 = math.atan(self.d1 / (abs(r) + self.d3))
-		ang2 = math.atan(self.d2 / (abs(r) + self.d3))
-		ang3 = math.atan(self.d2 / (abs(r) - self.d3))
-		ang4 = math.atan(self.d1 / (abs(r) - self.d3))
+		radius = 222
+
+                theta1 = math.atan2(self.d3, x radius + self.d1)
+                theta3 = math.atan2(self.d3, x radius - self.d1)
 
 		if radius > 0:
 			cmd_msg.left_front_pos = ang4
