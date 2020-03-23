@@ -55,7 +55,7 @@ class RoboclawWrapper(object):
     def run(self):
         """Blocking loop which runs after initialization has completed"""
         rate = rospy.Rate(5)
-                mutex_rate = rospy.Rate(10)
+        mutex_rate = rospy.Rate(10)
 
         status = Status()
 
@@ -67,11 +67,11 @@ class RoboclawWrapper(object):
             self.mutex = True
 
             # read from roboclaws and publish
-                        try:
-                            self.read_encoder_values()
+            try:
+                self.read_encoder_values()
                 self.enc_pub.publish(self.current_enc_vals)
-                        except AssertionError as read_exc:
-                            rospy.logwarn( "Failed to read encoder values")
+            except AssertionError as read_exc:
+                rospy.logwarn( "Failed to read encoder values")
 
             if (counter >= 10):
                 status.battery = self.getBattery()
@@ -105,7 +105,7 @@ class RoboclawWrapper(object):
         all_connected = True
         for address in self.address:
             rospy.logdebug("Attempting to talk to motor controller ''".format(address))
-                        version_response = self.rc.ReadVersion(address)
+            version_response = self.rc.ReadVersion(address)
             connected = bool(version_response[0])
             if not connected:
                 rospy.logerr("Unable to connect to roboclaw at '{}'".format(address))
@@ -191,7 +191,7 @@ class RoboclawWrapper(object):
         while self.mutex and not rospy.is_shutdown():
             r.sleep()
 
-                self.mutex = True
+        self.mutex = True
 
         props = self.roboclaw_mapping["drive_left_front"]
         vel_cmd = self.velocity2qpps(cmd.left_front_vel, props["ticks_per_rev"], props["gear_ratio"])
@@ -217,7 +217,7 @@ class RoboclawWrapper(object):
         vel_cmd = self.velocity2qpps(cmd.right_front_vel, props["ticks_per_rev"], props["gear_ratio"])
         self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
 
-                self.mutex = False
+        self.mutex = False
 
     def send_position_cmd(self, address, channel, target_tick):
         """
@@ -244,8 +244,8 @@ class RoboclawWrapper(object):
         else:
             raise AttributeError("Received unknown channel '{}'. Expected M1 or M2".format(channel))
 
-                assert val[0] == 1
-                return val[1]
+        assert val[0] == 1
+        return val[1]
 
 
     def read_encoder_limits(self, address, channel):
@@ -260,7 +260,7 @@ class RoboclawWrapper(object):
         else:
             raise AttributeError("Received unknown channel '{}'. Expected M1 or M2".format(channel))
 
-                assert result[0] == 1
+        assert result[0] == 1
         return (result[-2], result[-1])
 
     def send_velocity_cmd(self, address, channel, target_qpps):
@@ -271,8 +271,8 @@ class RoboclawWrapper(object):
         :param channel:
         :param target_qpps: int
         """
-                # clip values
-                target_qpps = max(-self.roboclaw_overflow, min(self.roboclaw_overflow, target_qpps))
+        # clip values
+        target_qpps = max(-self.roboclaw_overflow, min(self.roboclaw_overflow, target_qpps))
         accel = self.accel_pos
         if target_qpps < 0:
             accel = self.accel_neg
@@ -292,8 +292,8 @@ class RoboclawWrapper(object):
         else:
             raise AttributeError("Received unknown channel '{}'. Expected M1 or M2".format(channel))
 
-                assert val[0] == 1
-                return val[1]
+        assert val[0] == 1
+        return val[1]
 
     def read_encoder_current(self, address, channel):
         """Wrapper around self.rc.ReadCurrents to simplify code"""
@@ -315,8 +315,8 @@ class RoboclawWrapper(object):
         :return:
         """
         ticks_per_rad = ticks_per_rev / (2 * math.pi)
-                if enc_min is None or enc_max is None:
-                    return tick / ticks_per_rad
+        if enc_min is None or enc_max is None:
+            return tick / ticks_per_rad
         mid = enc_min + (enc_max - enc_min) / 2
 
         # positive values correspond to the wheel turning left (z-axis points up)
@@ -334,15 +334,15 @@ class RoboclawWrapper(object):
         :param ticks_per_rev:
         :return:
         """
-                # positive values correspond to the wheel turning left (z-axis points up)
-                position *= -1
+        # positive values correspond to the wheel turning left (z-axis points up)
+        position *= -1
         ticks_per_rad = ticks_per_rev / (2 * math.pi)
-                if enc_min is None or enc_max is None:
-                    return position * ticks_per_rad
+        if enc_min is None or enc_max is None:
+            return position * ticks_per_rad
         mid = enc_min + (enc_max - enc_min) / 2
         tick = int(mid + position * ticks_per_rad)
 
-                return max(enc_min, min(enc_max, tick))
+        return max(enc_min, min(enc_max, tick))
 
     def qpps2velocity(self, qpps, ticks_per_rev, gear_ratio):
         """
@@ -389,19 +389,17 @@ class RoboclawWrapper(object):
     def killMotors(self):
         """Stops all motors on Rover"""
         for i in range(5):
-            self.rc.ForwardM1(self.address[i],0)
-            self.rc.ForwardM2(self.address[i],0)
+            self.rc.ForwardM1(self.address[i], 0)
+            self.rc.ForwardM2(self.address[i], 0)
 
     def errorCheck(self):
         """Checks error status of each motor controller, returns 0 if any errors occur"""
-
         for i in range(len(self.address)):
             self.err[i] = self.rc.ReadError(self.address[i])[1]
         for error in self.err:
             if error:
                 self.killMotors()
                 rospy.logerr("Motor controller Error: \n'{}'".format(error))
-        return 1
 
 
 if __name__ == "__main__":
