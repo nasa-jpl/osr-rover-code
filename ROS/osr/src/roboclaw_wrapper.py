@@ -44,7 +44,6 @@ class RoboclawWrapper(object):
         self.accel_neg = int((accel_max /2) - accel_max * accel_rate)
         self.errorCheck()
 
-        rospy.sleep(2)
         self.killMotors()
 
         # set up publishers and subscribers
