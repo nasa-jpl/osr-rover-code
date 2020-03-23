@@ -12,10 +12,10 @@ class Rover(object):
 
 	def __init__(self):
 		distances = rospy.get_param('mech_dist','7.254,10.5,10.5,10.073').split(",")
-		self.d1 = float(distances[0])
-		self.d2 = float(distances[1])
-		self.d3 = float(distances[2])
-		self.d4 = float(distances[3])
+		self.d1 = float(distances[0]) * 0.0254
+		self.d2 = float(distances[1]) * 0.0254
+		self.d3 = float(distances[2]) * 0.0254
+		self.d4 = float(distances[3]) * 0.0254
 
                 self.no_cmd_thresh = 0.05  # [rad]
                 maxvel = 0.075 * 130/60 * 2 * math.pi  # wheel radius * omega_no_load [m/s]
@@ -31,11 +31,11 @@ class Rover(object):
 		corner_cmd_msg = self.calculate_corner_positions(msg.steering)
                 # temporarily convert (-50, 50) velocity range to actual velocity in m/s
                 velocity = msg.vel * self.max_vel / 50
-                rospy.loginfo("velocity drive cmd: {}".format(velocity))
+                rospy.logdebug("velocity drive cmd: {}".format(velocity))
                 # TODO shouldn't supply commanded steering, should supply current steering.
 		drive_cmd_msg = self.calculate_drive_velocities(velocity, msg.steering)
-                rospy.loginfo("Steering: {}".format(msg.steering))
-                rospy.loginfo("drive cmd: {}".format(drive_cmd_msg))
+                rospy.logdebug("Steering: {}".format(msg.steering))
+                rospy.logdebug("drive cmd: {}".format(drive_cmd_msg))
                	if True: #self.corner_cmd_threshold(corner_cmd_msg):
                     self.corner_cmd_pub.publish(corner_cmd_msg)
 		self.drive_cmd_pub.publish(drive_cmd_msg)
@@ -124,31 +124,39 @@ class Rover(object):
 		:param int direction: ranges from -100 (turning left) to 100 (turning right)
 		"""
 		cmd_msg = CommandCorner()
-
 		if direction == 0:
 			return cmd_msg
 
-		radius = 222
+                # convert the direction to a physical turning radius
+                max_theta_cl = math.pi/4
+                # angle around z axis pointing up of wheel closest to center of circle
+                theta_cl = -float(direction) / 100.0 * max_theta_cl
 
-                theta1 = math.atan2(self.d3, x radius + self.d1)
-                theta3 = math.atan2(self.d3, x radius - self.d1)
+                radius = self.d1 + self.d3 / math.tan(abs(theta_cl))
+                rospy.logdebug("direction, theta, radius:\n{}, {}, {}\n".format(direction, theta_cl, radius))
 
-		if radius > 0:
-			cmd_msg.left_front_pos = ang4
-			cmd_msg.left_back_pos = -ang3
-			cmd_msg.right_back_pos = -ang2
-			cmd_msg.right_front_pos = ang1
-		else:
-			cmd_msg.left_front_pos = -ang2
-			cmd_msg.left_back_pos = ang1
-			cmd_msg.right_back_pos = ang4
-			cmd_msg.right_front_pos = -ang3
+                if radius > 6.4:
+                    return cmd_msg  # assume straight
+
+                theta_front_closest = math.atan2(self.d3, radius - self.d1)
+                theta_front_farthest = math.atan2(self.d3, radius + self.d1)
+
+                if theta_cl > 0:
+                    cmd_msg.left_front_pos = theta_front_closest
+        	    cmd_msg.left_back_pos = -theta_front_closest
+		    cmd_msg.right_back_pos = -theta_front_farthest
+		    cmd_msg.right_front_pos = theta_front_farthest
+                else:
+                    cmd_msg.left_front_pos = -theta_front_farthest
+        	    cmd_msg.left_back_pos = theta_front_farthest
+		    cmd_msg.right_back_pos = theta_front_closest
+		    cmd_msg.right_front_pos = -theta_front_closest
 
 		return cmd_msg
 
 
 if __name__ == '__main__':
-	rospy.init_node('rover', log_level=rospy.DEBUG)
+	rospy.init_node('rover', log_level=rospy.INFO)
 	rospy.loginfo("Starting the rover node")
 	rover = Rover()
 	rospy.spin()

@@ -321,11 +321,15 @@ class RoboclawWrapper(object):
                 if enc_min is None or enc_max is None:
                     return tick / ticks_per_rad
 		mid = enc_min + (enc_max - enc_min) / 2
-		return (tick - mid) / ticks_per_rad
+
+                # positive values correspond to the wheel turning left (z-axis points up)
+		return -(tick - mid) / ticks_per_rad
 
 	def position2tick(self, position, enc_min, enc_max, ticks_per_rev):
 		"""
 		Convert the absolute position from radian relative to the middle position to ticks
+
+                Clip values that are outside the range [enc_min, enc_max]
 
 		:param position:
 		:param enc_min:
@@ -333,11 +337,15 @@ class RoboclawWrapper(object):
 		:param ticks_per_rev:
 		:return:
 		"""
+                # positive values correspond to the wheel turning left (z-axis points up)
+                position *= -1
 		ticks_per_rad = ticks_per_rev / (2 * math.pi)
                 if enc_min is None or enc_max is None:
                     return position * ticks_per_rad
 		mid = enc_min + (enc_max - enc_min) / 2
-		return int(mid + position * ticks_per_rad)
+		tick = int(mid + position * ticks_per_rad)
+
+                return max(enc_min, min(enc_max, tick))
 
 	def qpps2velocity(self, qpps, ticks_per_rev, gear_ratio):
 		"""
@@ -400,7 +408,7 @@ class RoboclawWrapper(object):
 
 
 if __name__ == "__main__":
-	rospy.init_node("roboclaw wrapper", log_level=rospy.DEBUG)
+	rospy.init_node("roboclaw wrapper", log_level=rospy.INFO)
 	rospy.loginfo("Starting the roboclaw wrapper node")
 
 	wrapper = RoboclawWrapper()
