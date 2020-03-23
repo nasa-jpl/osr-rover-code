@@ -3,49 +3,49 @@ roboclaw_mapping:
     address: 130
     channel: M2
     ticks_per_rev: 48
-    gear_ratio: 171.79
+    gear_ratio: 74.83
   drive_left_middle:
     address: 130
     channel: M1
     ticks_per_rev: 48
-    gear_ratio: 171.79
+    gear_ratio: 74.83
   drive_left_back:
     address: 129
     channel: M2
     ticks_per_rev: 48
-    gear_ratio: 171.79
+    gear_ratio: 74.83
   drive_right_back:
     address: 129
     channel: M1
     ticks_per_rev: 48
-    gear_ratio: 171.79
+    gear_ratio: 74.83
   drive_right_middle:
     address: 128
     channel: M2
     ticks_per_rev: 48
-    gear_ratio: 171.79
+    gear_ratio: 74.83
   drive_right_front:
     address: 128
     channel: M1
     ticks_per_rev: 48
-    gear_ratio: 171.79
+    gear_ratio: 74.83
   corner_left_front:
     address: 132
-    channel: M1
-    ticks_per_rev: 1024
+    channel: M2
+    ticks_per_rev: 4000
     gear_ratio: 189
   corner_left_back:
     address: 132
-    channel: M2
-    ticks_per_rev: 1024
+    channel: M1
+    ticks_per_rev: 4000
     gear_ratio: 189
   corner_right_back:
     address: 131
     channel: M2
-    ticks_per_rev: 1024
+    ticks_per_rev: 4000
     gear_ratio: 189
   corner_right_front:
     address: 131
     channel: M1
-    ticks_per_rev: 1024
+    ticks_per_rev: 4000
     gear_ratio: 189
