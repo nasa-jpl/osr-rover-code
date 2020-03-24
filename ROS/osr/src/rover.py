@@ -11,19 +11,20 @@ class Rover(object):
     """Math and motor control algorithms to move the rover"""
 
     def __init__(self):
-        distances = rospy.get_param('mech_dist','7.254,10.5,10.5,10.073').split(",")
-        self.d1 = float(distances[0]) * 0.0254
-        self.d2 = float(distances[1]) * 0.0254
-        self.d3 = float(distances[2]) * 0.0254
-        self.d4 = float(distances[3]) * 0.0254
+        rover_dimensions = rospy.get_param('/rover_dimensions', {"d1": 0.184, "d2": 0.267, "d3": 0.267, "d4": 0.256})
+        self.d1 = rover_dimensions["d1"]
+        self.d2 = rover_dimensions["d2"]
+        self.d3 = rover_dimensions["d3"]
+        self.d4 = rover_dimensions["d4"]
 
-        self.min_radius = 0.45
-        self.max_radius = 6.4
+        self.min_radius = 0.45  # [m]
+        self.max_radius = 6.4  # [m]
 
         self.no_cmd_thresh = 0.05  # [rad]
-        self.wheel_radius = rospy.get_param("/wheel_radius", 0.075)  # [m]
+        self.wheel_radius = rospy.get_param("/rover_dimensions/wheel_radius", 0.075)  # [m]
         drive_no_load_rpm = rospy.get_param("/drive_no_load_rpm", 130)
-        self.max_vel = self.wheel_radius * drive_no_load_rpm / 60 * 2 * math.pi  # wheel radius * omega_no_load [m/s]
+        speed_adjustment_factor = rospy.get_param("/speed_adjustment_factor", 1.0)
+        self.max_vel = self.wheel_radius * drive_no_load_rpm / 60 * 2 * math.pi * speed_adjustment_factor  # [m/s]
 
         rospy.Subscriber("/joystick", Joystick, self.cmd_cb)
         rospy.Subscriber("/encoder", JointState, self.enc_cb)
@@ -36,7 +37,11 @@ class Rover(object):
         rospy.logdebug("desired turning radius: {}".format(desired_turning_radius))
         corner_cmd_msg = self.calculate_corner_positions(desired_turning_radius)
         # temporarily convert (-50, 50) velocity range to actual velocity in m/s
-        velocity = msg.vel * self.max_vel / 50
+        # if we're turning, calculate the max velocity the middle of the rover can go
+        max_vel = abs(desired_turning_radius) / (abs(desired_turning_radius) + self.d1) * self.max_vel
+        if math.isnan(max_vel):  # turning radius infinite, going straight
+            max_vel = self.max_vel
+        velocity = msg.vel * max_vel / 50
         rospy.logdebug("velocity drive cmd: {} m/s".format(velocity))
         # TODO shouldn't supply commanded steering, should supply current steering.
         drive_cmd_msg = self.calculate_drive_velocities(velocity, desired_turning_radius)
@@ -67,7 +72,7 @@ class Rover(object):
         """
         Calculate target velocities for the drive motors based on desired speed and current turning radius
 
-        :param speed: Drive speed command range from -max_vel to max_vel
+        :param speed: Drive speed command range from -max_vel to max_vel, with max vel depending on the turning radius
         :param radius: Current turning radius in m
         """
         # clip the value to the maximum allowed velocity
@@ -77,25 +82,28 @@ class Rover(object):
             return cmd_msg
 
         elif abs(current_radius) >= self.max_radius:  # Very large turning radius, all wheels same speed
-            cmd_msg.left_front_vel = speed
-            cmd_msg.left_middle_vel = speed
-            cmd_msg.left_back_vel = speed
-            cmd_msg.right_back_vel = speed
-            cmd_msg.right_middle_vel = speed
-            cmd_msg.right_front_vel = speed
+            angular_vel = speed / self.wheel_radius
+            cmd_msg.left_front_vel = angular_vel
+            cmd_msg.left_middle_vel = angular_vel
+            cmd_msg.left_back_vel = angular_vel
+            cmd_msg.right_back_vel = angular_vel
+            cmd_msg.right_middle_vel = angular_vel
+            cmd_msg.right_front_vel = angular_vel
 
             return cmd_msg
 
         else:
-            # the entire vehicle move with the same angular velocity dictated by the desired speed,
+            # for the calculations, we assume positive radius (turn left) and adjust later
+            radius = abs(current_radius)
+            # the entire vehicle moves with the same angular velocity dictated by the desired speed,
             # around the radius of the turn. v = r * omega
-            angular_velocity_center = float(speed) / current_radius
+            angular_velocity_center = float(speed) / radius
             # calculate desired velocities of all centers of wheels. Corner wheels on the same side
             # move with the same velocity. v = r * omega again
-            vel_middle_closest = (current_radius - self.d4) * angular_velocity_center
-            vel_corner_closest = (current_radius - self.d1) * angular_velocity_center
-            vel_corner_farthest = (current_radius + self.d1) * angular_velocity_center
-            vel_middle_farthest = (current_radius + self.d4) * angular_velocity_center
+            vel_middle_closest =  (radius - self.d4) * angular_velocity_center
+            vel_corner_closest =  (radius - self.d1) * angular_velocity_center
+            vel_corner_farthest = (radius + self.d1) * angular_velocity_center
+            vel_middle_farthest = (radius + self.d4) * angular_velocity_center
 
             # now from these desired velocities, calculate the desired angular velocity of each wheel
             # v = r * omega again

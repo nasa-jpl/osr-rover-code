@@ -18,6 +18,7 @@
 		<rosparam command="load" file="$(find osr_bringup)/config/roboclaw_params.yaml"/>
 	</node>
 	<node name="joystick" pkg="osr" type="joystick.py" output="screen"/>
+	<rosparam command="load" file="$(find osr_bringup)/config/physical_properties.yaml"/>
 	<node name="rover" pkg="osr" type="rover.py" output="screen"/>
 	<node name="led_screen" pkg="led_screen" type="screen.py"/>
 	<node pkg="joy"
