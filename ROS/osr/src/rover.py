@@ -21,9 +21,9 @@ class Rover(object):
         self.max_radius = 6.4
 
         self.no_cmd_thresh = 0.05  # [rad]
-        self.wheel_radius = rospy.get_param("~wheel_radius", 0.075)  # [m]
-        maxvel = self.wheel_radius * 130/60 * 2 * math.pi  # wheel radius * omega_no_load [m/s]
-        self.max_vel = rospy.get_param("~max_translational_velocity", maxvel)  # [m/s]
+        self.wheel_radius = rospy.get_param("/wheel_radius", 0.075)  # [m]
+        drive_no_load_rpm = rospy.get_param("/drive_no_load_rpm", 130)
+        self.max_vel = self.wheel_radius * drive_no_load_rpm / 60 * 2 * math.pi  # wheel radius * omega_no_load [m/s]
 
         rospy.Subscriber("/joystick", Joystick, self.cmd_cb)
         rospy.Subscriber("/encoder", JointState, self.enc_cb)
@@ -33,10 +33,11 @@ class Rover(object):
 
     def cmd_cb(self, msg):
         desired_turning_radius = self.calculate_turning_radius(msg.steering)
+        rospy.logdebug("desired turning radius: {}".format(desired_turning_radius))
         corner_cmd_msg = self.calculate_corner_positions(desired_turning_radius)
         # temporarily convert (-50, 50) velocity range to actual velocity in m/s
         velocity = msg.vel * self.max_vel / 50
-        rospy.logdebug("velocity drive cmd: {}".format(velocity))
+        rospy.logdebug("velocity drive cmd: {} m/s".format(velocity))
         # TODO shouldn't supply commanded steering, should supply current steering.
         drive_cmd_msg = self.calculate_drive_velocities(velocity, desired_turning_radius)
         rospy.logdebug("drive cmd: {}".format(drive_cmd_msg))
@@ -88,7 +89,7 @@ class Rover(object):
         else:
             # the entire vehicle move with the same angular velocity dictated by the desired speed,
             # around the radius of the turn. v = r * omega
-            angular_velocity_center = float(speed) / abs(current_radius)
+            angular_velocity_center = float(speed) / current_radius
             # calculate desired velocities of all centers of wheels. Corner wheels on the same side
             # move with the same velocity. v = r * omega again
             vel_middle_closest = (current_radius - self.d4) * angular_velocity_center
@@ -138,7 +139,7 @@ class Rover(object):
         theta_front_closest = math.atan2(self.d3, radius - self.d1)
         theta_front_farthest = math.atan2(self.d3, radius + self.d1)
 
-        if theta_cl > 0:
+        if radius > 0:
             cmd_msg.left_front_pos = theta_front_closest
             cmd_msg.left_back_pos = -theta_front_closest
             cmd_msg.right_back_pos = -theta_front_farthest
@@ -162,8 +163,11 @@ class Rover(object):
         # angle around z axis pointing up of wheel closest to center of circle
         theta_cl = -float(direction) / 100.0 * max_theta_cl
 
-        radius = self.d1 + self.d3 / math.tan(abs(theta_cl))
-
+        try:
+            radius = self.d1 + self.d3 / math.tan(theta_cl)
+        except ZeroDivisionError:
+            return float("Inf")
+        
         # clip values so they lie in (-max_radius, -min_radius) or (min_radius, max_radius)
         if radius > 0:
             radius = max(self.min_radius, min(self.max_radius, radius))

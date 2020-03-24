@@ -35,9 +35,9 @@ class RoboclawWrapper(object):
         for address in self.address:
             self.rc.ReadNVM(address)
 
-                self.corner_max_vel = 1000
-                self.corner_accel = 2000
-                self.roboclaw_overflow = 2**15-1
+        self.corner_max_vel = 1000
+        self.corner_accel = 2000
+        self.roboclaw_overflow = 2**15-1
         accel_max = 655359
         accel_rate = 0.5
         self.accel_pos = int((accel_max /2) + accel_max * accel_rate)
@@ -124,7 +124,7 @@ class RoboclawWrapper(object):
                 enc_min, enc_max = self.read_encoder_limits(properties["address"], properties["channel"])
                 self.encoder_limits[motor_name] = (enc_min, enc_max)
             else:
-                                self.encoder_limits[motor_name] = (None, None)
+                self.encoder_limits[motor_name] = (None, None)
                 self.rc.ResetEncoders(properties["address"])
 
     def read_encoder_values(self):
