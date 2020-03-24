@@ -17,8 +17,12 @@ class Rover(object):
         self.d3 = float(distances[2]) * 0.0254
         self.d4 = float(distances[3]) * 0.0254
 
+        self.min_radius = 0.45
+        self.max_radius = 6.4
+
         self.no_cmd_thresh = 0.05  # [rad]
-        maxvel = 0.075 * 130/60 * 2 * math.pi  # wheel radius * omega_no_load [m/s]
+        self.wheel_radius = rospy.get_param("~wheel_radius", 0.075)  # [m]
+        maxvel = self.wheel_radius * 130/60 * 2 * math.pi  # wheel radius * omega_no_load [m/s]
         self.max_vel = rospy.get_param("~max_translational_velocity", maxvel)  # [m/s]
 
         rospy.Subscriber("/joystick", Joystick, self.cmd_cb)
@@ -28,13 +32,13 @@ class Rover(object):
         self.drive_cmd_pub = rospy.Publisher("/cmd_drive", CommandDrive, queue_size=1)
 
     def cmd_cb(self, msg):
-        corner_cmd_msg = self.calculate_corner_positions(msg.steering)
+        desired_turning_radius = self.calculate_turning_radius(msg.steering)
+        corner_cmd_msg = self.calculate_corner_positions(desired_turning_radius)
         # temporarily convert (-50, 50) velocity range to actual velocity in m/s
         velocity = msg.vel * self.max_vel / 50
         rospy.logdebug("velocity drive cmd: {}".format(velocity))
         # TODO shouldn't supply commanded steering, should supply current steering.
-        drive_cmd_msg = self.calculate_drive_velocities(velocity, msg.steering)
-        rospy.logdebug("Steering: {}".format(msg.steering))
+        drive_cmd_msg = self.calculate_drive_velocities(velocity, desired_turning_radius)
         rospy.logdebug("drive cmd: {}".format(drive_cmd_msg))
         if self.corner_cmd_threshold(corner_cmd_msg):
             self.corner_cmd_pub.publish(corner_cmd_msg)
@@ -62,16 +66,16 @@ class Rover(object):
         """
         Calculate target velocities for the drive motors based on desired speed and current turning radius
 
-        :param int speed: Drive speed command range from -max_vel to max_vel
-        :param int radius: Current turning radius range from -250 to 250
+        :param speed: Drive speed command range from -max_vel to max_vel
+        :param radius: Current turning radius in m
         """
         # clip the value to the maximum allowed velocity
         speed = max(-self.max_vel, min(self.max_vel, speed))
         cmd_msg = CommandDrive()
-        if (speed == 0):
+        if speed == 0:
             return cmd_msg
 
-        elif (abs(current_radius) <= 5):  # No turning radius, all wheels same speed
+        elif abs(current_radius) >= self.max_radius:  # Very large turning radius, all wheels same speed
             cmd_msg.left_front_vel = speed
             cmd_msg.left_middle_vel = speed
             cmd_msg.left_back_vel = speed
@@ -80,62 +84,55 @@ class Rover(object):
             cmd_msg.right_front_vel = speed
 
             return cmd_msg
+
         else:
-            radius = 250 - (230 * abs(current_radius)) / 100.0
-            if radius < 0:
-                rmax *= -1
-            rmax = radius + self.d4
+            # the entire vehicle move with the same angular velocity dictated by the desired speed,
+            # around the radius of the turn. v = r * omega
+            angular_velocity_center = float(speed) / abs(current_radius)
+            # calculate desired velocities of all centers of wheels. Corner wheels on the same side
+            # move with the same velocity. v = r * omega again
+            vel_middle_closest = (current_radius - self.d4) * angular_velocity_center
+            vel_corner_closest = (current_radius - self.d1) * angular_velocity_center
+            vel_corner_farthest = (current_radius + self.d1) * angular_velocity_center
+            vel_middle_farthest = (current_radius + self.d4) * angular_velocity_center
 
-            a = math.pow(self.d2, 2)
-            b = math.pow(self.d3, 2)
-            c = math.pow(abs(radius) + self.d1, 2)
-            d = math.pow(abs(radius) - self.d1, 2)
-            e = abs(radius) - self.d4
-            rmax_float = float(rmax)
+            # now from these desired velocities, calculate the desired angular velocity of each wheel
+            # v = r * omega again
+            ang_vel_middle_closest = vel_middle_closest / self.wheel_radius
+            ang_vel_corner_closest = vel_corner_closest / self.wheel_radius
+            ang_vel_corner_farthest = vel_corner_farthest / self.wheel_radius
+            ang_vel_middle_farthest = vel_middle_farthest / self.wheel_radius
 
-            v1 = speed * math.sqrt(b + d) / rmax_float
-            v2 = speed * e / rmax_float  # Slowest wheel
-            v3 = speed * math.sqrt(a + d) / rmax_float
-            v4 = speed * math.sqrt(a + c) / rmax_float
-            v5 = speed  # Fastest wheel
-            v6 = speed * math.sqrt(b + c) / rmax_float
-
-            if current_radius < 0:
-                cmd_msg.left_front_vel = v4
-                cmd_msg.left_middle_vel = v5
-                cmd_msg.left_back_vel = v6
-                cmd_msg.right_back_vel = v1
-                cmd_msg.right_middle_vel = v2
-                cmd_msg.right_front_vel = v3
-            else:
-                cmd_msg.left_front_vel = v3
-                cmd_msg.left_middle_vel = v2
-                cmd_msg.left_back_vel = v1
-                cmd_msg.right_back_vel = v6
-                cmd_msg.right_middle_vel = v5
-                cmd_msg.right_front_vel = v4
+            if current_radius > 0:  # turning left
+                cmd_msg.left_front_vel = ang_vel_corner_closest
+                cmd_msg.left_back_vel = ang_vel_corner_closest
+                cmd_msg.left_middle_vel = ang_vel_middle_closest
+                cmd_msg.right_back_vel = ang_vel_corner_farthest
+                cmd_msg.right_front_vel = ang_vel_corner_farthest
+                cmd_msg.right_middle_vel = ang_vel_middle_farthest
+            else:  # turning right
+                cmd_msg.left_front_vel = ang_vel_corner_farthest
+                cmd_msg.left_back_vel = ang_vel_corner_farthest
+                cmd_msg.left_middle_vel = ang_vel_middle_farthest
+                cmd_msg.right_back_vel = ang_vel_corner_closest
+                cmd_msg.right_front_vel = ang_vel_corner_closest
+                cmd_msg.right_middle_vel = ang_vel_middle_closest
 
             return cmd_msg
 
-    def calculate_corner_positions(self, direction):
+    def calculate_corner_positions(self, radius):
         """
-        Takes a turning direction and computes the required angle for each corner motor
+        Takes a turning radius and computes the required angle for each corner motor
 
-        :param int direction: ranges from -100 (turning left) to 100 (turning right)
+        A small turning radius means a sharp turn
+        A large turning radius means mostly straight. Any radius larger than max_radius is essentially straight
+        because of the encoders' resolution
+
+        :param radius: positive value means turn left. 0.45 < abs(turning_radius) < inf
         """
         cmd_msg = CommandCorner()
-        if direction == 0:
-            return cmd_msg
 
-        # convert the direction to a physical turning radius
-        max_theta_cl = math.pi/4
-        # angle around z axis pointing up of wheel closest to center of circle
-        theta_cl = -float(direction) / 100.0 * max_theta_cl
-
-        radius = self.d1 + self.d3 / math.tan(abs(theta_cl))
-        rospy.logdebug("direction, theta, radius:\n{}, {}, {}\n".format(direction, theta_cl, radius))
-
-        if radius > 6.4:
+        if radius >= self.max_radius:
             return cmd_msg  # assume straight
 
         theta_front_closest = math.atan2(self.d3, radius - self.d1)
@@ -153,6 +150,27 @@ class Rover(object):
             cmd_msg.right_front_pos = -theta_front_closest
 
         return cmd_msg
+
+    def calculate_turning_radius(self, direction):
+        """
+        Convert a range (-100, 100) to an actual turning radius
+
+        :param direction: -100 is left, 100 is right
+        :return: physical turning radius in meter, clipped to the rover's limits
+        """
+        max_theta_cl = math.pi/4
+        # angle around z axis pointing up of wheel closest to center of circle
+        theta_cl = -float(direction) / 100.0 * max_theta_cl
+
+        radius = self.d1 + self.d3 / math.tan(abs(theta_cl))
+
+        # clip values so they lie in (-max_radius, -min_radius) or (min_radius, max_radius)
+        if radius > 0:
+            radius = max(self.min_radius, min(self.max_radius, radius))
+        else:
+            radius = max(-self.max_radius, min(-self.min_radius, radius))
+
+        return radius
 
 
 if __name__ == '__main__':
