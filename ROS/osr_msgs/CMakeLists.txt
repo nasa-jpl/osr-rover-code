@@ -53,7 +53,6 @@ find_package(catkin REQUIRED COMPONENTS
    FILES
    CommandDrive.msg
    CommandCorner.msg
-   Joystick.msg
    Status.msg
  )
 
