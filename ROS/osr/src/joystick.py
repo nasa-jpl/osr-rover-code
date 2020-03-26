@@ -103,7 +103,7 @@ def cartesian2polar_45(x,y):
 def two_joy(x,y,rt):
     max_vel = 0.3
     forward_vel = y**3 * max_vel
-    rotation = x * math.pi / 4
+    rotation = x**3 * math.pi / 4
 
     return forward_vel, rotation
 
