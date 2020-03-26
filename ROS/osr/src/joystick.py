@@ -19,9 +19,9 @@ def callback(data):
 
     led_msg = Int64MultiArray()
 
-    y =  data.axes[1]
-    x = -data.axes[0]
-    x1 =-data.axes[3]
+    y = data.axes[1]
+    x = data.axes[0]
+    x1 = data.axes[3]
     rt = data.axes[2]
 
     dpad = data.buttons[11:]
@@ -114,7 +114,7 @@ if __name__ == '__main__':
     rospy.loginfo('joystick started')
 
     sub = rospy.Subscriber("/joy", Joy, callback)
-    pub = rospy.Publisher('joystick', Joystick, queue_size=1)
+    pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
     led_pub = rospy.Publisher('led_cmds', Int64MultiArray, queue_size=1)
 
     rospy.spin()
