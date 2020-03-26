@@ -145,8 +145,8 @@ class Rover(object):
         if radius >= self.max_radius:
             return cmd_msg  # assume straight
 
-        theta_front_closest = math.atan2(self.d3, radius - self.d1)
-        theta_front_farthest = math.atan2(self.d3, radius + self.d1)
+        theta_front_closest = math.atan2(self.d3, abs(radius) - self.d1)
+        theta_front_farthest = math.atan2(self.d3, abs(radius) + self.d1)
 
         if radius > 0:
             cmd_msg.left_front_pos = theta_front_closest
