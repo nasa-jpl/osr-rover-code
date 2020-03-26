@@ -45,7 +45,8 @@ class Rover(object):
         rospy.logdebug("velocity drive cmd: {} m/s".format(velocity))
         # TODO shouldn't supply commanded steering, should supply current steering.
         drive_cmd_msg = self.calculate_drive_velocities(velocity, desired_turning_radius)
-        rospy.logdebug("drive cmd: {}".format(drive_cmd_msg))
+        rospy.logdebug("drive cmd:\n{}".format(drive_cmd_msg))
+        rospy.logdebug("corner cmd:\n{}".format(corner_cmd_msg)) 
         if self.corner_cmd_threshold(corner_cmd_msg):
             self.corner_cmd_pub.publish(corner_cmd_msg)
         self.drive_cmd_pub.publish(drive_cmd_msg)
