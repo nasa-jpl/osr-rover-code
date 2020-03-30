@@ -139,7 +139,8 @@ class RoboclawWrapper(object):
             enc_msg.position.append(self.tick2position(position,
                                                        self.encoder_limits[motor_name][0],
                                                        self.encoder_limits[motor_name][1],
-                                                       properties['ticks_per_rev']))
+                                                       properties['ticks_per_rev'],
+                                                       properties['gear_ratio']))
             enc_msg.velocity.append(self.qpps2velocity(velocity,
                                                        properties['ticks_per_rev'],
                                                        properties['gear_ratio']))
@@ -159,16 +160,20 @@ class RoboclawWrapper(object):
         # convert position to tick
         encmin, encmax = self.encoder_limits["corner_left_front"]
         left_front_tick = self.position2tick(cmd.left_front_pos, encmin, encmax,
-                                             self.roboclaw_mapping["corner_left_front"]["ticks_per_rev"])
+                                             self.roboclaw_mapping["corner_left_front"]["ticks_per_rev"],
+                                             self.roboclaw_mapping["corner_left_front"]["gear_ratio"])
         encmin, encmax = self.encoder_limits["corner_left_back"]
         left_back_tick = self.position2tick(cmd.left_back_pos, encmin, encmax,
-                                            self.roboclaw_mapping["corner_left_back"]["ticks_per_rev"])
+                                            self.roboclaw_mapping["corner_left_back"]["ticks_per_rev"],
+                                            self.roboclaw_mapping["corner_left_back"]["gear_ratio"])
         encmin, encmax = self.encoder_limits["corner_right_back"]
         right_back_tick = self.position2tick(cmd.right_back_pos, encmin, encmax,
-                                             self.roboclaw_mapping["corner_right_back"]["ticks_per_rev"])
+                                             self.roboclaw_mapping["corner_right_back"]["ticks_per_rev"],
+                                             self.roboclaw_mapping["corner_right_back"]["gear_ratio"])
         encmin, encmax = self.encoder_limits["corner_right_front"]
         right_front_tick = self.position2tick(cmd.right_front_pos, encmin, encmax,
-                                              self.roboclaw_mapping["corner_right_front"]["ticks_per_rev"])
+                                              self.roboclaw_mapping["corner_right_front"]["ticks_per_rev"],
+                                              self.roboclaw_mapping["corner_right_front"]["gear_ratio"])
 
         self.send_position_cmd(self.roboclaw_mapping["corner_left_front"]["address"],
                                self.roboclaw_mapping["corner_left_front"]["channel"],
@@ -304,7 +309,7 @@ class RoboclawWrapper(object):
         else:
             raise AttributeError("Received unknown channel '{}'. Expected M1 or M2".format(channel))
 
-    def tick2position(self, tick, enc_min, enc_max, ticks_per_rev):
+    def tick2position(self, tick, enc_min, enc_max, ticks_per_rev, gear_ratio):
         """
         Convert the absolute position from ticks to radian relative to the middle position
 
@@ -320,9 +325,9 @@ class RoboclawWrapper(object):
         mid = enc_min + (enc_max - enc_min) / 2
 
         # positive values correspond to the wheel turning left (z-axis points up)
-        return -(tick - mid) / ticks_per_rad
+        return -(tick - mid) / ticks_per_rad * gear_ratio
 
-    def position2tick(self, position, enc_min, enc_max, ticks_per_rev):
+    def position2tick(self, position, enc_min, enc_max, ticks_per_rev, gear_ratio):
         """
         Convert the absolute position from radian relative to the middle position to ticks
 
@@ -340,7 +345,7 @@ class RoboclawWrapper(object):
         if enc_min is None or enc_max is None:
             return position * ticks_per_rad
         mid = enc_min + (enc_max - enc_min) / 2
-        tick = int(mid + position * ticks_per_rad)
+        tick = int(mid + position * ticks_per_rad / gear_ratio)
 
         return max(enc_min, min(enc_max, tick))
 
