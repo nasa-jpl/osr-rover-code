@@ -163,10 +163,10 @@ class RoboclawWrapper(object):
         encmin, encmax = self.encoder_limits["corner_left_back"]
         left_back_tick = self.position2tick(cmd.left_back_pos, encmin, encmax,
                                             self.roboclaw_mapping["corner_left_back"]["ticks_per_rev"])
-        encmin, encmax = self.encoder_limits["corner_left_back"]
+        encmin, encmax = self.encoder_limits["corner_right_back"]
         right_back_tick = self.position2tick(cmd.right_back_pos, encmin, encmax,
                                              self.roboclaw_mapping["corner_right_back"]["ticks_per_rev"])
-        encmin, encmax = self.encoder_limits["corner_left_back"]
+        encmin, encmax = self.encoder_limits["corner_right_front"]
         right_front_tick = self.position2tick(cmd.right_front_pos, encmin, encmax,
                                               self.roboclaw_mapping["corner_right_front"]["ticks_per_rev"])
 
