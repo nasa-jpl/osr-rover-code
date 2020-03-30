@@ -29,23 +29,26 @@ roboclaw_mapping:
     channel: M1
     ticks_per_rev: 48
     gear_ratio: 74.83
+  # gear ratio for the corner motors is 16/48 as the CPR is measured after the gearbox, but
+  # to the output shaft through the gears connecting the absolute encoder
+  # ticks per revolution for the absolute analog encoders: 0-2V with 1mV steps --> 2000
   corner_left_front:
     address: 132
     channel: M2
-    ticks_per_rev: 4000
-    gear_ratio: 189
+    ticks_per_rev: 2000
+    gear_ratio: 0.3333
   corner_left_back:
     address: 132
     channel: M1
-    ticks_per_rev: 4000
-    gear_ratio: 189
+    ticks_per_rev: 2000
+    gear_ratio: 0.3333
   corner_right_back:
     address: 131
     channel: M2
-    ticks_per_rev: 4000
-    gear_ratio: 189
+    ticks_per_rev: 2000
+    gear_ratio: 0.3333
   corner_right_front:
     address: 131
     channel: M1
-    ticks_per_rev: 4000
-    gear_ratio: 189
+    ticks_per_rev: 2000
+    gear_ratio: 0.3333
