@@ -24,6 +24,7 @@ class RoboclawWrapper(object):
 
         self.roboclaw_mapping = rospy.get_param('~roboclaw_mapping')
         self.encoder_limits = {}
+        self.encoder_ticks_per_rev = {}
         self.establish_roboclaw_connections()
         self.killMotors()  # don't move at start
         self.setup_encoders()
@@ -123,7 +124,11 @@ class RoboclawWrapper(object):
             if "corner" in motor_name:
                 enc_min, enc_max = self.read_encoder_limits(properties["address"], properties["channel"])
                 self.encoder_limits[motor_name] = (enc_min, enc_max)
+                ## ticks per 360 degree motor revolution * gear ratio
+                self.encoder_ticks_per_rev[motor_name] = int((enc_max - enc_min)*4.0*self.roboclaw_mapping[motor_name]["gear_ratio"])
+                rospy.set_param("/roboclaw_wrapper/roboclaw_mapping/" + str(motor_name), self.encoder_ticks_per_rev[motor_name])
             else:
+                self.encoder_ticks_per_rev[motor_name] = self.roboclaw_mapping[motor_name]["ticks_per_rev"]
                 self.encoder_limits[motor_name] = (None, None)
                 self.rc.ResetEncoders(properties["address"])
 
@@ -139,10 +144,10 @@ class RoboclawWrapper(object):
             enc_msg.position.append(self.tick2position(position,
                                                        self.encoder_limits[motor_name][0],
                                                        self.encoder_limits[motor_name][1],
-                                                       properties['ticks_per_rev'],
+                                                       self.encoder_ticks_per_rev[motor_name],
                                                        properties['gear_ratio']))
             enc_msg.velocity.append(self.qpps2velocity(velocity,
-                                                       properties['ticks_per_rev'],
+                                                       self.encoder_ticks_per_rev[motor_name],
                                                        properties['gear_ratio']))
             enc_msg.effort.append(current)
 
@@ -160,19 +165,19 @@ class RoboclawWrapper(object):
         # convert position to tick
         encmin, encmax = self.encoder_limits["corner_left_front"]
         left_front_tick = self.position2tick(cmd.left_front_pos, encmin, encmax,
-                                             self.roboclaw_mapping["corner_left_front"]["ticks_per_rev"],
+                                             self.encoder_ticks_per_rev["corner_left_front"],
                                              self.roboclaw_mapping["corner_left_front"]["gear_ratio"])
         encmin, encmax = self.encoder_limits["corner_left_back"]
         left_back_tick = self.position2tick(cmd.left_back_pos, encmin, encmax,
-                                            self.roboclaw_mapping["corner_left_back"]["ticks_per_rev"],
+                                            self.encoder_ticks_per_rev["corner_left_back"],
                                             self.roboclaw_mapping["corner_left_back"]["gear_ratio"])
         encmin, encmax = self.encoder_limits["corner_right_back"]
         right_back_tick = self.position2tick(cmd.right_back_pos, encmin, encmax,
-                                             self.roboclaw_mapping["corner_right_back"]["ticks_per_rev"],
+                                             self.encoder_ticks_per_rev["corner_right_back"],
                                              self.roboclaw_mapping["corner_right_back"]["gear_ratio"])
         encmin, encmax = self.encoder_limits["corner_right_front"]
         right_front_tick = self.position2tick(cmd.right_front_pos, encmin, encmax,
-                                              self.roboclaw_mapping["corner_right_front"]["ticks_per_rev"],
+                                              self.encoder_ticks_per_rev["corner_right_front"],
                                               self.roboclaw_mapping["corner_right_front"]["gear_ratio"])
 
         self.send_position_cmd(self.roboclaw_mapping["corner_left_front"]["address"],

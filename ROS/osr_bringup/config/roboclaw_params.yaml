@@ -36,20 +36,16 @@ roboclaw_mapping:
   corner_left_front:
     address: 132
     channel: M2
-    ticks_per_rev: 2000
     gear_ratio: 0.3333
   corner_left_back:
     address: 132
     channel: M1
-    ticks_per_rev: 2000
     gear_ratio: 0.3333
   corner_right_back:
     address: 131
     channel: M2
-    ticks_per_rev: 2000
     gear_ratio: 0.3333
   corner_right_front:
     address: 131
     channel: M1
-    ticks_per_rev: 2000
     gear_ratio: 0.3333
