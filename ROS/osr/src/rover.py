@@ -26,6 +26,8 @@ class Rover(object):
         drive_no_load_rpm = rospy.get_param("/drive_no_load_rpm", 130)
         speed_adjustment_factor = rospy.get_param("/speed_adjustment_factor", 1.0)
         self.max_vel = self.wheel_radius * drive_no_load_rpm / 60 * 2 * math.pi * speed_adjustment_factor  # [m/s]
+        self.curr_twist = Twist()
+        self.curr_turning_radius = self.max_radius
 
         rospy.Subscriber("/cmd_vel", Twist, self.cmd_cb)
         rospy.Subscriber("/encoder", JointState, self.enc_cb)
@@ -34,7 +36,7 @@ class Rover(object):
         self.drive_cmd_pub = rospy.Publisher("/cmd_drive", CommandDrive, queue_size=1)
 
     def cmd_cb(self, twist_msg):
-        desired_turning_radius = self.calculate_turning_radius(twist_msg.angular.z)
+        desired_turning_radius = self.angle_to_turning_radius(twist_msg.angular.z)
         rospy.logdebug("desired turning radius: {}".format(desired_turning_radius))
         corner_cmd_msg = self.calculate_corner_positions(desired_turning_radius)
 
@@ -44,8 +46,8 @@ class Rover(object):
             max_vel = self.max_vel
         velocity = min(max_vel, twist_msg.linear.x)
         rospy.logdebug("velocity drive cmd: {} m/s".format(velocity))
-        # TODO shouldn't supply commanded steering, should supply current steering.
-        drive_cmd_msg = self.calculate_drive_velocities(velocity, desired_turning_radius)
+
+        drive_cmd_msg = self.calculate_drive_velocities(velocity, self.curr_turning_radius)
         rospy.logdebug("drive cmd:\n{}".format(drive_cmd_msg))
         rospy.logdebug("corner cmd:\n{}".format(corner_cmd_msg)) 
         if self.corner_cmd_threshold(corner_cmd_msg):
@@ -54,6 +56,8 @@ class Rover(object):
 
     def enc_cb(self, msg):
         self.curr_positions = dict(zip(msg.name, msg.position))
+        self.curr_velocities = dict(zip(msg.name, msg.velocity))
+        self.forward_kinematics()
 
     def corner_cmd_threshold(self, corner_cmd):
         try:
@@ -162,11 +166,12 @@ class Rover(object):
 
         return cmd_msg
 
-    def calculate_turning_radius(self, angle):
+    def angle_to_turning_radius(self, angle, clip=True):
         """
         Convert a commanded angle into an actual turning radius
 
         :param angle: angle around the vertical which expresses how much the rover will rotate if it moves forward
+        :param clip: whether the values should be clipped from min_radius to max_radius
         :return: physical turning radius in meter, clipped to the rover's limits
         """
         try:
@@ -175,6 +180,8 @@ class Rover(object):
             return float("Inf")
         
         # clip values so they lie in (-max_radius, -min_radius) or (min_radius, max_radius)
+        if not clip:
+            return radius
         if radius > 0:
             radius = max(self.min_radius, min(self.max_radius, radius))
         else:
@@ -182,9 +189,38 @@ class Rover(object):
 
         return radius
 
+    def forward_kinematics(self):
+        """
+        Calculate current twist of the rover given current drive and corner motor velocities
+        Also approximate current turning radius.
+
+        Note that forward kinematics means solving an overconstrained system since the corner 
+        motors may not be aligned perfectly and drive velocities might fight each other
+        """
+        # calculate current turning radius according to each corner wheel's angle
+        theta_fl = self.curr_positions['corner_left_front']
+        theta_fr = self.curr_positions['corner_right_front']
+        theta_bl = self.curr_positions['corner_left_back']
+        theta_br = self.curr_positions['corner_right_back']
+        # sum wheel angles to find out which direction the rover is mostly turning in
+        if theta_fl + theta_fr + theta_bl + theta_br > 0:  # turning left
+            r_front_closest = self.d1 + self.angle_to_turning_radius(theta_fl, clip=False)
+            r_front_farthest = -self.d1 + self.angle_to_turning_radius(theta_fr, clip=False)
+            r_back_closest = -self.d1 - self.angle_to_turning_radius(theta_bl, clip=False)
+            r_back_farthest = self.d1 - self.angle_to_turning_radius(theta_br, clip=False)
+        else:  # turning right
+            r_front_farthest = self.d1 + self.angle_to_turning_radius(theta_fl, clip=False)
+            r_front_closest = -self.d1 + self.angle_to_turning_radius(theta_fr, clip=False)
+            r_back_farthest = -self.d1 - self.angle_to_turning_radius(theta_bl, clip=False)
+            r_back_closest = self.d1 - self.angle_to_turning_radius(theta_br, clip=False)
+        # get a best estimate of the turning radius by taking the median value (avg sensitive to outliers)
+        approx_turning_radius = sum(sorted([r_front_farthest, r_front_closest, r_back_farthest, r_back_closest])[1:3])/2.0
+        rospy.logdebug("Current approximate turning radius: {}".format(round(approx_turning_radius, 2)))
+        self.curr_turning_radius = approx_turning_radius
+
 
 if __name__ == '__main__':
-    rospy.init_node('rover', log_level=rospy.INFO)
+    rospy.init_node('rover', log_level=rospy.DEBUG)
     rospy.loginfo("Starting the rover node")
     rover = Rover()
     rospy.spin()
