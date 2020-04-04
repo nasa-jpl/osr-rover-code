@@ -17,7 +17,15 @@
 	<node name="roboclaw_wrapper" pkg="osr" type="roboclaw_wrapper.py" output="screen">
 		<rosparam command="load" file="$(find osr_bringup)/config/roboclaw_params.yaml"/>
 	</node>
-	<node name="joystick" pkg="osr" type="joystick.py" output="screen"/>
+        <node name="joy2twist" pkg="teleop_twist_joy" type="teleop_node">
+            <param name="enable_button" value="4"/>  <!-- which button to press to enable movement-->
+            <param name="enable_turbo_button" value="5"/>  <!-- -1: disable turbo -->
+            <param name="axis_linear" value="1"/>  <!-- which joystick axis to use for driving -->
+            <param name="axis_angular" value="3"/>  <!-- which joystick axis to use for turning -->
+            <param name="scale_linear" value="0.05"/>  <!-- scale to apply to drive speed, in m/s -->
+            <param name="scale_angular" value="0.45"/>  <!-- scale to apply to angular speed, in rad/s -->
+            <param name="scale_linear_turbo" value="0.5"/>  <!-- scale to apply to linear speed, in m/s -->
+        </node>
 	<rosparam command="load" file="$(find osr_bringup)/config/physical_properties.yaml"/>
 	<node name="rover" pkg="osr" type="rover.py" output="screen"/>
 	<node name="led_screen" pkg="led_screen" type="screen.py"/>
