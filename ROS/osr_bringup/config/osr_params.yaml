@@ -1,0 +1,5 @@
+motor_controller:
+  baud: 115200
+  device: "/dev/serial0"
+  addresses: "128,129,130,131,132"
+

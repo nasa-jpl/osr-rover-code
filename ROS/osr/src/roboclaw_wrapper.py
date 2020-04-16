@@ -91,11 +91,11 @@ class RoboclawWrapper(object):
 
         :raises Exception: when connection to one or more of the roboclaws is unsuccessful
         """
-        self.rc = Roboclaw(rospy.get_param('motor_controller_device', "/dev/serial0"),
-                           rospy.get_param('baud_rate', 115200))
+        self.rc = Roboclaw(rospy.get_param('/motor_controller/device', "/dev/serial0"),
+                           rospy.get_param('/motor_controller/baud_rate', 115200))
         self.rc.Open()
 
-        address_raw = rospy.get_param('motor_controller_addresses')
+        address_raw = rospy.get_param('motor_controller/addresses')
         address_list = (address_raw.split(','))
         self.address = [None]*len(address_list)
         for i in range(len(address_list)):
