@@ -2,7 +2,7 @@
 import serial
 import math
 import rospy
-
+import time
 from roboclaw import Roboclaw
 
 from sensor_msgs.msg import JointState
@@ -63,7 +63,7 @@ class RoboclawWrapper(object):
         while not rospy.is_shutdown():
 
             while self.mutex and not rospy.is_shutdown():
-                mutex_rate.sleep()
+                time.sleep(0.001)
             self.mutex = True
 
             # read from roboclaws and publish
@@ -153,7 +153,7 @@ class RoboclawWrapper(object):
         rospy.logdebug("Corner command callback received: {}".format(cmd))
 
         while self.mutex and not rospy.is_shutdown():
-            r.sleep()
+            time.sleep(0.001)
 
         self.mutex = True
 
@@ -194,10 +194,29 @@ class RoboclawWrapper(object):
         rospy.logdebug("Drive command callback received: {}".format(cmd))
 
         while self.mutex and not rospy.is_shutdown():
-            r.sleep()
+            time.sleep(0.001)
 
         self.mutex = True
+        
+        props = self.roboclaw_mapping["drive_left_front"]
+        self.send_duty_cmd(props["address"], props["channel"], int(cmd.left_front_vel))
 
+        props = self.roboclaw_mapping["drive_left_middle"]
+        self.send_duty_cmd(props["address"], props["channel"], int(cmd.left_middle_vel))
+
+        props = self.roboclaw_mapping["drive_left_back"]
+        self.send_duty_cmd(props["address"], props["channel"], int(cmd.left_back_vel))
+
+        props = self.roboclaw_mapping["drive_right_back"]
+        self.send_duty_cmd(props["address"], props["channel"], int(cmd.right_back_vel))
+
+        props = self.roboclaw_mapping["drive_right_middle"]
+        self.send_duty_cmd(props["address"], props["channel"], int(cmd.right_middle_vel))
+
+        props = self.roboclaw_mapping["drive_right_front"]
+        self.send_duty_cmd(props["address"], props["channel"], int(cmd.right_front_vel))
+        
+        """
         props = self.roboclaw_mapping["drive_left_front"]
         vel_cmd = self.velocity2qpps(cmd.left_front_vel, props["ticks_per_rev"], props["gear_ratio"])
         self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
@@ -221,7 +240,7 @@ class RoboclawWrapper(object):
         props = self.roboclaw_mapping["drive_right_front"]
         vel_cmd = self.velocity2qpps(cmd.right_front_vel, props["ticks_per_rev"], props["gear_ratio"])
         self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
-
+        """
         self.mutex = False
 
     def send_position_cmd(self, address, channel, target_tick):
@@ -268,6 +287,29 @@ class RoboclawWrapper(object):
         assert result[0] == 1
         return (result[-2], result[-1])
 
+    def send_duty_cmd(self, address, channel, speed):
+        """
+        Wrapper to send one of the speed commands.
+        
+        :param address:
+        :param channel:
+        :param speed:
+        """
+        
+        speed = speed/100.0 # scale speed to percent
+        max_duty = self.roboclaw_overflow * 0.5 # max speed/duty is half what the roboclaws can do 
+        duty = max(-max_duty, min(max_duty, speed * self.roboclaw_overflow))
+        accel = self.accel_pos
+        
+        if speed < 0:
+            accel = self.accel_neg
+        if channel == "M1":
+            return self.rc.DutyAccelM1(address, accel, int(duty))
+        elif channel == "M2":
+            return self.rc.DutyAccelM2(address, accel, int(duty))
+        else:
+            raise AttributeError("Recieved unknown channel '{}'. Expected M1 or M2".format(channel))
+        
     def send_velocity_cmd(self, address, channel, target_qpps):
         """
         Wrapper around one of the send velocity commands
