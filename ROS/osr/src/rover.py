@@ -44,7 +44,8 @@ class Rover(object):
         velocity = msg.vel * max_vel / 50
         rospy.logdebug("velocity drive cmd: {} m/s".format(velocity))
         # TODO shouldn't supply commanded steering, should supply current steering.
-        drive_cmd_msg = self.calculate_drive_velocities(velocity, desired_turning_radius)
+        #drive_cmd_msg = self.calculate_drive_velocities(velocity, desired_turning_radius)
+        drive_cmd_msg = self.calculate_drive_ratios(msg.vel, desired_turning_radius)
         rospy.logdebug("drive cmd:\n{}".format(drive_cmd_msg))
         rospy.logdebug("corner cmd:\n{}".format(corner_cmd_msg)) 
         if self.corner_cmd_threshold(corner_cmd_msg):
@@ -68,6 +69,65 @@ class Rover(object):
                 return False
         except AttributeError:  # haven't received current encoder positions yet
             return True
+
+    def calculate_drive_ratios(self, speed, current_radius):
+        """
+        Calculate target speed ratios for the drive motors based on desired speed and current turning radius.
+        
+        :param speed: Drive speed command range from -max_vel to max_vel, with max vel depending on the turning radius.
+        :param radius: Current turning radius in meters.
+        """
+        # clip the value to the maximum allowed velocity
+        
+        
+        cmd_msg = CommandDrive()
+        if speed == 0:
+            return cmd_msg
+
+        elif abs(current_radius) >= self.max_radius:  # Very large turning radius, all wheels same speed 
+            cmd_msg.left_front_vel = speed
+            cmd_msg.left_middle_vel = speed
+            cmd_msg.left_back_vel = speed
+            cmd_msg.right_back_vel = speed
+            cmd_msg.right_middle_vel = speed
+            cmd_msg.right_front_vel = speed
+
+            return cmd_msg
+
+        else:
+            # for the calculations, we assume positive radius (turn left) and adjust later
+            radius = abs(current_radius)
+            # the entire vehicle moves with the same angular velocity dictated by the desired speed,
+            # around the radius of the turn. v = r * omega
+            angular_velocity_center = float(speed) / radius
+            # calculate desired velocities of all centers of wheels. Corner wheels on the same side
+            # move with the same velocity. v = r * omega again
+            r1 = (radius - self.d4)
+            r2 = ((self.d3**2 + (radius - self.d1)**2)**0.5)
+            r3 = ((self.d3**2 + (radius + self.d1)**2)**0.5)
+            r4 = (radius + self.d4)
+            
+            vel_middle_closest =  (r1/r4) * speed
+            vel_corner_closest =  (r2/r4) * speed
+            vel_corner_farthest = (r3/r4) * speed
+            vel_middle_farthest = speed
+
+            if current_radius > 0:  # turning left
+                cmd_msg.left_front_vel = vel_corner_closest
+                cmd_msg.left_back_vel = vel_corner_closest
+                cmd_msg.left_middle_vel = vel_middle_closest
+                cmd_msg.right_back_vel = vel_corner_farthest
+                cmd_msg.right_front_vel = vel_corner_farthest
+                cmd_msg.right_middle_vel = vel_middle_farthest
+            else:  # turning right
+                cmd_msg.left_front_vel = vel_corner_farthest
+                cmd_msg.left_back_vel = vel_corner_farthest
+                cmd_msg.left_middle_vel = vel_middle_farthest
+                cmd_msg.right_back_vel = vel_corner_closest
+                cmd_msg.right_front_vel = vel_corner_closest
+                cmd_msg.right_middle_vel = vel_middle_closest
+
+            return cmd_msg
 
     def calculate_drive_velocities(self, speed, current_radius):
         """
