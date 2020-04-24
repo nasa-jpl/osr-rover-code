@@ -202,11 +202,14 @@ int* Screen::get_color(int num){
 }
 
 void Screen::display_face(int face){
-  if (face == 0x01){
+  if (face == 0x00){
+    happy_face();
+  }
+  else if (face == 0x01){
     eight_bit_face();
   }
-  else if (face == 0x00){
-    happy_face();
+  else if (face == 0x02){
+    shocked_face();
   }
 }
 
@@ -265,9 +268,21 @@ void Screen::happy_eye(int x, int y, int rgb[]){
   
 }
 
-
 void Screen::sleepy_eye(int x, int y, int rgb[]){
   RGBmatrixPanel::drawLine(x-2,y,x+2,y,RGBmatrixPanel::Color444(rgb[0],rgb[1],rgb[2]));
+}
+
+void Screen::shocked_eye(int x, int y, int rgb[]){
+	RGBmatrixPanel::drawLine(x-2,y-2,x+2,y+2,RGBmatrixPanel::Color444(rgb[0],rgb[1],rgb[2]));
+  RGBmatrixPanel::drawLine(x-2,y+2,x+2,y-2,RGBmatrixPanel::Color444(rgb[0],rgb[1],rgb[2]));
+}
+
+void Screen::eight_bit_eye(int x, int y){
+  RGBmatrixPanel::fillCircle(x,y,2,RGBmatrixPanel::Color444(0,0,15));
+  RGBmatrixPanel::drawLine(x-1,y-1,x-1,y+1,RGBmatrixPanel::Color444(3,0,15));
+  RGBmatrixPanel::drawLine(x,y+1,x+1,y+1,RGBmatrixPanel::Color444(3,0,15));
+  RGBmatrixPanel::drawLine(x,y-1,x+1,y-1,RGBmatrixPanel::Color444(WHITE));
+  RGBmatrixPanel::drawLine(x,y,x+1,y,RGBmatrixPanel::Color444(WHITE));
 }
 
 void Screen::happy_mouth(int x, int y, int rgb[]){
@@ -276,13 +291,6 @@ void Screen::happy_mouth(int x, int y, int rgb[]){
   RGBmatrixPanel::drawLine(x+3,y+2,x+5,y,RGBmatrixPanel::Color444(rgb[0],rgb[1],rgb[2]));
   RGBmatrixPanel::drawPixel(x-4,y-1,RGBmatrixPanel::Color444(rgb[0],rgb[1],rgb[2]));
   RGBmatrixPanel::drawPixel(x+5,y-1,RGBmatrixPanel::Color444(rgb[0],rgb[1],rgb[2]));
-}
-
-void Screen::circle_cheek(int x, int y, int rgb[]){
-  RGBmatrixPanel::drawLine(x-1,y,x-1,y+1,RGBmatrixPanel::Color444(rgb[0],rgb[1],rgb[2]));
-  RGBmatrixPanel::drawLine(x+2,y,x+2,y+1,RGBmatrixPanel::Color444(rgb[0],rgb[1],rgb[2]));
-  RGBmatrixPanel::drawLine(x,y-1,x+1,y-1,RGBmatrixPanel::Color444(rgb[0],rgb[1],rgb[2]));
-  RGBmatrixPanel::drawLine(x,y+2,x+1,y+2,RGBmatrixPanel::Color444(rgb[0],rgb[1],rgb[2]));
 }
 
 
@@ -299,18 +307,24 @@ void Screen::cute_mouth(int x, int y, int rgb[]){
   //RGBmatrixPanel::drawPixel(x-4,y-1,RGBmatrixPanel::Color444(r,g,b));
   //RGBmatrixPanel::drawPixel(x+5,y-1,RGBmatrixPanel::Color444(r,g,b));
 }
+
+void Screen::open_mouth(int x, int y, int rgb[]){
+	RGBmatrixPanel::drawLine(x-2,y-1,x+2,y-1,RGBmatrixPanel::Color444(rgb[0],rgb[1],rgb[2]));
+	RGBmatrixPanel::drawLine(x+2,y-1,x+2,y+2,RGBmatrixPanel::Color444(rgb[0],rgb[1],rgb[2]));
+	RGBmatrixPanel::drawLine(x+2,y+2,x-2,y+2,RGBmatrixPanel::Color444(rgb[0],rgb[1],rgb[2]));
+	RGBmatrixPanel::drawLine(x-2,y+2,x-2,y-1,RGBmatrixPanel::Color444(rgb[0],rgb[1],rgb[2]));
+}
+
+void Screen::circle_cheek(int x, int y, int rgb[]){
+  RGBmatrixPanel::drawLine(x-1,y,x-1,y+1,RGBmatrixPanel::Color444(rgb[0],rgb[1],rgb[2]));
+  RGBmatrixPanel::drawLine(x+2,y,x+2,y+1,RGBmatrixPanel::Color444(rgb[0],rgb[1],rgb[2]));
+  RGBmatrixPanel::drawLine(x,y-1,x+1,y-1,RGBmatrixPanel::Color444(rgb[0],rgb[1],rgb[2]));
+  RGBmatrixPanel::drawLine(x,y+2,x+1,y+2,RGBmatrixPanel::Color444(rgb[0],rgb[1],rgb[2]));
+}
     
 void Screen::cute_cheeks(int x, int y, int rgb[]){
    RGBmatrixPanel::drawLine(x-2,y-1,x+1,y-1,RGBmatrixPanel::Color444(rgb[0],rgb[1],rgb[2]));
    RGBmatrixPanel::drawLine(x-2,y,x+1,y,RGBmatrixPanel::Color444(rgb[0],rgb[1],rgb[2]));
-}
-    
-void Screen::eight_bit_eye(int x, int y){
-  RGBmatrixPanel::fillCircle(x,y,2,RGBmatrixPanel::Color444(0,0,15));
-  RGBmatrixPanel::drawLine(x-1,y-1,x-1,y+1,RGBmatrixPanel::Color444(3,0,15));
-  RGBmatrixPanel::drawLine(x,y+1,x+1,y+1,RGBmatrixPanel::Color444(3,0,15));
-  RGBmatrixPanel::drawLine(x,y-1,x+1,y-1,RGBmatrixPanel::Color444(WHITE));
-  RGBmatrixPanel::drawLine(x,y,x+1,y,RGBmatrixPanel::Color444(WHITE));
 }
     
     
@@ -337,6 +351,32 @@ void Screen::happy_face(){
 	cute_cheeks(7,9,cheek_color);
 	cute_cheeks(22,9,cheek_color);
   
+}
+
+void Screen::shocked_face(){
+/*
+  oooooooooooooooooooooooooooooooo
+  oooooooooooooooooooooooooooooooo
+  oooooooooooooooooooooooooooooooo
+  oooooooo●ooo●ooo●ooo●ooooooooooo
+  ooooooooo●o●ooooo●o●oooooooooooo
+  oooooooooo●ooooooo●ooooooooooooo
+  ooooooooo●o●ooooo●o●oooooooooooo
+  oooooooo●ooo●ooo●ooo●ooooooooooo
+  oooooooooooooooooooooooooooooooo
+  oooooooooooooooooooooooooooooooo
+  oooooooooooo●●●●●ooooooooooooooo
+  oooooooooooo●ooo●ooooooooooooooo
+  oooooooooooo●ooo●ooooooooooooooo
+  oooooooooooo●●●●●ooooooooooooooo
+  oooooooooooooooooooooooooooooooo
+  oooooooooooooooooooooooooooooooo
+*/
+	int eye_color[] = {15,0,0};
+	int mouth_color[] = {15,0,0};
+	shocked_eye(10,5,eye_color);
+	shocked_eye(18,5,eye_color);
+	open_mouth(14,11,mouth_color);
 }
     
 void Screen::sleepy_face(){
