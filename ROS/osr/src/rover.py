@@ -36,7 +36,7 @@ class Rover(object):
         self.drive_cmd_pub = rospy.Publisher("/cmd_drive", CommandDrive, queue_size=1)
 
     def cmd_cb(self, twist_msg):
-        desired_turning_radius = self.angle_to_turning_radius(twist_msg.angular.z)
+        desired_turning_radius = self.twist_to_turning_radius(twist_msg)
         rospy.logdebug("desired turning radius: {}".format(desired_turning_radius))
         corner_cmd_msg = self.calculate_corner_positions(desired_turning_radius)
 
@@ -166,16 +166,20 @@ class Rover(object):
 
         return cmd_msg
 
-    def angle_to_turning_radius(self, angle, clip=True):
+    def twist_to_turning_radius(self, twist, clip=True):
         """
-        Convert a commanded angle into an actual turning radius
+        Convert a commanded twist into an actual turning radius
 
-        :param angle: angle around the vertical which expresses how much the rover will rotate if it moves forward
+        ackermann steering: if l is distance travelled, rho the turning radius, and theta the heading of the middle of the robot,
+        then: dl = rho * dtheta. With dt -> 0, dl/dt = rho * dtheta/dt
+        dl/dt = twist.linear.x, dtheta/dt = twist.angular.z
+
+        :param twist: geometry_msgs/Twist. Only linear.x and angular.z are used
         :param clip: whether the values should be clipped from min_radius to max_radius
         :return: physical turning radius in meter, clipped to the rover's limits
         """
         try:
-            radius = self.d3 / math.tan(angle)
+            radius = twist.linear.x / twist.angular.z
         except ZeroDivisionError:
             return float("Inf")
         
@@ -186,6 +190,21 @@ class Rover(object):
             radius = max(self.min_radius, min(self.max_radius, radius))
         else:
             radius = max(-self.max_radius, min(-self.min_radius, radius))
+
+        return radius
+
+    def angle_to_turning_radius(self, angle):
+        """
+        Convert the angle of a virtual wheel positioned in the middle of the front two wheels to a turning radius
+        Turning left and positive angle corresponds to a positive turning radius
+
+        :param angle: [-pi/4, pi/4]
+        :return: turning radius for the given angle in [m]
+        """
+        try:
+            radius = self.d3 / math.tan(angle)
+        except ZeroDivisionError:
+            return float("Inf")
 
         return radius
 
@@ -204,17 +223,19 @@ class Rover(object):
         theta_br = self.curr_positions['corner_right_back']
         # sum wheel angles to find out which direction the rover is mostly turning in
         if theta_fl + theta_fr + theta_bl + theta_br > 0:  # turning left
-            r_front_closest = self.d1 + self.angle_to_turning_radius(theta_fl, clip=False)
-            r_front_farthest = -self.d1 + self.angle_to_turning_radius(theta_fr, clip=False)
-            r_back_closest = -self.d1 - self.angle_to_turning_radius(theta_bl, clip=False)
-            r_back_farthest = self.d1 - self.angle_to_turning_radius(theta_br, clip=False)
+            r_front_closest = self.d1 + self.angle_to_turning_radius(theta_fl)
+            r_front_farthest = -self.d1 + self.angle_to_turning_radius(theta_fr)
+            r_back_closest = -self.d1 - self.angle_to_turning_radius(theta_bl)
+            r_back_farthest = self.d1 - self.angle_to_turning_radius(theta_br)
         else:  # turning right
-            r_front_farthest = self.d1 + self.angle_to_turning_radius(theta_fl, clip=False)
-            r_front_closest = -self.d1 + self.angle_to_turning_radius(theta_fr, clip=False)
-            r_back_farthest = -self.d1 - self.angle_to_turning_radius(theta_bl, clip=False)
-            r_back_closest = self.d1 - self.angle_to_turning_radius(theta_br, clip=False)
+            r_front_farthest = self.d1 + self.angle_to_turning_radius(theta_fl)
+            r_front_closest = -self.d1 + self.angle_to_turning_radius(theta_fr)
+            r_back_farthest = -self.d1 - self.angle_to_turning_radius(theta_bl)
+            r_back_closest = self.d1 - self.angle_to_turning_radius(theta_br)
         # get a best estimate of the turning radius by taking the median value (avg sensitive to outliers)
         approx_turning_radius = sum(sorted([r_front_farthest, r_front_closest, r_back_farthest, r_back_closest])[1:3])/2.0
+        if math.isnan(approx_turning_radius):
+            approx_turning_radius = float("Inf")
         rospy.logdebug("Current approximate turning radius: {}".format(round(approx_turning_radius, 2)))
         self.curr_turning_radius = approx_turning_radius
 
