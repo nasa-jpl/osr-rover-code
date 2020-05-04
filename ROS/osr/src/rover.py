@@ -4,7 +4,8 @@ import rospy
 import math
 
 from sensor_msgs.msg import JointState
-from osr_msgs.msg import Joystick, CommandDrive, CommandCorner
+from geometry_msgs.msg import Twist
+from osr_msgs.msg import CommandDrive, CommandCorner
 
 
 class Rover(object):
@@ -26,22 +27,22 @@ class Rover(object):
         speed_adjustment_factor = rospy.get_param("/speed_adjustment_factor", 1.0)
         self.max_vel = self.wheel_radius * drive_no_load_rpm / 60 * 2 * math.pi * speed_adjustment_factor  # [m/s]
 
-        rospy.Subscriber("/joystick", Joystick, self.cmd_cb)
+        rospy.Subscriber("/cmd_vel", Twist, self.cmd_cb)
         rospy.Subscriber("/encoder", JointState, self.enc_cb)
 
         self.corner_cmd_pub = rospy.Publisher("/cmd_corner", CommandCorner, queue_size=1)
         self.drive_cmd_pub = rospy.Publisher("/cmd_drive", CommandDrive, queue_size=1)
 
-    def cmd_cb(self, msg):
-        desired_turning_radius = self.calculate_turning_radius(msg.steering)
+    def cmd_cb(self, twist_msg):
+        desired_turning_radius = self.calculate_turning_radius(twist_msg.angular.z)
         rospy.logdebug("desired turning radius: {}".format(desired_turning_radius))
         corner_cmd_msg = self.calculate_corner_positions(desired_turning_radius)
-        # temporarily convert (-50, 50) velocity range to actual velocity in m/s
+
         # if we're turning, calculate the max velocity the middle of the rover can go
         max_vel = abs(desired_turning_radius) / (abs(desired_turning_radius) + self.d1) * self.max_vel
         if math.isnan(max_vel):  # turning radius infinite, going straight
             max_vel = self.max_vel
-        velocity = msg.vel * max_vel / 50
+        velocity = min(max_vel, twist_msg.linear.x)
         rospy.logdebug("velocity drive cmd: {} m/s".format(velocity))
         # TODO shouldn't supply commanded steering, should supply current steering.
         drive_cmd_msg = self.calculate_drive_velocities(velocity, desired_turning_radius)
@@ -161,19 +162,15 @@ class Rover(object):
 
         return cmd_msg
 
-    def calculate_turning_radius(self, direction):
+    def calculate_turning_radius(self, angle):
         """
-        Convert a range (-100, 100) to an actual turning radius
+        Convert a commanded angle into an actual turning radius
 
-        :param direction: -100 is left, 100 is right
+        :param angle: angle around the vertical which expresses how much the rover will rotate if it moves forward
         :return: physical turning radius in meter, clipped to the rover's limits
         """
-        max_theta_cl = math.pi/4
-        # angle around z axis pointing up of wheel closest to center of circle
-        theta_cl = -float(direction) / 100.0 * max_theta_cl
-
         try:
-            radius = self.d1 + self.d3 / math.tan(theta_cl)
+            radius = self.d3 / math.tan(angle)
         except ZeroDivisionError:
             return float("Inf")
         

@@ -6,6 +6,14 @@ This branch is an in-development version of the Open Source Rover Code. It conta
 ### Installing
 To install and run the updated software in this branch, please follow the instructions in the [Software Steps.pdf document in the master repository](https://github.com/nasa-jpl/open-source-rover/blob/master/Software/Software%20Steps.pdf).
 
+Then, install the requirements for each package by navigating to the catkin workspace you just made
+and runnning
+
+```
+cd ~/your_catkin_ws/
+rosdep install --from-paths src --ignore-src
+```
+
 <img src="img/OSR_ROS_Diagram.png" width="100%">
 
 ### Catkin Packages
