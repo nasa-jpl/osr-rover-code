@@ -204,6 +204,7 @@ class RoboclawWrapper(object):
         on the next iteration of the run() loop.
         """
         
+        rospy.logdebug("Drive command callback received: {}".format(cmd))
         self.drive_cmd_buffer = cmd
 
     
@@ -211,10 +212,7 @@ class RoboclawWrapper(object):
         """
         Sends the drive command to the motor controller.
         """
-        
-        rospy.logdebug("Drive command callback received: {}".format(cmd))
 
-        
         props = self.roboclaw_mapping["drive_left_front"]
         self.send_duty_cmd(props["address"], props["channel"], int(cmd.left_front_vel))
 
