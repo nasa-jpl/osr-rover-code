@@ -159,15 +159,13 @@ class RoboclawWrapper(object):
         on the next iteration of the run() loop.
         """
         
+        rospy.logdebug("Corner command callback received: {}".format(cmd))
         self.corner_cmd_buffer = cmd
 
     def send_corner_buffer(self, cmd):
         """
         Sends the corner command to the motor controller.
         """
-        
-        rospy.logdebug("Corner command callback received: {}".format(cmd))
-
 
         # convert position to tick
         encmin, encmax = self.encoder_limits["corner_left_front"]
