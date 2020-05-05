@@ -230,32 +230,7 @@ class RoboclawWrapper(object):
 
         props = self.roboclaw_mapping["drive_right_front"]
         self.send_duty_cmd(props["address"], props["channel"], int(cmd.right_front_vel))
-        
-        """
-        props = self.roboclaw_mapping["drive_left_front"]
-        vel_cmd = self.velocity2qpps(cmd.left_front_vel, props["ticks_per_rev"], props["gear_ratio"])
-        self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
 
-        props = self.roboclaw_mapping["drive_left_middle"]
-        vel_cmd = self.velocity2qpps(cmd.left_middle_vel, props["ticks_per_rev"], props["gear_ratio"])
-        self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
-
-        props = self.roboclaw_mapping["drive_left_back"]
-        vel_cmd = self.velocity2qpps(cmd.left_back_vel, props["ticks_per_rev"], props["gear_ratio"])
-        self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
-
-        props = self.roboclaw_mapping["drive_right_back"]
-        vel_cmd = self.velocity2qpps(cmd.right_back_vel, props["ticks_per_rev"], props["gear_ratio"])
-        self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
-
-        props = self.roboclaw_mapping["drive_right_middle"]
-        vel_cmd = self.velocity2qpps(cmd.right_middle_vel, props["ticks_per_rev"], props["gear_ratio"])
-        self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
-
-        props = self.roboclaw_mapping["drive_right_front"]
-        vel_cmd = self.velocity2qpps(cmd.right_front_vel, props["ticks_per_rev"], props["gear_ratio"])
-        self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
-        """
 
     def send_position_cmd(self, address, channel, target_tick):
         """
