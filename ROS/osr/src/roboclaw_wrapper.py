@@ -36,6 +36,7 @@ class RoboclawWrapper(object):
         for address in self.address:
             self.rc.ReadNVM(address)
 
+        self.drive_mode = 'duty'       #control mode, either duty or velocity (open/closed loop)
         self.corner_max_vel = 1000
         self.corner_accel = 2000
         self.roboclaw_overflow = 2**15-1
@@ -62,15 +63,17 @@ class RoboclawWrapper(object):
 
         counter = 0
         while not rospy.is_shutdown():
+
             # Check to see if there are commands in the buffer to send to the motor controller
             if self.drive_cmd_buffer:
-                self.send_drive_buffer(self.drive_cmd_buffer)
+                # either call duty based or velocity based driving functions
+                drive_fcn = (self.send_drive_buffer_duty if self.drive_mode == "duty" else self.send_drive_buffer_velocity)
+                drive_fcn(self.drive_cmd_buffer)
                 self.drive_cmd_buffer = None
                 
             if self.corner_cmd_buffer:
                 self.send_corner_buffer(self.corner_cmd_buffer)
                 self.corner_cmd_buffer = None
-
 
             # read from roboclaws and publish
             try:
@@ -79,14 +82,15 @@ class RoboclawWrapper(object):
             except AssertionError as read_exc:
                 rospy.logwarn( "Failed to read encoder values")
 
-            if (counter >= 10):
+            # Downsample the rate of less important data
+            if (counter >= 5):
                 status.battery = self.getBattery()
                 status.temp = self.getTemp()
                 status.current = self.getCurrents()
                 status.error_status = self.getErrors()
-                self.status_pub.publish(status)
                 counter = 0
 
+            self.status_pub.publish(status)
             counter += 1
             rate.sleep()
 
@@ -162,16 +166,10 @@ class RoboclawWrapper(object):
         rospy.logdebug("Corner command callback received: {}".format(cmd))
         self.corner_cmd_buffer = cmd
 
-
     def send_corner_buffer(self, cmd):
         """
         Sends the corner command to the motor controller.
         """
-
-        while self.mutex and not rospy.is_shutdown():
-            r.sleep()
-
-        self.mutex = True
 
 
         # convert position to tick
@@ -214,31 +212,79 @@ class RoboclawWrapper(object):
         rospy.logdebug("Drive command callback received: {}".format(cmd))
         self.drive_cmd_buffer = cmd
 
-
     
-    def send_drive_buffer(self, cmd):
+    def send_drive_buffer_duty(self, cmd):
         """
-        Sends the drive command to the motor controller.
+        Sends the drive command to the motor controller, open loop duty cycle commands
         """
-
         props = self.roboclaw_mapping["drive_left_front"]
-        self.send_duty_cmd(props["address"], props["channel"], int(cmd.left_front_vel))
+        self.send_duty_cmd(props["address"], props["channel"], cmd.left_front_vel)
 
         props = self.roboclaw_mapping["drive_left_middle"]
-        self.send_duty_cmd(props["address"], props["channel"], int(cmd.left_middle_vel))
+        self.send_duty_cmd(props["address"], props["channel"], cmd.left_middle_vel)
 
         props = self.roboclaw_mapping["drive_left_back"]
-        self.send_duty_cmd(props["address"], props["channel"], int(cmd.left_back_vel))
+        self.send_duty_cmd(props["address"], props["channel"], cmd.left_back_vel)
 
         props = self.roboclaw_mapping["drive_right_back"]
-        self.send_duty_cmd(props["address"], props["channel"], int(cmd.right_back_vel))
+        self.send_duty_cmd(props["address"], props["channel"], cmd.right_back_vel)
 
         props = self.roboclaw_mapping["drive_right_middle"]
-        self.send_duty_cmd(props["address"], props["channel"], int(cmd.right_middle_vel))
+        self.send_duty_cmd(props["address"], props["channel"], cmd.right_middle_vel)
 
         props = self.roboclaw_mapping["drive_right_front"]
-        self.send_duty_cmd(props["address"], props["channel"], int(cmd.right_front_vel))
+        self.send_duty_cmd(props["address"], props["channel"], cmd.right_front_vel)
 
+
+    def send_drive_buffer_velocity(self, cmd):
+        """
+        Sends the drive command to the motor controller, closed loop velocity commands
+        """
+        props = self.roboclaw_mapping["drive_left_front"]
+        vel_cmd = self.velocity2qpps(cmd.left_front_vel, props["ticks_per_rev"], props["gear_ratio"])
+        self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
+
+        props = self.roboclaw_mapping["drive_left_middle"]
+        vel_cmd = self.velocity2qpps(cmd.left_middle_vel, props["ticks_per_rev"], props["gear_ratio"])
+        self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
+
+        props = self.roboclaw_mapping["drive_left_back"]
+        vel_cmd = self.velocity2qpps(cmd.left_back_vel, props["ticks_per_rev"], props["gear_ratio"])
+        self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
+
+        props = self.roboclaw_mapping["drive_right_back"]
+        vel_cmd = self.velocity2qpps(cmd.right_back_vel, props["ticks_per_rev"], props["gear_ratio"])
+        self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
+
+        props = self.roboclaw_mapping["drive_right_middle"]
+        vel_cmd = self.velocity2qpps(cmd.right_middle_vel, props["ticks_per_rev"], props["gear_ratio"])
+        self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
+
+        props = self.roboclaw_mapping["drive_right_front"]
+        vel_cmd = self.velocity2qpps(cmd.right_front_vel, props["ticks_per_rev"], props["gear_ratio"])
+        self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
+
+    def send_duty_cmd(self, address, channel, speed):
+        """
+        Wrapper to send one of the speed commands.
+        
+        :param address:
+        :param channel:
+        :param speed:
+        """
+
+        speed = max(-1, min(1, speed))
+        duty =  speed * self.roboclaw_overflow
+        accel = self.accel_pos
+        
+        if speed < 0:
+            accel = self.accel_neg
+        if channel == "M1":
+            return self.rc.DutyAccelM1(address, accel, int(duty))
+        elif channel == "M2":
+            return self.rc.DutyAccelM2(address, accel, int(duty))
+        else:
+            raise AttributeError("Recieved unknown channel '{}'. Expected M1 or M2".format(channel))
 
 
     def send_position_cmd(self, address, channel, target_tick):
