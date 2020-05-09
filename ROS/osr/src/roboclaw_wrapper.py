@@ -2,7 +2,7 @@
 import serial
 import math
 import rospy
-import time
+
 from roboclaw import Roboclaw
 
 from sensor_msgs.msg import JointState
@@ -62,7 +62,6 @@ class RoboclawWrapper(object):
 
         counter = 0
         while not rospy.is_shutdown():
-
             # Check to see if there are commands in the buffer to send to the motor controller
             if self.drive_cmd_buffer:
                 self.send_drive_buffer(self.drive_cmd_buffer)
@@ -71,6 +70,7 @@ class RoboclawWrapper(object):
             if self.corner_cmd_buffer:
                 self.send_corner_buffer(self.corner_cmd_buffer)
                 self.corner_cmd_buffer = None
+
 
             # read from roboclaws and publish
             try:
@@ -162,10 +162,17 @@ class RoboclawWrapper(object):
         rospy.logdebug("Corner command callback received: {}".format(cmd))
         self.corner_cmd_buffer = cmd
 
+
     def send_corner_buffer(self, cmd):
         """
         Sends the corner command to the motor controller.
         """
+
+        while self.mutex and not rospy.is_shutdown():
+            r.sleep()
+
+        self.mutex = True
+
 
         # convert position to tick
         encmin, encmax = self.encoder_limits["corner_left_front"]
@@ -207,6 +214,7 @@ class RoboclawWrapper(object):
         rospy.logdebug("Drive command callback received: {}".format(cmd))
         self.drive_cmd_buffer = cmd
 
+
     
     def send_drive_buffer(self, cmd):
         """
@@ -230,6 +238,7 @@ class RoboclawWrapper(object):
 
         props = self.roboclaw_mapping["drive_right_front"]
         self.send_duty_cmd(props["address"], props["channel"], int(cmd.right_front_vel))
+
 
 
     def send_position_cmd(self, address, channel, target_tick):
@@ -276,29 +285,6 @@ class RoboclawWrapper(object):
         assert result[0] == 1
         return (result[-2], result[-1])
 
-    def send_duty_cmd(self, address, channel, speed):
-        """
-        Wrapper to send one of the speed commands.
-        
-        :param address:
-        :param channel:
-        :param speed:
-        """
-        
-        speed = speed/100.0 # scale speed to percent
-        max_duty = self.roboclaw_overflow * 0.5 # max speed/duty is half what the roboclaws can do 
-        duty = max(-max_duty, min(max_duty, speed * self.roboclaw_overflow))
-        accel = self.accel_pos
-        
-        if speed < 0:
-            accel = self.accel_neg
-        if channel == "M1":
-            return self.rc.DutyAccelM1(address, accel, int(duty))
-        elif channel == "M2":
-            return self.rc.DutyAccelM2(address, accel, int(duty))
-        else:
-            raise AttributeError("Recieved unknown channel '{}'. Expected M1 or M2".format(channel))
-        
     def send_velocity_cmd(self, address, channel, target_qpps):
         """
         Wrapper around one of the send velocity commands
