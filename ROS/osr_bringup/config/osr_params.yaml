@@ -3,3 +3,5 @@ motor_controller:
   device: "/dev/serial0"
   addresses: "128,129,130,131,132"
 
+controller:
+  mode: "velocity"
