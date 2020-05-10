@@ -6,7 +6,7 @@ import rospy
 from roboclaw import Roboclaw
 
 from sensor_msgs.msg import JointState
-from osr_msgs.msg import CommandDrive, CommandCorner, Status
+from osr_msgs.msg import CommandDriveVelocity, CommandDriveDuty, CommandCorner, Status
 
 
 class RoboclawWrapper(object):
@@ -35,7 +35,8 @@ class RoboclawWrapper(object):
 
         for address in self.address:
             self.rc.ReadNVM(address)
-
+        
+        self.drive_mode = 'duty'       #control mode, either duty or velocity (open/closed loop)
         self.corner_max_vel = 1000
         self.corner_accel = 2000
         self.roboclaw_overflow = 2**15-1
@@ -49,7 +50,8 @@ class RoboclawWrapper(object):
 
         # set up publishers and subscribers
         self.corner_cmd_sub = rospy.Subscriber("/cmd_corner", CommandCorner, self.corner_cmd_cb, queue_size=1)
-        self.drive_cmd_sub = rospy.Subscriber("/cmd_drive", CommandDrive, self.drive_cmd_cb, queue_size=1)
+        self.drive_duty_cmd_sub = rospy.Subscriber("/cmd_drive_duty", CommandDriveDuty, self.drive_cmd_cb, queue_size=1)
+        self.drive_vel_cmd_sub = rospy.Subscriber("/cmd_drive_vel", CommandDriveVelocity, self.drive_cmd_cb, queue_size=1)
         self.enc_pub = rospy.Publisher("/encoder", JointState, queue_size=1)
         self.status_pub = rospy.Publisher("/status", Status, queue_size=1)
 
@@ -65,9 +67,9 @@ class RoboclawWrapper(object):
 
             # Check to see if there are commands in the buffer to send to the motor controller
             if self.drive_cmd_buffer:
-                drive_fcn = self.send_drive_buffer_velocity
+                # either call duty based or velocity based driving functions
+                drive_fcn = (self.send_drive_buffer_duty if (rospy.get_param("controller/mode") == "duty") else self.send_drive_buffer_velocity)
                 drive_fcn(self.drive_cmd_buffer)
-                self.drive_cmd_buffer = None
                 
             if self.corner_cmd_buffer:
                 self.send_corner_buffer(self.corner_cmd_buffer)
@@ -210,10 +212,35 @@ class RoboclawWrapper(object):
         rospy.logdebug("Drive command callback received: {}".format(cmd))
         self.drive_cmd_buffer = cmd
 
+
+    def send_drive_buffer_duty(self, cmd):
+        """
+        Sends the drive command to the motor controller, open loop duty cycle commands
+        """
+        
+        props = self.roboclaw_mapping["drive_left_front"]
+        self.send_duty_cmd(props["address"], props["channel"], cmd.left_front_duty)
+
+        props = self.roboclaw_mapping["drive_left_middle"]
+        self.send_duty_cmd(props["address"], props["channel"], cmd.left_middle_duty)
+
+        props = self.roboclaw_mapping["drive_left_back"]
+        self.send_duty_cmd(props["address"], props["channel"], cmd.left_back_duty)
+
+        props = self.roboclaw_mapping["drive_right_back"]
+        self.send_duty_cmd(props["address"], props["channel"], cmd.right_back_duty)
+
+        props = self.roboclaw_mapping["drive_right_middle"]
+        self.send_duty_cmd(props["address"], props["channel"], cmd.right_middle_duty)
+
+        props = self.roboclaw_mapping["drive_right_front"]
+        self.send_duty_cmd(props["address"], props["channel"], cmd.right_front_duty)
+
     def send_drive_buffer_velocity(self, cmd):
         """
         Sends the drive command to the motor controller, closed loop velocity commands
         """
+        
         props = self.roboclaw_mapping["drive_left_front"]
         vel_cmd = self.velocity2qpps(cmd.left_front_vel, props["ticks_per_rev"], props["gear_ratio"])
         self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
@@ -282,6 +309,27 @@ class RoboclawWrapper(object):
         assert result[0] == 1
         return (result[-2], result[-1])
 
+    def send_duty_cmd(self, address, channel, speed):
+        """
+        Wrapper to send one of the speed commands.
+        
+        :param address:
+        :param channel:
+        :param speed:
+        """  
+        speed = max(-1, min(1, speed))
+        duty =  speed * self.roboclaw_overflow
+        accel = self.accel_pos
+
+        if speed < 0:
+            accel = self.accel_neg
+        if channel == "M1":
+            return self.rc.DutyAccelM1(address, accel, int(duty))
+        elif channel == "M2":
+            return self.rc.DutyAccelM2(address, accel, int(duty))
+        else:
+            raise AttributeError("Recieved unknown channel '{}'. Expected M1 or M2".format(channel))
+
     def send_velocity_cmd(self, address, channel, target_qpps):
         """
         Wrapper around one of the send velocity commands
@@ -291,6 +339,10 @@ class RoboclawWrapper(object):
         :param target_qpps: int
         """
         # clip values
+        
+        rospy.loginfo(target_qpps)
+        return
+        
         target_qpps = max(-self.roboclaw_overflow, min(self.roboclaw_overflow, target_qpps))
         accel = self.accel_pos
         if channel == "M1":
