@@ -342,12 +342,10 @@ class RoboclawWrapper(object):
         # clip values
         target_qpps = max(-self.roboclaw_overflow, min(self.roboclaw_overflow, target_qpps))
         accel = self.accel_pos
-        if target_qpps < 0:
-            accel = self.accel_neg
         if channel == "M1":
-            return self.rc.DutyAccelM1(address, accel, target_qpps)
+            return self.rc.SpeedAccelM1(address, accel, target_qpps)
         elif channel == "M2":
-            return self.rc.DutyAccelM2(address, accel, target_qpps)
+            return self.rc.SpeedAccelM2(address, accel, target_qpps)
         else:
             raise AttributeError("Received unknown channel '{}'. Expected M1 or M2".format(channel))
 
