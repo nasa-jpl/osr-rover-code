@@ -21,7 +21,7 @@ up-to-date and complete source of information.
   * `rover.py`: ROS node that controls the rover, taking in high-level commands and calculating motor commands which are
   sent to `roboclaw_wrapper.py`
 
-![drive motor velocity calculation diagram](osr/dimensions_wheel_illustration.png)
+![drive motor velocity calculation diagram](osr/dimensions_wheels_illustration.png)
 
 ### osr_msgs
 Contains custom message definitions used for the rover. Please refer to the message definitions for details
