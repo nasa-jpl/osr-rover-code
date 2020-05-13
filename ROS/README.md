@@ -22,6 +22,7 @@ up-to-date and complete source of information.
   sent to `roboclaw_wrapper.py`
 
 ![drive motor velocity calculation diagram](osr/dimensions_wheels_illustration.png)
+Note that a positive angular twist corresponds to a positive turning radius and turning left while driving forward.
 
 ### osr_msgs
 Contains custom message definitions used for the rover. Please refer to the message definitions for details
