@@ -55,7 +55,7 @@ class RoboclawWrapper(object):
 
     def run(self):
         """Blocking loop which runs after initialization has completed"""
-        rate = rospy.Rate(50)
+        rate = rospy.Rate(8)
  
 
         status = Status()
