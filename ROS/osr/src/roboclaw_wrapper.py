@@ -20,7 +20,8 @@ class RoboclawWrapper(object):
         self.err = [None] * 5
         self.address = []
         self.current_enc_vals = None
-        self.mutex = False
+        self.corner_cmd_buffer = None
+        self.drive_cmd_buffer = None
 
         self.roboclaw_mapping = rospy.get_param('~roboclaw_mapping')
         self.encoder_limits = {}
@@ -54,17 +55,23 @@ class RoboclawWrapper(object):
 
     def run(self):
         """Blocking loop which runs after initialization has completed"""
-        rate = rospy.Rate(5)
-        mutex_rate = rospy.Rate(10)
+        rate = rospy.Rate(8)
+ 
 
         status = Status()
 
         counter = 0
         while not rospy.is_shutdown():
 
-            while self.mutex and not rospy.is_shutdown():
-                mutex_rate.sleep()
-            self.mutex = True
+            # Check to see if there are commands in the buffer to send to the motor controller
+            if self.drive_cmd_buffer:
+                drive_fcn = self.send_drive_buffer_velocity
+                drive_fcn(self.drive_cmd_buffer)
+                self.drive_cmd_buffer = None
+                
+            if self.corner_cmd_buffer:
+                self.send_corner_buffer(self.corner_cmd_buffer)
+                self.corner_cmd_buffer = None
 
             # read from roboclaws and publish
             try:
@@ -73,15 +80,15 @@ class RoboclawWrapper(object):
             except AssertionError as read_exc:
                 rospy.logwarn( "Failed to read encoder values")
 
-            if (counter >= 10):
+            # Downsample the rate of less important data
+            if (counter >= 5):
                 status.battery = self.getBattery()
                 status.temp = self.getTemp()
                 status.current = self.getCurrents()
                 status.error_status = self.getErrors()
-                self.status_pub.publish(status)
                 counter = 0
 
-            self.mutex = False
+            self.status_pub.publish(status)
             counter += 1
             rate.sleep()
 
@@ -147,15 +154,21 @@ class RoboclawWrapper(object):
             enc_msg.effort.append(current)
 
         self.current_enc_vals = enc_msg
-
+        
     def corner_cmd_cb(self, cmd):
-        r = rospy.Rate(10)
+        """
+        Takes the corner command and stores it in the buffer to be sent
+        on the next iteration of the run() loop.
+        """
+        
         rospy.logdebug("Corner command callback received: {}".format(cmd))
+        self.corner_cmd_buffer = cmd
 
-        while self.mutex and not rospy.is_shutdown():
-            r.sleep()
+    def send_corner_buffer(self, cmd):
+        """
+        Sends the corner command to the motor controller.
+        """
 
-        self.mutex = True
 
         # convert position to tick
         encmin, encmax = self.encoder_limits["corner_left_front"]
@@ -187,17 +200,20 @@ class RoboclawWrapper(object):
         self.send_position_cmd(self.roboclaw_mapping["corner_right_front"]["address"],
                                self.roboclaw_mapping["corner_right_front"]["channel"],
                                right_front_tick)
-        self.mutex = False
 
     def drive_cmd_cb(self, cmd):
-        r = rospy.Rate(10)
+        """
+        Takes the drive command and stores it in the buffer to be sent
+        on the next iteration of the run() loop.
+        """
+        
         rospy.logdebug("Drive command callback received: {}".format(cmd))
+        self.drive_cmd_buffer = cmd
 
-        while self.mutex and not rospy.is_shutdown():
-            r.sleep()
-
-        self.mutex = True
-
+    def send_drive_buffer_velocity(self, cmd):
+        """
+        Sends the drive command to the motor controller, closed loop velocity commands
+        """
         props = self.roboclaw_mapping["drive_left_front"]
         vel_cmd = self.velocity2qpps(cmd.left_front_vel, props["ticks_per_rev"], props["gear_ratio"])
         self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
@@ -221,8 +237,6 @@ class RoboclawWrapper(object):
         props = self.roboclaw_mapping["drive_right_front"]
         vel_cmd = self.velocity2qpps(cmd.right_front_vel, props["ticks_per_rev"], props["gear_ratio"])
         self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
-
-        self.mutex = False
 
     def send_position_cmd(self, address, channel, target_tick):
         """

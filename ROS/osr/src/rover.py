@@ -106,9 +106,9 @@ class Rover(object):
             angular_velocity_center = float(speed) / radius
             # calculate desired velocities of all centers of wheels. Corner wheels on the same side
             # move with the same velocity. v = r * omega again
-            vel_middle_closest =  (radius - self.d4) * angular_velocity_center
-            vel_corner_closest =  (radius - self.d1) * angular_velocity_center
-            vel_corner_farthest = (radius + self.d1) * angular_velocity_center
+            vel_middle_closest = (radius - self.d4) * angular_velocity_center
+            vel_corner_closest = math.hypot(radius - self.d1, self.d3) * angular_velocity_center
+            vel_corner_farthest = math.hypot(radius + self.d1, self.d3) * angular_velocity_center
             vel_middle_farthest = (radius + self.d4) * angular_velocity_center
 
             # now from these desired velocities, calculate the desired angular velocity of each wheel

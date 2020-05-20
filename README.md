@@ -25,6 +25,13 @@ catkin_make
 source devel/setup.bash
 ```
 
+The rover has some customizable settings that will overwrite the default values. Whether you have any changes compared to the defaults or not, you have to manually create these files:
+```
+cd ~/osr_ws/src/osr-rover-code/ROS/osr_bringup/config
+touch physical_properties_mod.yaml roboclaw_params_mod.yaml
+```
+To change any values from the default, modify these files instead so they don't get tracked by git. The files follow the same structure as the default.
+
 ### Arduino
 
 Please refer to the instructions in 

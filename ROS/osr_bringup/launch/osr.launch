@@ -4,6 +4,7 @@
 	<!-- Nodes to run the Open Source Rover -->
 	<node name="roboclaw_wrapper" pkg="osr" type="roboclaw_wrapper.py" output="screen">
 		<rosparam command="load" file="$(find osr_bringup)/config/roboclaw_params.yaml"/>
+		<rosparam command="load" file="$(find osr_bringup)/config/roboclaw_params_mod.yaml"/>
 	</node>
         <node name="joy2twist" pkg="teleop_twist_joy" type="teleop_node">
             <param name="enable_button" value="4"/>  <!-- which button to press to enable movement-->
@@ -15,6 +16,7 @@
             <param name="scale_linear_turbo" value="0.5"/>  <!-- scale to apply to linear speed, in m/s -->
         </node>
 	<rosparam command="load" file="$(find osr_bringup)/config/physical_properties.yaml"/>
+	<rosparam command="load" file="$(find osr_bringup)/config/physical_properties_mod.yaml"/>
 	<node name="rover" pkg="osr" type="rover.py" output="screen"/>
 	<node name="led_screen" pkg="led_screen" type="arduino_comm.py"/>
 	<node pkg="joy"
