@@ -38,12 +38,13 @@ class RoboclawWrapper(object):
 
         self.corner_max_vel = 1000
         # corner motor acceleration
-        accel_max = 655359
-        accel_rate = rospy.get_param('/corner_acceleration_factor', 0.5)
+        # Even though the actual method takes longs (2*32-1), roboclaw blog says 2**15 is 100%
+        accel_max = 2**15-1
+        accel_rate = rospy.get_param('/corner_acceleration_factor', 0.8)
         self.corner_accel = int(accel_max * accel_rate)
         self.roboclaw_overflow = 2**15-1
         # drive motor acceleration
-        accel_max = 655359
+        accel_max = 2**15-1
         accel_rate = rospy.get_param('/drive_acceleration_factor', 0.5)
         self.acceleration = int(accel_max * accel_rate)
         self.errorCheck()
