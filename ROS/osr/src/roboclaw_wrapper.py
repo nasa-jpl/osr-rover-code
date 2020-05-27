@@ -46,7 +46,7 @@ class RoboclawWrapper(object):
         # drive motor acceleration
         accel_max = 2**15-1
         accel_rate = rospy.get_param('/drive_acceleration_factor', 0.5)
-        self.acceleration = int(accel_max * accel_rate)
+        self.drive_accel = int(accel_max * accel_rate)
         self.errorCheck()
 
         self.killMotors()
@@ -297,9 +297,9 @@ class RoboclawWrapper(object):
         # clip values
         target_qpps = max(-self.roboclaw_overflow, min(self.roboclaw_overflow, target_qpps))
         if channel == "M1":
-            return self.rc.SpeedAccelM1(address, self.acceleration, target_qpps)
+            return self.rc.SpeedAccelM1(address, self.drive_accel, target_qpps)
         elif channel == "M2":
-            return self.rc.SpeedAccelM2(address, self.acceleration, target_qpps)
+            return self.rc.SpeedAccelM2(address, self.drive_accel, target_qpps)
         else:
             raise AttributeError("Received unknown channel '{}'. Expected M1 or M2".format(channel))
 
