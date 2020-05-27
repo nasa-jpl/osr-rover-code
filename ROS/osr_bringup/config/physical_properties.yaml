@@ -6,3 +6,4 @@ rover_dimensions:
   wheel_radius: 0.075  # [m]
 drive_no_load_rpm: 130  # no load speed for the drive motors
 speed_adjustment_factor: 0.1  # scale down velocity from no load rpm due to weight of rover
+acceleration_factor: 0.5  # fraction used to scale the drive motor acceleration (0, 1]
