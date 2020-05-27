@@ -37,11 +37,14 @@ class RoboclawWrapper(object):
             self.rc.ReadNVM(address)
 
         self.corner_max_vel = 1000
-        self.corner_accel = 2000
+        # corner motor acceleration
+        accel_max = 655359
+        accel_rate = rospy.get_param('/corner_acceleration_factor', 0.5)
+        self.corner_accel = int(accel_max * accel_rate)
         self.roboclaw_overflow = 2**15-1
         # drive motor acceleration
         accel_max = 655359
-        accel_rate = rospy.get_param('/acceleration_factor', 0.5)
+        accel_rate = rospy.get_param('/drive_acceleration_factor', 0.5)
         self.acceleration = int(accel_max * accel_rate)
         self.errorCheck()
 
