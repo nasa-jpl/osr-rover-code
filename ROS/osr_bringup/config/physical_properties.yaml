@@ -5,4 +5,3 @@ rover_dimensions:
   d4: 0.2556  # [m, ~10.073in]
   wheel_radius: 0.075  # [m]
 drive_no_load_rpm: 130  # no load speed for the drive motors
-speed_adjustment_factor: 0.1  # scale down velocity from no load rpm due to weight of rover
