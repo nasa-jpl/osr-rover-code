@@ -2,9 +2,10 @@
 
 import rospy
 import math
+import tf2_ros
 
 from sensor_msgs.msg import JointState
-from geometry_msgs.msg import Twist, TwistWithCovariance
+from geometry_msgs.msg import Twist, TwistWithCovariance, TransformStamped
 from nav_msgs.msg import Odometry
 from osr_msgs.msg import CommandDrive, CommandCorner
 
@@ -38,6 +39,7 @@ class Rover(object):
         self.drive_cmd_pub = rospy.Publisher("/cmd_drive", CommandDrive, queue_size=1)
         self.turning_radius_pub = rospy.Publisher("/turning_radius", Float64, queue_size=1)
         self.odometry_pub = rospy.Publisher("/odom", Odometry, queue_size=2)
+        self.tf_pub = tf2_ros.TransformBroadcaster()
 
         rospy.Subscriber("/cmd_vel", Twist, self.cmd_cb, callback_args=False)
         rospy.Subscriber("/cmd_vel_intuitive", Twist, self.cmd_cb, callback_args=True)
@@ -98,6 +100,14 @@ class Rover(object):
         self.odometry.twist = self.curr_twist
         self.odometry.header.stamp = now
         self.odometry_pub.publish(self.odometry)
+        transform_msg = TransformStamped()
+        transform_msg.header.frame_id = "odom"
+        transform_msg.child_frame_id = "base_link"
+        transform_msg.header.stamp = now
+        transform_msg.transform.translation.x = self.odometry.pose.pose.position.x
+        transform_msg.transform.translation.y = self.odometry.pose.pose.position.y
+        transform_msg.transform.rotation = self.odometry.pose.pose.orientation
+        self.tf_pub.sendTransform(transform_msg)
 
     def corner_cmd_threshold(self, corner_cmd):
         try:
