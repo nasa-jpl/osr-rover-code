@@ -8,6 +8,7 @@ from sensor_msgs.msg import JointState
 from geometry_msgs.msg import Twist, TwistWithCovariance, TransformStamped
 from nav_msgs.msg import Odometry
 from osr_msgs.msg import CommandDrive, CommandCorner
+from std_msgs.msg import Float64
 
 
 class Rover(object):
