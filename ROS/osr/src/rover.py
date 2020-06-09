@@ -24,8 +24,7 @@ class Rover(object):
         self.no_cmd_thresh = 0.05  # [rad]
         self.wheel_radius = rospy.get_param("/rover_dimensions/wheel_radius", 0.075)  # [m]
         drive_no_load_rpm = rospy.get_param("/drive_no_load_rpm", 130)
-        speed_adjustment_factor = rospy.get_param("/speed_adjustment_factor", 1.0)
-        self.max_vel = self.wheel_radius * drive_no_load_rpm / 60 * 2 * math.pi * speed_adjustment_factor  # [m/s]
+        self.max_vel = self.wheel_radius * drive_no_load_rpm / 60 * 2 * math.pi  # [m/s]
         self.curr_twist = Twist()
         self.curr_turning_radius = self.max_radius
 
