@@ -92,12 +92,15 @@ class Rover(object):
         dx = self.curr_twist.twist.linear.x * dt
         dth = self.curr_twist.twist.angular.z * dt
         # angle is straightforward: in 2D it's additive
-        self.odometry.pose.pose.orientation.z += dth
+        current_angle = 2 * math.atan2(self.odometry.pose.pose.orientation.z, 
+                                       self.odometry.pose.pose.orientation.w)
+        new_angle = current_angle + dth
+        self.odometry.pose.pose.orientation.z = math.sin(new_angle/2.)
+        self.odometry.pose.pose.orientation.w = math.cos(new_angle/2.)
         # the new pose in x and y depends on the current heading
-        heading = self.odometry.pose.pose.orientation.z
-        self.odometry.pose.pose.position.x += math.cos(heading) * dx
-        self.odometry.pose.pose.position.y += math.sin(heading) * dx
-        self.odometry.pose.covariance = 36 * [0.03,]
+        self.odometry.pose.pose.position.x += math.cos(new_angle) * dx
+        self.odometry.pose.pose.position.y += math.sin(new_angle) * dx
+        self.odometry.pose.covariance = 36 * [0.0,]
         self.odometry.twist = self.curr_twist
         self.odometry.header.stamp = now
         self.odometry_pub.publish(self.odometry)
@@ -308,11 +311,12 @@ class Rover(object):
 
         # we know that the linear velocity in x direction is the instantaneous velocity of the middle virtual
         # wheel which spins at the average speed of the two middle outer wheels.
-        self.curr_twist.twist.linear.x = (self.curr_velocities['drive_left_middle'] + self.curr_velocities['drive_right_middle']) / 2.
+        drive_angular_velocity = (self.curr_velocities['drive_left_middle'] + self.curr_velocities['drive_right_middle']) / 2.
+        self.curr_twist.twist.linear.x = drive_angular_velocity * self.wheel_radius
         # now calculate angular velocity from its relation with linear velocity and turning radius
         self.curr_twist.twist.angular.z = self.curr_twist.twist.linear.x / self.curr_turning_radius
         # covariance
-        self.curr_twist.covariance = 36 * [0.02,]
+        self.curr_twist.covariance = 36 * [0.0,]
 
 if __name__ == '__main__':
     rospy.init_node('rover', log_level=rospy.INFO)
