@@ -61,8 +61,6 @@ class RoboclawWrapper(object):
     def run(self):
         """Blocking loop which runs after initialization has completed"""
         rate = rospy.Rate(8)
- 
-
         status = Status()
 
         counter = 0
@@ -124,7 +122,7 @@ class RoboclawWrapper(object):
         # initialize connection status to successful
         all_connected = True
         for address in self.address:
-            rospy.logdebug("Attempting to talk to motor controller ''".format(address))
+            rospy.logdebug("Attempting to talk to motor controller '{}'".format(address))
             version_response = self.rc.ReadVersion(address)
             connected = bool(version_response[0])
             if not connected:
