@@ -373,7 +373,7 @@ class RoboclawWrapper(object):
         :param gear_ratio:
         :return:
         """
-        return qpps / (2 * math.pi * gear_ratio * ticks_per_rev)
+        return qpps * 2 * math.pi / (gear_ratio * ticks_per_rev)
 
     def velocity2qpps(self, velocity, ticks_per_rev, gear_ratio):
         """
@@ -384,7 +384,7 @@ class RoboclawWrapper(object):
         :param gear_ratio:
         :return: int
         """
-        return int(velocity * 2 * math.pi * gear_ratio * ticks_per_rev)
+        return int(velocity * gear_ratio * ticks_per_rev / (2 * math.pi))
 
     def getBattery(self):
         return self.rc.ReadMainBatteryVoltage(self.address[0])[1]
