@@ -218,10 +218,12 @@ class Rover(object):
             radius = twist.linear.x / twist.angular.z
         except ZeroDivisionError:
             return float("Inf")
-        
+
         # clip values so they lie in (-max_radius, -min_radius) or (min_radius, max_radius)
         if not clip:
             return radius
+        if radius == 0:  # don't know if moving forward or backwards, so don't do anything (set to max radius/straight)
+            radius = self.max_radius
         if radius > 0:
             radius = max(self.min_radius, min(self.max_radius, radius))
         else:

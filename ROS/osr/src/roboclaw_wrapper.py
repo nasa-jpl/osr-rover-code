@@ -37,12 +37,16 @@ class RoboclawWrapper(object):
             self.rc.ReadNVM(address)
 
         self.corner_max_vel = 1000
-        self.corner_accel = 2000
+        # corner motor acceleration
+        # Even though the actual method takes longs (2*32-1), roboclaw blog says 2**15 is 100%
+        accel_max = 2**15-1
+        accel_rate = rospy.get_param('/corner_acceleration_factor', 0.8)
+        self.corner_accel = int(accel_max * accel_rate)
         self.roboclaw_overflow = 2**15-1
-        accel_max = 655359
-        accel_rate = 0.5
-        self.accel_pos = int((accel_max /2) + accel_max * accel_rate)
-        self.accel_neg = int((accel_max /2) - accel_max * accel_rate)
+        # drive motor acceleration
+        accel_max = 2**15-1
+        accel_rate = rospy.get_param('/drive_acceleration_factor', 0.5)
+        self.drive_accel = int(accel_max * accel_rate)
         self.errorCheck()
 
         self.killMotors()
@@ -290,11 +294,10 @@ class RoboclawWrapper(object):
         """
         # clip values
         target_qpps = max(-self.roboclaw_overflow, min(self.roboclaw_overflow, target_qpps))
-        accel = self.accel_pos
         if channel == "M1":
-            return self.rc.SpeedAccelM1(address, accel, target_qpps)
+            return self.rc.SpeedAccelM1(address, self.drive_accel, target_qpps)
         elif channel == "M2":
-            return self.rc.SpeedAccelM2(address, accel, target_qpps)
+            return self.rc.SpeedAccelM2(address, self.drive_accel, target_qpps)
         else:
             raise AttributeError("Received unknown channel '{}'. Expected M1 or M2".format(channel))
 
