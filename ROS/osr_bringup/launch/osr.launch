@@ -14,6 +14,7 @@
             <param name="scale_linear" value="0.24"/>  <!-- scale to apply to drive speed, in m/s: drive_motor_rpm * 2pi / 60 * wheel radius -->
             <param name="scale_angular" value="0.53"/>  <!-- scale to apply to angular speed, in rad/s: scale_linear / min_radius -->
             <param name="scale_linear_turbo" value="0.5"/>  <!-- scale to apply to linear speed, in m/s -->
+			<!-- <remap from="/cmd_vel" to="/cmd_vel_intuitive"/> -->
         </node>
 	<rosparam command="load" file="$(find osr_bringup)/config/physical_properties.yaml"/>
 	<rosparam command="load" file="$(find osr_bringup)/config/physical_properties_mod.yaml"/>

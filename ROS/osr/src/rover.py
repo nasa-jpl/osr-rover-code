@@ -28,15 +28,33 @@ class Rover(object):
         self.curr_twist = Twist()
         self.curr_turning_radius = self.max_radius
 
-        rospy.Subscriber("/cmd_vel", Twist, self.cmd_cb)
+        rospy.Subscriber("/cmd_vel", Twist, self.cmd_cb, callback_args=False)
+        rospy.Subscriber("/cmd_vel_intuitive", Twist, self.cmd_cb, callback_args=True)
         rospy.Subscriber("/encoder", JointState, self.enc_cb)
 
         self.corner_cmd_pub = rospy.Publisher("/cmd_corner", CommandCorner, queue_size=1)
         self.drive_cmd_pub = rospy.Publisher("/cmd_drive", CommandDrive, queue_size=1)
 
-    def cmd_cb(self, twist_msg):
-        desired_turning_radius = self.twist_to_turning_radius(twist_msg)
-        rospy.logdebug("desired turning radius: {}".format(desired_turning_radius))
+    def cmd_cb(self, twist_msg, intuitive=False):
+        """
+        Respond to an incoming Twist command in one of two ways depending on the mode (intuitive)
+
+        The Mathematically correct mode (intuitive=False) means that 
+         * when the linear velocity is zero, an angular velocity does not cause the corner motors to move
+           (since simply steering the corners while standing still doesn't generate a twist)
+         * when driving backwards, steering behaves opposite as what you intuitively might expect
+           (this is to hold true to the commanded twist)
+        Use this topic with a controller that generated velocities based on targets. When you're
+        controlling the robot with a joystick or other manual input topic, consider using the 
+        /cmd_vel_intuitive topic instead.
+
+        The Intuitive mode (intuitive=True) means that sending a positive angular velocity (moving joystick left)
+        will always make the corner wheels turn 'left' regardless of the linear velocity.
+
+        :param intuitive: determines the mode
+        """
+        desired_turning_radius = self.twist_to_turning_radius(twist_msg, intuitive_mode=intuitive)
+        rospy.logdebug_throttle(1, "desired turning radius: {}".format(desired_turning_radius))
         corner_cmd_msg = self.calculate_corner_positions(desired_turning_radius)
 
         # if we're turning, calculate the max velocity the middle of the rover can go
@@ -165,7 +183,7 @@ class Rover(object):
 
         return cmd_msg
 
-    def twist_to_turning_radius(self, twist, clip=True):
+    def twist_to_turning_radius(self, twist, clip=True, intuitive_mode=False):
         """
         Convert a commanded twist into an actual turning radius
 
@@ -175,18 +193,28 @@ class Rover(object):
 
         :param twist: geometry_msgs/Twist. Only linear.x and angular.z are used
         :param clip: whether the values should be clipped from min_radius to max_radius
+        :param intuitive_mode: whether the turning radius should be mathematically correct (see cmd_cb()) or intuitive
         :return: physical turning radius in meter, clipped to the rover's limits
         """
         try:
-            radius = twist.linear.x / twist.angular.z
+            if intuitive_mode and twist.linear.x < 0:
+                radius = twist.linear.x / -twist.angular.z
+            else:
+                radius = twist.linear.x / twist.angular.z
         except ZeroDivisionError:
-            return float("Inf")
+                return float("Inf")
 
         # clip values so they lie in (-max_radius, -min_radius) or (min_radius, max_radius)
         if not clip:
             return radius
-        if radius == 0:  # don't know if moving forward or backwards, so don't do anything (set to max radius/straight)
-            radius = self.max_radius
+        if radius == 0:
+            if intuitive_mode:
+                if twist.angular.z == 0:
+                    return self.max_radius
+                else:
+                    radius = twist.angular.z  # proxy
+            else:  # mathematical mode: standing still, so can't generate an angular velocity
+                return self.max_radius  
         if radius > 0:
             radius = max(self.min_radius, min(self.max_radius, radius))
         else:
@@ -242,7 +270,7 @@ class Rover(object):
 
 
 if __name__ == '__main__':
-    rospy.init_node('rover', log_level=rospy.DEBUG)
+    rospy.init_node('rover', log_level=rospy.INFO)
     rospy.loginfo("Starting the rover node")
     rover = Rover()
     rospy.spin()
