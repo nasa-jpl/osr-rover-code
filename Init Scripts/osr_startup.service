@@ -5,8 +5,8 @@ After=network.target
 [Service]
 User=ubuntu
 Group=ubuntu
-WorkingDirectory=/home/ubuntu/LaunchOSR.sh
-ExecStart=/home/ubuntu/
+WorkingDirectory=/home/ubuntu/
+ExecStart=/home/bin/LaunchOSR.sh
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 
