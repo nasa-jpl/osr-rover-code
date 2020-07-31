@@ -1,3 +1,4 @@
 *.pyc
 .vscode
 ROS/osr_bringup/config/*_mod.yaml
+README.pdf
