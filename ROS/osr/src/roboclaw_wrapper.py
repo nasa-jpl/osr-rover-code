@@ -403,8 +403,8 @@ class RoboclawWrapper(object):
         for i in range(5):
             currs = self.rc.ReadCurrents(self.address[i])
             # reported by roboclaw in 10ths of an Ampere
-            currents[2*i] = currs[1] / 10.0
-            currents[(2*i) + 1] = currs[2] / 10.0
+            currents[2*i] = currs[1] / 100.0
+            currents[(2*i) + 1] = currs[2] / 100.0
         
         return currents
 
