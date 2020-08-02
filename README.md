@@ -57,3 +57,19 @@ changed.
 * The [ROS overview](ROS/README.md) gives an overview of the setup related to ROS and links to specific implementations
 such as how the drive and corner commands are being calculated
 * The [Arduino readme](Arduino/README.md) details the code that runs on the Arduino, used to control the LED screen.
+
+## Startup Services
+
+Services allow any rover related processes to start up automatically when the RPi boots.
+Don't follow these instructions if your rover is still under heavy development.
+This is useful for example to swap out batteries in the field while the rover is driving or restart when a bug occurs.
+
+1. install the ROS package [robot_upstart](docs.ros.org/melodic/api/robot_upstart/html/#usage) which makes creating startup services much easier. `sudo apt install ros-$ROS_DISTRO-robot-upstart`
+2. Create the service files: `rosrun robot_upstart install osr_bringup/launch/osr.launch`. You should see something like: 
+```
+Filesystem operation succeeded.
+** To complete installation please run the following command:
+ sudo systemctl daemon-reload && sudo systemctl start osr
+```
+Run that last command.
+3. That's it! Check that it works by running `sudo service osr start`. For more information, see [robot_upstart](docs.ros.org/melodic/api/robot_upstart/html/#usage)
