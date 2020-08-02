@@ -26,7 +26,7 @@ class RoboclawWrapper(object):
         self.roboclaw_mapping = rospy.get_param('~roboclaw_mapping')
         self.encoder_limits = {}
         self.establish_roboclaw_connections()
-        self.killMotors()  # don't move at start
+        self.stop_motors()  # don't move at start
         self.setup_encoders()
 
         # save settings to non-volatile (permanent) memory
@@ -47,9 +47,8 @@ class RoboclawWrapper(object):
         accel_max = 2**15-1
         accel_rate = rospy.get_param('/drive_acceleration_factor', 0.5)
         self.drive_accel = int(accel_max * accel_rate)
-        self.errorCheck()
 
-        self.killMotors()
+        self.stop_motors()
 
         # set up publishers and subscribers
         self.corner_cmd_sub = rospy.Subscriber("/cmd_corner", CommandCorner, self.corner_cmd_cb, queue_size=1)
@@ -86,10 +85,10 @@ class RoboclawWrapper(object):
 
             # Downsample the rate of less important data
             if (counter >= 5):
-                status.battery = self.getBattery()
-                status.temp = self.getTemp()
-                status.current = self.getCurrents()
-                status.error_status = self.getErrors()
+                status.battery = self.read_battery()
+                status.temp = self.read_temperatures()
+                status.current = self.read_currents()
+                status.error_status = self.read_errors()
                 counter = 0
 
             self.status_pub.publish(status)
@@ -386,40 +385,44 @@ class RoboclawWrapper(object):
         """
         return int(velocity * gear_ratio * ticks_per_rev / (2 * math.pi))
 
-    def getBattery(self):
-        return self.rc.ReadMainBatteryVoltage(self.address[0])[1]
+    def read_battery(self):
+        """Read battery voltage from one of the roboclaws as a proxy for all roboclaws"""
+        # roboclaw reports value in 10ths of a Volt
+        return self.rc.ReadMainBatteryVoltage(self.address[0])[1] / 10.0
 
-    def getTemp(self):
+    def read_temperatures(self):
         temp = [None] * 5
         for i in range(5):
-            temp[i] = self.rc.ReadTemp(self.address[i])[1]
+            # reported by roboclaw in 10ths of a Celsius
+            temp[i] = self.rc.ReadTemp(self.address[i])[1] / 10.0
+        
         return temp
 
-    def getCurrents(self):
+    def read_currents(self):
         currents = [None] * 10
         for i in range(5):
             currs = self.rc.ReadCurrents(self.address[i])
-            currents[2*i] = currs[1]
-            currents[(2*i) + 1] = currs[2]
+            # reported by roboclaw in 10ths of an Ampere
+            currents[2*i] = currs[1] / 100.0
+            currents[(2*i) + 1] = currs[2] / 100.0
+        
         return currents
 
-    def getErrors(self):
-        return self.err
-
-    def killMotors(self):
+    def stop_motors(self):
         """Stops all motors on Rover"""
         for i in range(5):
             self.rc.ForwardM1(self.address[i], 0)
             self.rc.ForwardM2(self.address[i], 0)
 
-    def errorCheck(self):
-        """Checks error status of each motor controller, returns 0 if any errors occur"""
+    def read_errors(self):
+        """Checks error status of each motor controller, returns 0 if no errors reported"""
+        err = [0] * 5
         for i in range(len(self.address)):
-            self.err[i] = self.rc.ReadError(self.address[i])[1]
-        for error in self.err:
-            if error:
-                self.killMotors()
-                rospy.logerr("Motor controller Error: \n'{}'".format(error))
+            err[i] = self.rc.ReadError(self.address[i])[1]
+            if err[i] != 0:
+                rospy.logerr("Motor controller '{}' reported error code {}".format(self.address[i], err[i]))
+        
+        return err
 
 
 if __name__ == "__main__":
@@ -427,5 +430,5 @@ if __name__ == "__main__":
     rospy.loginfo("Starting the roboclaw wrapper node")
 
     wrapper = RoboclawWrapper()
-    rospy.on_shutdown(wrapper.killMotors)
+    rospy.on_shutdown(wrapper.stop_motors)
     wrapper.run()
