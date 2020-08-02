@@ -47,6 +47,8 @@ class RoboclawWrapper(object):
         accel_max = 2**15-1
         accel_rate = rospy.get_param('/drive_acceleration_factor', 0.5)
         self.drive_accel = int(accel_max * accel_rate)
+        self.velocity_timeout = rospy.Duration(rospy.get_param('/velocity_timeout', 2.0))
+        self.time_last_cmd = rospy.Time.now()
 
         self.stop_motors()
 
@@ -90,6 +92,14 @@ class RoboclawWrapper(object):
                 status.current = self.read_currents()
                 status.error_status = self.read_errors()
                 counter = 0
+
+            # stop the motors if we haven't received a command in a while
+            now = rospy.Time.now()
+            if now - self.time_last_cmd > self.velocity_timeout:
+                # rather than a hard stop, send a ramped velocity command
+                self.drive_cmd_buffer = CommandDrive()
+                self.send_drive_buffer_velocity(self.drive_cmd_buffer)
+                self.time_last_cmd = now  # so this doesn't get called all the time
 
             self.status_pub.publish(status)
             counter += 1
@@ -165,6 +175,7 @@ class RoboclawWrapper(object):
         """
         
         rospy.logdebug("Corner command callback received: {}".format(cmd))
+        self.time_last_cmd = rospy.Time.now()
         self.corner_cmd_buffer = cmd
 
     def send_corner_buffer(self, cmd):
@@ -212,6 +223,7 @@ class RoboclawWrapper(object):
         
         rospy.logdebug("Drive command callback received: {}".format(cmd))
         self.drive_cmd_buffer = cmd
+        self.time_last_cmd = rospy.Time.now()
 
     def send_drive_buffer_velocity(self, cmd):
         """
