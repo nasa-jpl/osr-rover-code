@@ -1,3 +1,7 @@
+# A short and sweet script to test communication with a single roboclaw motor controller.
+# usage 
+#   $ python roboclawtest.py 128
+
 from time import sleep
 import sys
 from os import path
