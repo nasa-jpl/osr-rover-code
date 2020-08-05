@@ -61,6 +61,21 @@ Follow the instructions on the download page for preparing the image for the RPi
 
 You should now be logged in to your newly minted copy of Ubuntu 18.04 server!
 
+You probably will also want to connect to your newly configured RPi remotely over ssh, rather than having to using a separate monitor every time. Follow these steps.
+
+1. Connect to wifi from the command line
+    1. Instructions [here](https://linuxconfig.org/ubuntu-20-04-connect-to-wifi-from-command-line) (basically, you need to edit the `/etc/netplan/50-cloud-init.yaml` file and add your wifi network)
+    2. `SSID-NAME-HERE` is your network's name, and `PASSWORD-HERE` is the password for it.
+    3. After following these steps, you should see an ip address assigned in the output of `ip a`. It will be an `inet` value like `192.168.1.18`, underneath an interface entry like `wlan0`
+2. Enable SSH
+    1. Instructions [here]([https://askubuntu.com/a/681768). Namely, run `sudo systemctl enable ssh.socket` from the command line
+    3. Now you should be able to login from your dev machine. `ssh ubunut@192.168.1.18`, or whatever the ip address of your RPi is.
+    4. It should prompt you for a password. Once you enter it successfully, you'll be logged! The `enable` step above should configure the ssh server to automatically come up on reboot, so you can just login to the RPi remotely from now on.
+
+<!-- 3. Add your host/development machine's SSH key to the RPi `authorized_keys` file.
+    1. Generate an SSH key on your dev machine, if you don't already have one. Use `ssh-keygen` at the command line. (You can choose to give it a password or not - a password probably isn't necessary if you don't plan on putting anything sensitive on your rover)
+    2. Copy your public ssh key. `cat ~/.ssh/id_rsa.pub` (or whatever _public_, `.pub`, key file you want). Copy the 
+    3.  -->
 
 #### 2.1.2 Raspbian (not recommended)
 
@@ -354,9 +369,4 @@ via `roslaunch osr bringup osr.launch`, enable the startup service on the robot 
 sudo systemctl enable osr startup.service
 ```
 
-At this point, your rover should be fully functional and automatically run whenever you boot it up!
-Congratulations and happy roving!!
-
-## 6 Other stuff
-
-For getting ssh to start before login: [https://askubuntu.com/a/681768 ](https://askubuntu.com/a/681768)
+At this point, your rover should be fully functional and automatically run whenever you boot it up! Congratulations and happy roving!!
