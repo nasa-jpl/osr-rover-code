@@ -12,9 +12,8 @@ from roboclaw import Roboclaw
 if __name__ == "__main__":
     
     address = int(sys.argv[1]) 
-    roboclaw = Roboclaw("/dev/ttyS0", 115200)
+    roboclaw = Roboclaw("/dev/serial0", 115200)
     roboclaw.Open()
 
     print roboclaw.ReadVersion(address)
     print roboclaw.ReadEncM1(address)
-
