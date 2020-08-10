@@ -132,12 +132,11 @@ sudo apt install python-rosdep python-rosinstall python-rosinstall-generator pyt
 # initialize rosdep
 sudo rosdep init
 rosdep update
-
-todo: these need to be moved down
+```
+<!-- todo: pretty sure these aren't needed anymore. Confirm.
 # sensor msgs dependencies
 rosinstall_generator sensor_msgs --rosdistro melodic --deps --wet-only --tar >melodic-sensor_msgs-wet.rosinstall
-wstool init src melodic-sensor_msgs-wet.rosinstall
-```
+wstool init src melodic-sensor_msgs-wet.rosinstall -->
 
 #### 2.2.2 ROS Kinetic on Raspbian
 
@@ -177,13 +176,6 @@ On the Raspberry Pi, open up a terminal `(ctl + alt + t)` and then type the foll
 # Create a catkin workspace directory, which will contain all ROS compilation and 
 # source code files, and move into it
 mkdir -p ~/osr_ws/src && cd ~/osr_ws
-# Build a basic, empty catkin project
-catkin make
-
-# If this doesn’t report any errors, check if there are two new directories:
-ls ~/osr_ws/build
-ls ~/osr_ws/devel
-# the above commands should not report 'No such file or directory'
 
 # Source your newly created ROS environment
 # EITHER, if you installed ROS melodic
