@@ -130,10 +130,10 @@ Dependencies for building packages
 sudo apt install python-rosdep python-rosinstall python-rosinstall-generator python-wstool build-essential
 
 # initialize rosdep
-sudo apt install python-rosdep
 sudo rosdep init
 rosdep update
 
+todo: these need to be moved down
 # sensor msgs dependencies
 rosinstall_generator sensor_msgs --rosdistro melodic --deps --wet-only --tar >melodic-sensor_msgs-wet.rosinstall
 wstool init src melodic-sensor_msgs-wet.rosinstall
@@ -165,33 +165,96 @@ Next, we will install ROS (and specifically, the version called ’Kinetic’).
 Once you familiarize yourself with the above issues, go ahead and complete your ROS installation by following these [instructions](http://wiki.ros.org/ROSberryPi/Installing%20ROS%20Kinetic%20on%20the%20Raspberry%20Pi)
 
 
-### 2.3 Setting up serial communication on the RPi
+### 2.3 Setting up ROS environment and building the rover code
 
-#### 2.3.1 Ubuntu 18.04
+#### 2.3.1 Setup ROS build environment
 
-You'll need to create dev files for serial0 and serial1 and update permissions:
+First we'll create a workspace for the rover code. 
+
+On the Raspberry Pi, open up a terminal `(ctl + alt + t)` and then type the following commands:
+
 ```
-sudo ln -s /dev/ttyS0 /dev/serial0
-sudo ln -s /dev/ttyAMA0 /dev/serial1
+# Create a catkin workspace directory, which will contain all ROS compilation and 
+# source code files, and move into it
+mkdir -p ~/osr_ws/src && cd ~/osr_ws
+# Build a basic, empty catkin project
+catkin make
 
-# change the group of the new serial devices
-sudo chgrp -h tty /dev/serial0
-sudo chgrp -h tty /dev/serial1
+# If this doesn’t report any errors, check if there are two new directories:
+ls ~/osr_ws/build
+ls ~/osr_ws/devel
+# the above commands should not report 'No such file or directory'
 
-# The devices are now under the tty group. Need to add the ubuntu user to the tty group:
-sudo adduser ubuntu tty
-# also need dialout for ttyS0 and ttyAMA0
-sudo adduser ubuntu dialout
-
-# update the permissions for group read on the devices
-sudo chmod g+r /dev/ttyS0
-sudo chmod g+r /dev/ttyAMA0
+# Source your newly created ROS environment
+# EITHER, if you installed ROS melodic
+source /opt/ros/melodic/setup.bash
+# OR, if you installed ROS kinetic
+source /opt/ros/kinetic/setup.bash
 ```
 
-**todo**: should update instructions in this subsection for making this setup permanent
+#### 2.3.2 Clone and build the rover code
+
+In the newly created catkin workspace you just made, clone this repo:
+```commandline
+cd ~/osr_ws/src
+git clone https://github.com/nasa-jpl/osr-rover-code.git
+
+# install the dependencies
+rosdep install --from-paths src --ignore-src
+catkin_make
+
+# add the generated files to the path so ROS can find them
+source devel/setup.bash
+```
+
+The rover has some customizable settings that will overwrite the default values. Whether you have any changes compared to the defaults or not, you have to manually create these files:
+```
+cd ~/osr_ws/src/osr-rover-code/ROS/osr_bringup/config
+touch physical_properties_mod.yaml roboclaw_params_mod.yaml
+```
+To change any values from the default, modify these files instead so they don't get tracked by git. The files follow the same structure as the default.
 
 
-#### 2.3.1 Raspbian
+#### 2.3.3 Add ROS config scripts to .bashrc
+
+The `source...foo.bash` lines above are used to manually configure your ROS environment. We can do this automatically in the future by doing:
+```
+# use "melodic" or "kinetic" below, as appropriate
+echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc 
+echo "source ~/osr_ws/devel/setup.bash" >> ~/.bashrc
+```
+This adds the `source` lines to `~/.bashrc`, which runs whenever a new shell is opened on the RPi - by logging in via ssh, for example. So, from now on, when you log into the RPi your new command line environment will have the appropriate configuration for ROS and the rover code.
+
+
+### 2.4 Setting up serial communication on the RPi
+
+#### 2.4.1 Ubuntu 18.04
+
+Because we are using the serial port for communicating with the roboclaw motor controllers, we have to disable the serial-getty@ttyS0.service service. This service has some level of control over serial devices that we use, so if we leave it on it we'll get weird errors ([source](https://spellfoundry.com/2016/05/29/configuring-gpio-serial-port-raspbian-jessie-including-pi-3-4/)).
+
+Note that this **may** stop us from being able to communicate with the RPi over serial. **Todo**: confirm this and discuss workarounds (e.g. only use ssh)
+
+```
+sudo systemctl stop serial-getty@ttyS0.service
+sudo systemctl disable serial-getty@ttyS0.service
+```
+
+
+Now we'll need to copy over a udev rules file, which is used to configure needed device files in `/dev`; namely, `ttyS0 and ttyAMA0`. Here's a [good primer](http://reactivated.net/writing_udev_rules.html) on udev. 
+
+```
+# copy udev file from the repo to your system
+cd ~/osr_ws/src/osr-rover-code/config
+sudo cp serial_udev_ubuntu1804.rules /etc/udev/rules.d/10-local.rules
+
+# reload the udev rules so that the devices files are set up correctly.
+sudo udevadm control --reload-rules && sudo udevadm trigger
+```
+
+This configuration should persist across RPi reboots.
+
+
+#### 2.4.1 Raspbian
 
 In this project we will be using serial communication to talk to the motor controllers. Serial communication is a communication protocol that describes how bits of information are transferred between one device and another. You can find more information on serial communication [here](https://learn.sparkfun.com/tutorials/serial-communication)
 
@@ -226,67 +289,6 @@ Once you’ve completed the above steps, reboot the Pi.
 ```
 sudo reboot
 ```
-
-### 2.4 Setting up ROS environment and building the rover code
-
-#### 2.4.1 Setup ROS build environment
-
-First we'll create a workspace for the rover code. 
-
-On the Raspberry Pi, open up a terminal `(ctl + alt + t)` and then type the following commands:
-
-```
-# Create a catkin workspace directory, which will contain all ROS compilation and 
-# source code files, and move into it
-mkdir -p ~/osr_ws/src && cd ~/osr_ws
-# Build a basic, empty catkin project
-catkin make
-
-# If this doesn’t report any errors, check if there are two new directories:
-ls ~/osr_ws/build
-ls ~/osr_ws/devel
-# the above commands should not report 'No such file or directory'
-
-# Source your newly created ROS environment
-# EITHER, if you installed ROS melodic
-source /opt/ros/melodic/setup.bash
-# OR, if you installed ROS kinetic
-source /opt/ros/kinetic/setup.bash
-```
-
-#### 2.4.2 Clone and build the rover code
-
-In the newly created catkin workspace you just made, clone this repo:
-```commandline
-cd ~/osr_ws/src
-git clone https://github.com/nasa-jpl/osr-rover-code.git
-
-# install the dependencies
-rosdep install --from-paths src --ignore-src
-catkin_make
-
-# add the generated files to the path so ROS can find them
-source devel/setup.bash
-```
-
-The rover has some customizable settings that will overwrite the default values. Whether you have any changes compared to the defaults or not, you have to manually create these files:
-```
-cd ~/osr_ws/src/osr-rover-code/ROS/osr_bringup/config
-touch physical_properties_mod.yaml roboclaw_params_mod.yaml
-```
-To change any values from the default, modify these files instead so they don't get tracked by git. The files follow the same structure as the default.
-
-
-#### 2.4.3 Add ROS config scripts to .bashrc
-
-The `source...foo.bash` lines above are used to manually configure your ROS environment. We can do this automatically in the future by doing:
-```
-# use "melodic" or "kinetic" below, as appropriate
-echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc 
-echo "source ~/osr_ws/devel/setup.bash" >> ~/.bashrc
-```
-This adds the `source` lines to `~/.bashrc`, which runs whenever a new shell is opened on the RPi - by logging in via ssh, for example. So, from now on, when you log into the RPi your new command line environment will have the appropriate configuration for ROS and the rover code.
-
 
 ## 3 Testing serial comm with the Roboclaw motors controllers
 
@@ -325,7 +327,7 @@ command the rover by holding the left back button (LB) down and moving the joyst
 
 ## 5 Automatic bringup with init script
 
-todo: need to update this stuff to reflect changes from this PR: https://github.com/nasa-jpl/osr-rover-code/pull/107
+**todo**: need to update this stuff to reflect changes from this PR: https://github.com/nasa-jpl/osr-rover-code/pull/107
 
 Starting scripts on boot using ROS can be a little more difficult than starting scripts on boot normally from
 the Raspberry Pi because of the default permission settings on the RPi and the fact that that ROS cannot
