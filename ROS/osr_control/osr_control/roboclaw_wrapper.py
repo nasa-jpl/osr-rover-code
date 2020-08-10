@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 import serial
 import math
-import rospy
+import rclpy
+from rclpy.node import Node
+
 
 from roboclaw import Roboclaw
 
@@ -9,11 +11,12 @@ from sensor_msgs.msg import JointState
 from osr_msgs.msg import CommandDrive, CommandCorner, Status
 
 
-class RoboclawWrapper(object):
+class RoboclawWrapper(Node):
     """Interface between the roboclaw motor drivers and the higher level rover code"""
 
     def __init__(self):
-        rospy.loginfo( "Initializing motor controllers")
+        super().__init__(RoboclawWrapper)
+        self.get_logger().info( "Initializing motor controllers")
 
         # initialize attributes
         self.rc = None
@@ -23,7 +26,8 @@ class RoboclawWrapper(object):
         self.corner_cmd_buffer = None
         self.drive_cmd_buffer = None
 
-        self.roboclaw_mapping = rospy.get_param('~roboclaw_mapping')
+        self.declare_parameter("~roboclaw_mapping")
+        self.roboclaw_mapping = self.get_parameter('~roboclaw_mapping').get_parameter_value()
         self.encoder_limits = {}
         self.establish_roboclaw_connections()
         self.stop_motors()  # don't move at start
@@ -40,23 +44,25 @@ class RoboclawWrapper(object):
         # corner motor acceleration
         # Even though the actual method takes longs (2*32-1), roboclaw blog says 2**15 is 100%
         accel_max = 2**15-1
-        accel_rate = rospy.get_param('/corner_acceleration_factor', 0.8)
+        self.declare_parameter('/corner_acceleration_factor')
+        accel_rate = self.get_parameter('/corner_acceleration_factor').get_parameter_value()
         self.corner_accel = int(accel_max * accel_rate)
         self.roboclaw_overflow = 2**15-1
         # drive motor acceleration
         accel_max = 2**15-1
-        accel_rate = rospy.get_param('/drive_acceleration_factor', 0.5)
+        self.declare_parameter('/drive_acceleration_factor')
+        accel_rate = self.get_parameter('/drive_acceleration_factor')
         self.drive_accel = int(accel_max * accel_rate)
-        self.velocity_timeout = rospy.Duration(rospy.get_param('/velocity_timeout', 2.0))
-        self.time_last_cmd = rospy.Time.now()
+        self.velocity_timeout = rospy.Duration(self.get_parameter('/velocity_timeout').get_parameter_value()
+        self.time_last_cmd = self.get_clock().now()
 
         self.stop_motors()
 
         # set up publishers and subscribers
-        self.corner_cmd_sub = rospy.Subscriber("/cmd_corner", CommandCorner, self.corner_cmd_cb, queue_size=1)
-        self.drive_cmd_sub = rospy.Subscriber("/cmd_drive", CommandDrive, self.drive_cmd_cb, queue_size=1)
-        self.enc_pub = rospy.Publisher("/encoder", JointState, queue_size=1)
-        self.status_pub = rospy.Publisher("/status", Status, queue_size=1)
+        self.corner_cmd_sub = self.create_subscription(CommandCorner, "/cmd_corner", self.corner_cmd_cb, queue_size=1)
+        self.drive_cmd_sub = self.create_subscription(CommandDrive, "/cmd_drive", self.drive_cmd_cb, queue_size=1)
+        self.enc_pub = self.create_publisher(JointState, "/encoder", queue_size=1)
+        self.status_pub = self.create_publisher(Status, "/status", queue_size=1)
 
     def run(self):
         """Blocking loop which runs after initialization has completed"""
@@ -83,7 +89,7 @@ class RoboclawWrapper(object):
                 self.read_encoder_values()
                 self.enc_pub.publish(self.current_enc_vals)
             except AssertionError as read_exc:
-                rospy.logwarn( "Failed to read encoder values")
+                self.get_logger().warn( "Failed to read encoder values")
 
             # Downsample the rate of less important data
             if (counter >= 5):
@@ -94,7 +100,7 @@ class RoboclawWrapper(object):
                 counter = 0
 
             # stop the motors if we haven't received a command in a while
-            now = rospy.Time.now()
+            now = self.get_clock().now()
             if now - self.time_last_cmd > self.velocity_timeout:
                 # rather than a hard stop, send a ramped velocity command
                 self.drive_cmd_buffer = CommandDrive()
@@ -124,16 +130,16 @@ class RoboclawWrapper(object):
         # initialize connection status to successful
         all_connected = True
         for address in self.address:
-            rospy.logdebug("Attempting to talk to motor controller ''".format(address))
+            self.get_logger().debug("Attempting to talk to motor controller ''".format(address))
             version_response = self.rc.ReadVersion(address)
             connected = bool(version_response[0])
             if not connected:
-                rospy.logerr("Unable to connect to roboclaw at '{}'".format(address))
+                self.get_logger().err("Unable to connect to roboclaw at '{}'".format(address))
                 all_connected = False
             else:
-                rospy.logdebug("Roboclaw version for address '{}': '{}'".format(address, version_response[1]))
+                self.get_logger().debug("Roboclaw version for address '{}': '{}'".format(address, version_response[1]))
         if all_connected:
-            rospy.loginfo("Sucessfully connected to RoboClaw motor controllers")
+            self.get_logger().info("Sucessfully connected to RoboClaw motor controllers")
         else:
             raise Exception("Unable to establish connection to one or more of the Roboclaw motor controllers")
 
@@ -150,7 +156,7 @@ class RoboclawWrapper(object):
     def read_encoder_values(self):
         """Query roboclaws and update current motors status in encoder ticks"""
         enc_msg = JointState()
-        enc_msg.header.stamp = rospy.Time.now()
+        enc_msg.header.stamp = self.get_clock().now().to_msg()
         for motor_name, properties in self.roboclaw_mapping.iteritems():
             enc_msg.name.append(motor_name)
             position = self.read_encoder_position(properties["address"], properties["channel"])
@@ -173,17 +179,14 @@ class RoboclawWrapper(object):
         Takes the corner command and stores it in the buffer to be sent
         on the next iteration of the run() loop.
         """
-        
-        rospy.logdebug("Corner command callback received: {}".format(cmd))
-        self.time_last_cmd = rospy.Time.now()
+        self.get_logger().debug("Corner command callback received: {}".format(cmd))
+        self.time_last_cmd = self.get_clock().now()
         self.corner_cmd_buffer = cmd
 
     def send_corner_buffer(self, cmd):
         """
         Sends the corner command to the motor controller.
         """
-
-
         # convert position to tick
         encmin, encmax = self.encoder_limits["corner_left_front"]
         left_front_tick = self.position2tick(cmd.left_front_pos, encmin, encmax,
@@ -221,9 +224,9 @@ class RoboclawWrapper(object):
         on the next iteration of the run() loop.
         """
         
-        rospy.logdebug("Drive command callback received: {}".format(cmd))
+        self.get_logger().debug("Drive command callback received: {}".format(cmd))
         self.drive_cmd_buffer = cmd
-        self.time_last_cmd = rospy.Time.now()
+        self.time_last_cmd = self.get_clock().now()
 
     def send_drive_buffer_velocity(self, cmd):
         """
@@ -432,15 +435,17 @@ class RoboclawWrapper(object):
         for i in range(len(self.address)):
             err[i] = self.rc.ReadError(self.address[i])[1]
             if err[i] != 0:
-                rospy.logerr("Motor controller '{}' reported error code {}".format(self.address[i], err[i]))
+                self.get_logger().err("Motor controller '{}' reported error code {}".format(self.address[i], err[i]))
         
         return err
 
 
 if __name__ == "__main__":
-    rospy.init_node("roboclaw wrapper", log_level=rospy.INFO)
-    rospy.loginfo("Starting the roboclaw wrapper node")
+    rclpy.init()
 
     wrapper = RoboclawWrapper()
     rospy.on_shutdown(wrapper.stop_motors)
     wrapper.run()
+
+    wrapper.destroy_node()
+    rclpy.shutdown()
