@@ -69,7 +69,7 @@ You probably will also want to connect to your newly configured RPi remotely ove
     3. After following these steps, you should see an ip address assigned in the output of `ip a`. It will be an `inet` value like `192.168.1.18`, underneath an interface entry like `wlan0`
 2. Enable SSH
     1. Instructions [here]([https://askubuntu.com/a/681768). Namely, run `sudo systemctl enable ssh.socket` from the command line
-    3. Now you should be able to login from your dev machine. `ssh ubunut@192.168.1.18`, or whatever the ip address of your RPi is.
+    3. Now you should be able to login from your dev machine. `ssh ubuntu@192.168.1.18`, or whatever the ip address of your RPi is.
     4. It should prompt you for a password. Once you enter it successfully, you'll be logged! The `enable` step above should configure the ssh server to automatically come up on reboot, so you can just login to the RPi remotely from now on.
 
 <!-- 3. Add your host/development machine's SSH key to the RPi `authorized_keys` file.
