@@ -13,7 +13,7 @@ Download Ubuntu 18.04 from [here](https://ubuntu.com/download/raspberry-pi) for 
 Follow the instructions on the download page for preparing the image for the RPi. Namely:
 
 - Flash Ubuntu onto your microSD card. There are instructions for doing this on [Ubuntu](https://ubuntu.com/tutorials/create-an-ubuntu-image-for-a-raspberry-pi-on-ubuntu#1-overview), [Windows](https://ubuntu.com/tutorials/create-an-ubuntu-image-for-a-raspberry-pi-on-windows), and [Mac](https://ubuntu.com/tutorials/create-an-ubuntu-image-for-a-raspberry-pi-on-macos)
-- Attach a monitor and keyboard to the RPi
+- Attach a monitor and keyboard to the RPi (note an alternative is to use `screen`, see [here](https://elinux.org/RPi_Serial_Connection))
 - Insert the flashed SD card in the RPi
 - Power it on
 - Login, using "ubuntu" for the username and password
