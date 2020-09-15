@@ -4,7 +4,7 @@ Note that these instructions assume you followed the steps in [rpi setup](rpi.md
 
 ## 1 Manual rover bringup
 
-In a sourced terminal (`source /opt/ros/melodic/setup.bash && source ~/osr_ws/devel/setup.bash`), run
+In a sourced terminal (`source /opt/ros/$ROS_DISTRO/setup.bash && source ~/osr_ws/devel/setup.bash`), run
 
 ```commandline
 roslaunch osr_bringup osr.launch
