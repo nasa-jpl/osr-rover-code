@@ -8,17 +8,22 @@ These instructions should work for both the RPi 3 and 4. You are free to use oth
 
 The first step is to install the Ubuntu Operating System on your Raspberry Pi.
 
-Download Ubuntu 18.04 from [here](https://ubuntu.com/download/raspberry-pi) for your RPi version. Go for the 64 bit version. **Note that as of 7/30/2020, the link for 18.04 64bit for rpi4 is broken, and points to the rpi3 version. You can grab the correct rpi4 version from [this direct link](https://ubuntu.com/download/raspberry-pi/thank-you?version=18.04&versionPatch=.4&architecture=arm64+raspi4)**.
+We recommend installing [Ubuntu Mate](https://ubuntu-mate.org/ports/raspberry-pi/) for first timers. Grab the right image from the [downloads page](https://ubuntu-mate.org/download/). Best default is 32-bit, but if you're on an Rpi4 then you can go for 64-bit.
 
-Follow the instructions on the download page for preparing the image for the RPi. Namely:
+Note: If you don't need a desktop, you can get the server image from ubuntu.com [here](https://ubuntu.com/download/raspberry-pi) for your RPi version.
+
+Follow these instructions for preparing the image for the RPi. Namely:
 
 - Flash Ubuntu onto your microSD card. There are instructions for doing this on [Ubuntu](https://ubuntu.com/tutorials/create-an-ubuntu-image-for-a-raspberry-pi-on-ubuntu#1-overview), [Windows](https://ubuntu.com/tutorials/create-an-ubuntu-image-for-a-raspberry-pi-on-windows), and [Mac](https://ubuntu.com/tutorials/create-an-ubuntu-image-for-a-raspberry-pi-on-macos)
 - Attach a monitor and keyboard to the RPi (note an alternative is to use `screen`, see [here](https://elinux.org/RPi_Serial_Connection))
 - Insert the flashed SD card in the RPi
 - Power it on
-- Login, using "ubuntu" for the username and password
+- If you're using Ubuntu Mate, you should be lead through a setup process that includes connecting to a wifi network and creating a user account. Just name the user "ubuntu" to make things easy.
+- If you're using an ubuntu server image, login using "ubuntu" for the username and password.
 
-You should now be logged in to your newly minted copy of Ubuntu 18.04 server!
+You should now be logged in to your newly minted copy of Ubuntu 18.04!
+
+## 2 Connecting to Wifi and enabling SSH (Ubuntu server only)
 
 You probably will also want to connect to your newly configured RPi remotely over ssh, rather than having to using a separate monitor every time. Follow these steps.
 
@@ -28,15 +33,12 @@ You probably will also want to connect to your newly configured RPi remotely ove
     3. After following these steps, you should see an ip address assigned in the output of `ip a`. It will be an `inet` value like `192.168.1.18`, underneath an interface entry like `wlan0`
 2. Enable SSH
     1. Instructions [here](https://askubuntu.com/a/681768). Namely, run `sudo systemctl enable ssh.socket` from the command line
-    3. Now you should be able to login from your dev machine. `ssh ubuntu@192.168.1.18`, or whatever the ip address of your RPi is.
-    4. It should prompt you for a password. Once you enter it successfully, you'll be logged! The `enable` step above should configure the ssh server to automatically come up on reboot, so you can just login to the RPi remotely from now on.
+    3. Now you should be able to login from your dev machine. `ssh ubuntu@192.168.1.18`, using the ip address for your RPi that you found above.
+    4. It should prompt you for a password. Once you enter it successfully, you'll be logged on! The `enable` step above should configure the ssh server to automatically come up on reboot, so you can just login to the RPi remotely from now on.
 
-<!-- 3. Add your host/development machine's SSH key to the RPi `authorized_keys` file.
-    1. Generate an SSH key on your dev machine, if you don't already have one. Use `ssh-keygen` at the command line. (You can choose to give it a password or not - a password probably isn't necessary if you don't plan on putting anything sensitive on your rover)
-    2. Copy your public ssh key. `cat ~/.ssh/id_rsa.pub` (or whatever _public_, `.pub`, key file you want). Copy the 
-    3.  -->
+**Todo**: add ssh instructions for Ubuntu Mate. The instructions above didn't work for me.
 
-## 2 Installing ROS
+## 3 Installing ROS
 
 We'll install ROS (Robot Operating System) Melodic on the RPi.
 
@@ -74,9 +76,9 @@ rosdep update
 rosinstall_generator sensor_msgs --rosdistro melodic --deps --wet-only --tar >melodic-sensor_msgs-wet.rosinstall
 wstool init src melodic-sensor_msgs-wet.rosinstall -->
 
-## 3 Setting up ROS environment and building the rover code
+## 4 Setting up ROS environment and building the rover code
 
-### 3.1 Setup ROS build environment
+### 4.1 Setup ROS build environment
 
 First we'll create a workspace for the rover code. 
 
@@ -94,7 +96,7 @@ source /opt/ros/melodic/setup.bash
 source /opt/ros/kinetic/setup.bash
 ```
 
-### 3.2 Clone and build the rover code
+### 4.2 Clone and build the rover code
 
 In the newly created catkin workspace you just made, clone this repo:
 ```commandline
@@ -103,6 +105,7 @@ git clone https://github.com/nasa-jpl/osr-rover-code.git
 
 # install the dependencies
 rosdep install --from-paths src --ignore-src
+cd ..
 catkin_make
 
 # add the generated files to the path so ROS can find them
@@ -117,7 +120,7 @@ touch physical_properties_mod.yaml roboclaw_params_mod.yaml
 To change any values from the default, modify these files instead so they don't get tracked by git. The files follow the same structure as the default.
 
 
-### 3.3 Add ROS config scripts to .bashrc
+### 4.3 Add ROS config scripts to .bashrc
 
 The `source...foo.bash` lines above are used to manually configure your ROS environment. We can do this automatically in the future by doing:
 ```
@@ -128,13 +131,13 @@ echo "source ~/osr_ws/devel/setup.bash" >> ~/.bashrc
 This adds the `source` lines to `~/.bashrc`, which runs whenever a new shell is opened on the RPi - by logging in via ssh, for example. So, from now on, when you log into the RPi your new command line environment will have the appropriate configuration for ROS and the rover code.
 
 
-## 4 Setting up serial communication on the RPi
+## 5 Setting up serial communication on the RPi
 
 The RPi will talk to the motor controllers over serial.
 
 Because we are using the serial port for communicating with the roboclaw motor controllers, we have to disable the serial-getty@ttyS0.service service. This service has some level of control over serial devices that we use, so if we leave it on it we'll get weird errors ([source](https://spellfoundry.com/2016/05/29/configuring-gpio-serial-port-raspbian-jessie-including-pi-3-4/)).
 
-Note that this **may** stop us from being able to communicate with the RPi over serial. **Todo**: confirm this and discuss workarounds (e.g. only use ssh)
+Note that the following **may** step may stop you from being able to communicate with the RPi over serial. **Todo**: confirm this and discuss workarounds (e.g. only use ssh)
 
 ```
 sudo systemctl stop serial-getty@ttyS0.service
@@ -155,7 +158,7 @@ sudo udevadm control --reload-rules && sudo udevadm trigger
 
 This configuration should persist across RPi reboots.
 
-## 5 Testing serial comm with the Roboclaw motors controllers
+## 6 Testing serial comm with the Roboclaw motors controllers
 
 Run the roboclawtest.py script with all of the motor addresses:
 ```
