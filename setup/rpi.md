@@ -71,10 +71,6 @@ sudo apt install python-rosdep python-rosinstall python-rosinstall-generator pyt
 sudo rosdep init
 rosdep update
 ```
-<!-- todo: pretty sure these aren't needed anymore. Confirm.
-# sensor msgs dependencies
-rosinstall_generator sensor_msgs --rosdistro melodic --deps --wet-only --tar >melodic-sensor_msgs-wet.rosinstall
-wstool init src melodic-sensor_msgs-wet.rosinstall -->
 
 ## 4 Setting up ROS environment and building the rover code
 
@@ -137,7 +133,7 @@ The RPi will talk to the motor controllers over serial.
 
 Because we are using the serial port for communicating with the roboclaw motor controllers, we have to disable the serial-getty@ttyS0.service service. This service has some level of control over serial devices that we use, so if we leave it on it we'll get weird errors ([source](https://spellfoundry.com/2016/05/29/configuring-gpio-serial-port-raspbian-jessie-including-pi-3-4/)).
 
-Note that the following **may** step may stop you from being able to communicate with the RPi over serial. **Todo**: confirm this and discuss workarounds (e.g. only use ssh)
+Note that the following **may** step may stop you from being able to communicate with the RPi over serial.
 
 ```
 sudo systemctl stop serial-getty@ttyS0.service

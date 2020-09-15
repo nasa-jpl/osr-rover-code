@@ -16,8 +16,6 @@ command the rover by holding the left back button (LB) down and moving the joyst
 
 ## 2 Automatic bringup with init script
 
-**todo**: need to update this stuff to reflect changes from this PR: https://github.com/nasa-jpl/osr-rover-code/pull/107
-
 Starting scripts on boot using ROS can be a little more difficult than starting scripts on boot normally from
 the Raspberry Pi because of the default permission settings on the RPi and the fact that that ROS cannot
 be ran as the root user. The way that we will starting our rover code automatically on boot is to create
