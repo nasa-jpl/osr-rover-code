@@ -158,6 +158,15 @@ sudo udevadm control --reload-rules && sudo udevadm trigger
 
 This configuration should persist across RPi reboots.
 
+Finally, add the user to the `tty` group:
+```
+sudo adduser ubuntu tty
+```
+(or whatever your username is, if not ubuntu)
+
+You'll need to log out of your ssh session and log back in for this to take effect. Or you can restart Ubuntu.
+
+
 ## 6 Testing serial comm with the Roboclaw motors controllers
 
 Run the roboclawtest.py script with all of the motor addresses:
