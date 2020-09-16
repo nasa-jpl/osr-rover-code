@@ -8,35 +8,45 @@ These instructions should work for both the RPi 3 and 4. You are free to use oth
 
 The first step is to install the Ubuntu Operating System on your Raspberry Pi.
 
-We recommend installing [Ubuntu Mate](https://ubuntu-mate.org/ports/raspberry-pi/) for first timers. Grab the right image from the [downloads page](https://ubuntu-mate.org/download/). Best default is 32-bit, but if you're on an Rpi4 then you can go for 64-bit.
+Download Ubuntu 18.04 from [here](https://ubuntu.com/download/raspberry-pi) for your RPi version. For an RPi3 the best default is 32-bit, but if you're on an Rpi4 then you can go for 64-bit.
 
-Note: If you don't need a desktop, you can get the server image from ubuntu.com [here](https://ubuntu.com/download/raspberry-pi) for your RPi version.
-
-Follow these instructions for preparing the image for the RPi. Namely:
+Preparing the image for the RPi and boot it up:
 
 - Flash Ubuntu onto your microSD card. There are instructions for doing this on [Ubuntu](https://ubuntu.com/tutorials/create-an-ubuntu-image-for-a-raspberry-pi-on-ubuntu#1-overview), [Windows](https://ubuntu.com/tutorials/create-an-ubuntu-image-for-a-raspberry-pi-on-windows), and [Mac](https://ubuntu.com/tutorials/create-an-ubuntu-image-for-a-raspberry-pi-on-macos)
 - Attach a monitor and keyboard to the RPi (note an alternative is to use `screen`, see [here](https://elinux.org/RPi_Serial_Connection))
 - Insert the flashed SD card in the RPi
 - Power it on
-- If you're using Ubuntu Mate, you should be lead through a setup process that includes connecting to a wifi network and creating a user account. Just name the user "ubuntu" to make things easy.
-- If you're using an ubuntu server image, login using "ubuntu" for the username and password.
+- Login, using "ubuntu" for the username and password.
 
 You should now be logged in to your newly minted copy of Ubuntu 18.04!
 
-## 2 Connecting to Wifi and enabling SSH (Ubuntu server only)
+## 2 Further setup: wifi, desktop GUI (optional), ssh
 
-You probably will also want to connect to your newly configured RPi remotely over ssh, rather than having to using a separate monitor every time. Follow these steps.
+### 2.1 Connect to wifi from the command line
 
-1. Connect to wifi from the command line
-    1. Instructions [here](https://linuxconfig.org/ubuntu-20-04-connect-to-wifi-from-command-line) (basically, you need to edit the `/etc/netplan/50-cloud-init.yaml` file and add your wifi network)
-    2. `SSID-NAME-HERE` is your network's name, and `PASSWORD-HERE` is the password for it.
-    3. After following these steps, you should see an ip address assigned in the output of `ip a`. It will be an `inet` value like `192.168.1.18`, underneath an interface entry like `wlan0`
-2. Enable SSH
-    1. Instructions [here](https://askubuntu.com/a/681768). Namely, run `sudo systemctl enable ssh.socket` from the command line
-    3. Now you should be able to login from your dev machine. `ssh ubuntu@192.168.1.18`, using the ip address for your RPi that you found above.
-    4. It should prompt you for a password. Once you enter it successfully, you'll be logged on! The `enable` step above should configure the ssh server to automatically come up on reboot, so you can just login to the RPi remotely from now on.
+Get your new device on the internet. Instructions [here](https://linuxconfig.org/ubuntu-20-04-connect-to-wifi-from-command-line). 
 
-**Todo**: add ssh instructions for Ubuntu Mate. The instructions above didn't work for me.
+1. Basically, you need to edit the `/etc/netplan/50-cloud-init.yaml` file and add your wifi network)
+2. `SSID-NAME-HERE` is your network's name, and `PASSWORD-HERE` is the password for it.
+3. After following these steps, you should see an ip address assigned in the output of `ip a`. It will be an `inet` value like `192.168.1.18`, underneath an interface entry like `wlan0`
+
+### 2.2 Install a desktop GUI environment (optional)
+
+This is a good option for newbies to the linux world. It's pretty easy to do, though it'll take a while (maybe an hour).
+
+Follow the instructions [here](https://phoenixnap.com/kb/how-to-install-a-gui-on-ubuntu#htoc-update-repositories-and-packages).
+
+1. We recommend using SLiM as the Display Manager, it seems lighter weight than the other options
+2. We also recommend using GNOME for the GUI
+3. Note that you'll probably need to `sudo tasksel` (instead of without sudo, per the instructions), otherwise you'll get a permissions error.
+
+### 2.3 Enable SSH
+
+You probably will also want to connect to your newly configured RPi remotely over ssh, rather than having to using a separate monitor every time.
+
+1. Instructions [here](https://askubuntu.com/a/681768). Namely, run `sudo systemctl enable ssh.socket` from the command line
+3. Now you should be able to login from your dev machine. `ssh ubuntu@192.168.1.18`, using the ip address for your RPi that you found above.
+4. It should prompt you for a password. Once you enter it successfully, you'll be logged on! The `enable` step above should configure the ssh server to automatically come up on reboot, so you can just login to the RPi remotely from now on.
 
 ## 3 Installing ROS
 
