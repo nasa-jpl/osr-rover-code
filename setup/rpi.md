@@ -96,10 +96,7 @@ On the Raspberry Pi, open up a terminal `(ctl + alt + t)` and then type the foll
 mkdir -p ~/osr_ws/src && cd ~/osr_ws
 
 # Source your newly created ROS environment
-# EITHER, if you installed ROS melodic
-source /opt/ros/melodic/setup.bash
-# OR, if you installed ROS kinetic
-source /opt/ros/kinetic/setup.bash
+source /opt/ros/$ROS_DISTRO/setup.bash
 ```
 
 ### 4.2 Clone and build the rover code
