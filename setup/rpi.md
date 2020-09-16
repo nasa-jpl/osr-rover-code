@@ -16,7 +16,7 @@ Preparing the image for the RPi and boot it up:
 - Attach a monitor and keyboard to the RPi (note an alternative is to use `screen`, see [here](https://elinux.org/RPi_Serial_Connection))
 - Insert the flashed SD card in the RPi
 - Power it on
-- Login, using "ubuntu" for the username and password.
+- Login, using "ubuntu" for the username and password. You should be prompted to make a new password.
 
 You should now be logged in to your newly minted copy of Ubuntu 18.04!
 
@@ -42,9 +42,9 @@ Follow the instructions [here](https://phoenixnap.com/kb/how-to-install-a-gui-on
 
 ### 2.3 Enable SSH
 
-You probably will also want to connect to your newly configured RPi remotely over ssh, rather than having to using a separate monitor every time.
+You probably will also want to connect to your newly configured RPi remotely over ssh, rather than having to using a separate monitor every time. Instructions [here](https://askubuntu.com/a/681768).
 
-1. Instructions [here](https://askubuntu.com/a/681768). Namely, run `sudo systemctl enable ssh.socket` from the command line
+1. Basically, run `sudo systemctl enable ssh.socket` from the command line
 3. Now you should be able to login from your dev machine. `ssh ubuntu@192.168.1.18`, using the ip address for your RPi that you found above.
 4. It should prompt you for a password. Once you enter it successfully, you'll be logged on! The `enable` step above should configure the ssh server to automatically come up on reboot, so you can just login to the RPi remotely from now on.
 
