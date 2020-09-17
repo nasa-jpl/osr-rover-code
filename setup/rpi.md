@@ -100,7 +100,7 @@ source /opt/ros/$ROS_DISTRO/setup.bash
 ```
 
 ### 4.2 Clone and build the rover code
-
+For this section, you'll be working with the version control software `git`. Now's a good time to [read up](https://try.github.io/) on how that works if you're new to it and make a GitHub account!
 In the newly created catkin workspace you just made, clone this repo:
 ```commandline
 sudo apt-get install git
