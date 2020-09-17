@@ -128,8 +128,7 @@ To change any values from the default, modify these files instead so they don't 
 
 The `source...foo.bash` lines above are used to manually configure your ROS environment. We can do this automatically in the future by doing:
 ```
-# use "melodic" or "kinetic" below, as appropriate
-echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc 
+echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> ~/.bashrc 
 echo "source ~/osr_ws/devel/setup.bash" >> ~/.bashrc
 ```
 This adds the `source` lines to `~/.bashrc`, which runs whenever a new shell is opened on the RPi - by logging in via ssh, for example. So, from now on, when you log into the RPi your new command line environment will have the appropriate configuration for ROS and the rover code.
