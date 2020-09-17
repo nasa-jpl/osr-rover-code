@@ -52,6 +52,8 @@ You probably will also want to connect to your newly configured RPi remotely ove
 
 We'll install ROS (Robot Operating System) Melodic on the RPi.
 
+You'll need to be logged in to the RPi via ssh, or open a terminal in the desktop GUI if you installed it above.
+
 The below steps are based off of [these instructions](http://wiki.ros.org/melodic/Installation/Ubuntu). Consult them for more details.
 
 Setup
@@ -87,8 +89,6 @@ rosdep update
 ### 4.1 Setup ROS build environment
 
 First we'll create a workspace for the rover code. 
-
-On the Raspberry Pi, open up a terminal `(ctl + alt + t)` and then type the following commands:
 
 ```
 # Create a catkin workspace directory, which will contain all ROS compilation and 
