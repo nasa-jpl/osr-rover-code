@@ -53,7 +53,7 @@ class RoboclawWrapper(Node):
         self.declare_parameter('/drive_acceleration_factor')
         accel_rate = self.get_parameter('/drive_acceleration_factor')
         self.drive_accel = int(accel_max * accel_rate)
-        self.velocity_timeout = rospy.Duration(self.get_parameter('/velocity_timeout').get_parameter_value()
+        self.velocity_timeout = rospy.Duration(self.get_parameter('/velocity_timeout').get_parameter_value())
         self.time_last_cmd = self.get_clock().now()
 
         self.stop_motors()
