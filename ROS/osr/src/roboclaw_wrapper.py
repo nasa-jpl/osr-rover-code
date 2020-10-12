@@ -350,8 +350,7 @@ class RoboclawWrapper(object):
             return tick / ticks_per_rad
         mid = enc_min + (enc_max - enc_min) / 2
 
-        # positive values correspond to the wheel turning left (z-axis points up)
-        return -(tick - mid) / ticks_per_rad * gear_ratio
+        return (tick - mid) / ticks_per_rad * gear_ratio
 
     def position2tick(self, position, enc_min, enc_max, ticks_per_rev, gear_ratio):
         """
@@ -365,8 +364,6 @@ class RoboclawWrapper(object):
         :param ticks_per_rev:
         :return:
         """
-        # positive values correspond to the wheel turning left (z-axis points up)
-        position *= -1
         ticks_per_rad = ticks_per_rev / (2 * math.pi)
         if enc_min is None or enc_max is None:
             return position * ticks_per_rad
