@@ -215,7 +215,7 @@ class Rover(object):
                 if twist.angular.z == 0:
                     return self.max_radius
                 else:
-                    radius = twist.angular.z  # proxy
+                    radius = self.min_radius * self.max_vel / twist.angular.z  # proxy
             else:  # mathematical mode: standing still, so can't generate an angular velocity
                 return self.max_radius  
         if radius > 0:
