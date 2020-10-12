@@ -1,0 +1,4 @@
+# make symlinks serial0 and serial1, pointing to the default device names. Grant read/write permissions for the devices
+# note: not sure if these actually ought to be tty, but this works.
+KERNEL=="ttyS0", SYMLINK+="serial0" GROUP="tty" MODE="0660"
+KERNEL=="ttyAMA0", SYMLINK+="serial1" GROUP="tty" MODE="0660"
