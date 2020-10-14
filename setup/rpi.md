@@ -96,7 +96,7 @@ First we'll create a workspace for the rover code.
 mkdir -p ~/osr_ws/src && cd ~/osr_ws
 
 # Source your newly created ROS environment
-source /opt/ros/$ROS_DISTRO/setup.bash
+source /opt/ros/melodic/setup.bash
 ```
 
 ### 4.2 Clone and build the rover code
@@ -108,8 +108,8 @@ cd ~/osr_ws/src
 git clone https://github.com/nasa-jpl/osr-rover-code.git
 
 # install the dependencies
-rosdep install --from-paths src --ignore-src
 cd ..
+rosdep install --from-paths src --ignore-src
 catkin_make
 
 # add the generated files to the path so ROS can find them
@@ -147,7 +147,8 @@ should be set to `scale_linear / min_radius`. For the default configuration, the
 
 The `source...foo.bash` lines above are used to manually configure your ROS environment. We can do this automatically in the future by doing:
 ```
-echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> ~/.bashrc 
+cd ~
+echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc 
 echo "source ~/osr_ws/devel/setup.bash" >> ~/.bashrc
 ```
 This adds the `source` lines to `~/.bashrc`, which runs whenever a new shell is opened on the RPi - by logging in via ssh, for example. So, from now on, when you log into the RPi your new command line environment will have the appropriate configuration for ROS and the rover code.
@@ -159,7 +160,7 @@ The RPi will talk to the motor controllers over serial.
 
 Because we are using the serial port for communicating with the roboclaw motor controllers, we have to disable the serial-getty@ttyS0.service service. This service has some level of control over serial devices that we use, so if we leave it on it we'll get weird errors ([source](https://spellfoundry.com/2016/05/29/configuring-gpio-serial-port-raspbian-jessie-including-pi-3-4/)).
 
-Note that the following **may** step may stop you from being able to communicate with the RPi over serial.
+Note that the following **may** stop you from being able to communicate with the RPi over serial.
 
 ```
 sudo systemctl stop serial-getty@ttyS0.service
