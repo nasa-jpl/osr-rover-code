@@ -4,7 +4,7 @@ Note that these instructions assume you followed the steps in [rpi setup](rpi.md
 
 ## 1 Manual rover bringup
 
-In a sourced terminal (`source /opt/ros/$ROS_DISTRO/setup.bash && source ~/osr_ws/devel/setup.bash`), run
+In a sourced terminal (`source /opt/ros/melodic/setup.bash && source ~/osr_ws/devel/setup.bash`), run
 
 ```commandline
 roslaunch osr_bringup osr.launch
@@ -22,15 +22,15 @@ be ran as the root user. The way that we will starting our rover code automatica
 a service that starts our roslaunch script, and then automatically run that service on boot of the robot.
 [Further information](https://www.linode.com/docs/quick-answers/linux/start-service-at-boot/) on system service scripts running at boot.
 
-There are two scripts in the ”Software/Init Scripts” folder. The first is the bash file that runs the
+There are two scripts in the ”init_scripts” folder. The first is the bash file that runs the
 roslaunch file, and the other creates a system service to start that bash script. Open up a terminal on the
 raspberry Pi and execute the following commands.
 ```
-cd /home/pi/osr/Init\ Scripts
-sudo cp LaunchOSR.sh /usr/bin/LaunchOSR.sh
-sudo chmod +x /usr/bin/LaunchOSR.sh
-sudo cp osr startup.service /etc/systemd/system/osr startup.service
-sudo chmod 644 /etc/systemd/system/osr startup.service
+cd ~/osr_ws/src/osr-rover-code/init_scripts
+sudo cp LaunchOSR.sh ~/LaunchOSR.sh
+sudo chmod +x ~/LaunchOSR.sh
+sudo cp osr_startup.service /etc/systemd/system/osr_startup.service
+sudo chmod 644 /etc/systemd/system/osr_startup.service
 ```
 
 Your osr startup service is now installed on the Pi and ready to be used. The following are some commands
