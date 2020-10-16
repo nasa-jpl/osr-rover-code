@@ -134,11 +134,11 @@ send to the rover. These values in the node joy2twist are of interest:
 <param name="scale_angular" value="0.4"/>
 <param name="scale_linear_turbo" value="0.24"/>
 ```
-The maximum speed your rover can go is determined by the no-load speed of your drive motors. The default value is located
-in the file [physical_properties.yaml](../ROS/osr_bringup/config/physical_properties.yaml) as `drive_no_load_rpm`. 
-Then the value of `scale_linear_turbo` can be calculated as `drive_no_load_rpm * 2pi / 60 * wheel radius (=0.075m)`.
-Based on this max value, let's set our regular moving speed to a fraction of that which you can configure to your liking.
-Start with e.g. 0.75 * scale_linear_turbo.
+The maximum speed your rover can go is determined by the no-load speed of your drive motors. The default no-load speed is located
+in the file [physical_properties.yaml](../ROS/osr_bringup/config/physical_properties.yaml) as `drive_no_load_rpm`, unless you modified it in the corresponding `_mod.yaml` file. 
+This maximum speed corresponds to `scale_linear_turbo` and can be calculated as `drive_no_load_rpm * 2pi / 60 * wheel radius (=0.075m)`.
+Based on this upper limit, let's set our regular moving speed to a sensible fraction of that which you can configure to your liking.
+Start with e.g. 0.75 * scale_linear_turbo. If you think it's too slow or too fast, simply scale it up or down.
 
 The turning speed of the rover, just like a regular car, depends on how fast it's going. As a result, `scale_angular`
 should be set to `scale_linear / min_radius`. For the default configuration, the `min_radius` equals `0.45m`.
