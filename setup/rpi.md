@@ -116,13 +116,32 @@ catkin_make
 source devel/setup.bash
 ```
 
-The rover has some customizable settings that will overwrite the default values. Whether you have any changes compared to the defaults or not, you have to manually create these files:
+The rover has some customizable settings that will overwrite the default values. 
+Whether you have any changes compared to the defaults or not, you have to manually create these files:
 ```
 cd ~/osr_ws/src/osr-rover-code/ROS/osr_bringup/config
 touch physical_properties_mod.yaml roboclaw_params_mod.yaml
 ```
-To change any values from the default, modify these files instead so they don't get tracked by git. The files follow the same structure as the default.
 
+To change any values from the default, modify these files (the _mod.yaml ones) instead so your changes don't get committed to git. 
+The files follow the same structure as the default. Just include the values that you need to change as the default
+values for other parameters may change over time.
+
+You might also want to modify the file `osr-rover-code/ROS/osr_bringup/launch/osr.launch` to change the velocities the gamepad controller will
+send to the rover. These values in the node joy2twist are of interest:
+```
+<param name="scale_linear" value="0.18"/>
+<param name="scale_angular" value="0.4"/>
+<param name="scale_linear_turbo" value="0.24"/>
+```
+The maximum speed your rover can go is determined by the no-load speed of your drive motors. The default no-load speed is located
+in the file [physical_properties.yaml](../ROS/osr_bringup/config/physical_properties.yaml) as `drive_no_load_rpm`, unless you modified it in the corresponding `_mod.yaml` file. 
+This maximum speed corresponds to `scale_linear_turbo` and can be calculated as `drive_no_load_rpm * 2pi / 60 * wheel radius (=0.075m)`.
+Based on this upper limit, let's set our regular moving speed to a sensible fraction of that which you can configure to your liking.
+Start with e.g. 0.75 * scale_linear_turbo. If you think it's too slow or too fast, simply scale it up or down.
+
+The turning speed of the rover, just like a regular car, depends on how fast it's going. As a result, `scale_angular`
+should be set to `scale_linear / min_radius`. For the default configuration, the `min_radius` equals `0.45m`.
 
 ### 4.3 Add ROS config scripts to .bashrc
 

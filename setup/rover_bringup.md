@@ -12,7 +12,9 @@ roslaunch osr_bringup osr.launch
 to run the rover.
 
 Any errors or warnings will be displayed there in case something went wrong. If you're using the Xbox wireless controller,
-command the rover by holding the left back button (LB) down and moving the joysticks.
+command the rover by holding the left back button (LB) down and moving the joysticks. You can boost as described in
+the [RPi setup](rpi.md) by holding down the right back button (RB) instead. If this isn't working for you, 
+`rostopic echo /joy`, press buttons, and adjust `bringup.launch` to point to the corresponding buttons and axes. If you have questions, please ask on the Tapatalk forum.
 
 ## 2 Automatic bringup with init script
 

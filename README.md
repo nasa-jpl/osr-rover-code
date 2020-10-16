@@ -23,5 +23,5 @@ such as how the drive and corner commands are being calculated
 The setup directory contains tutorial files for getting everything setup and configured for running the rover code. You should proceed through them in the following order:
 - [Arduino setup](setup/arduino.md)
 - [Raspberry Pi setup with Ubuntu 18.04](setup/rpi.md)
-    - If you want to use Raspian, there are instructions [here](setup/rpi_raspbian.md), though they're not maintained.
+    - If you want to use Raspbian (Raspberry Pi OS), there are instructions [here](setup/rpi_raspbian.md), though we strongly recommend following the Ubuntu18 instructions instead to get the best support.
 - [Rover code bringup](setup/rover_bringup.md)
