@@ -158,13 +158,14 @@ This adds the `source` lines to `~/.bashrc`, which runs whenever a new shell is 
 
 The RPi will talk to the motor controllers over serial.
 
-Because we are using the serial port for communicating with the roboclaw motor controllers, we have to disable the serial-getty@ttyS0.service service. This service has some level of control over serial devices that we use, so if we leave it on it we'll get weird errors ([source](https://spellfoundry.com/2016/05/29/configuring-gpio-serial-port-raspbian-jessie-including-pi-3-4/)).
+Because we are using the serial port for communicating with the roboclaw motor controllers, we have to disable the serial-getty@ttyS0.service service. This service has some level of control over serial devices that we use, so if we leave it on it we'll get weird errors ([source](https://spellfoundry.com/2016/05/29/configuring-gpio-serial-port-raspbian-jessie-including-pi-3-4/)). Note that the masking step was suggested [here](https://stackoverflow.com/a/43633467/4292910). It seems to be necessary for some setups of the rpi4 - just using `systemctl disable` won't cut it for disabling the service.
 
-Note that the following **may** stop you from being able to communicate with the RPi over serial.
+**Note that the following will stop you from being able to communicate with the RPi over the serial, wired connection. However, it won't affect communication with the rpi with SSH over wifi.**
 
 ```
 sudo systemctl stop serial-getty@ttyS0.service
 sudo systemctl disable serial-getty@ttyS0.service
+sudo systemctl mask serial-getty@ttyS0.service
 ```
 
 
