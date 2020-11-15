@@ -16,6 +16,12 @@ command the rover by holding the left back button (LB) down and moving the joyst
 the [RPi setup](rpi.md) by holding down the right back button (RB) instead. If this isn't working for you, 
 `rostopic echo /joy`, press buttons, and adjust `bringup.launch` to point to the corresponding buttons and axes. If you have questions, please ask on the Tapatalk forum.
 
+### Optional arguments
+
+If you want the code to calculate and publish wheel odometry, launch with the argument `enable_odometry:=true`.
+![](wheel_odom_example.png)
+Odometry is used for localization and SLAM.
+
 ## 2 Automatic bringup with init script
 
 Starting scripts on boot using ROS can be a little more difficult than starting scripts on boot normally from
