@@ -28,10 +28,12 @@ class Rover(object):
         self.wheel_radius = rospy.get_param("/rover_dimensions/wheel_radius", 0.075)  # [m]
         drive_no_load_rpm = rospy.get_param("/drive_no_load_rpm", 130)
         self.max_vel = self.wheel_radius * drive_no_load_rpm / 60 * 2 * math.pi  # [m/s]
+        self.should_calculate_odom = rospy.get_param("~enable_odometry", False)
         self.odometry = Odometry()
         self.odometry.header.stamp = rospy.Time.now()
-        self.odometry.header.frame_id = "map"
-        self.odometry.child_frame_id = "odom"
+        self.odometry.header.frame_id = "odom"
+        self.odometry.child_frame_id = "base_link"
+        self.odometry.pose.pose.orientation.z = 1.
         self.odometry.pose.pose.orientation.w = 1.
         self.curr_twist = TwistWithCovariance()
         self.curr_turning_radius = self.max_radius
@@ -39,7 +41,8 @@ class Rover(object):
         self.corner_cmd_pub = rospy.Publisher("/cmd_corner", CommandCorner, queue_size=1)
         self.drive_cmd_pub = rospy.Publisher("/cmd_drive", CommandDrive, queue_size=1)
         self.turning_radius_pub = rospy.Publisher("/turning_radius", Float64, queue_size=1)
-        self.odometry_pub = rospy.Publisher("/odom", Odometry, queue_size=2)
+        if self.should_calculate_odom:
+            self.odometry_pub = rospy.Publisher("/odom", Odometry, queue_size=2)
         self.tf_pub = tf2_ros.TransformBroadcaster()
 
         rospy.Subscriber("/cmd_vel", Twist, self.cmd_cb, callback_args=False)
@@ -85,33 +88,35 @@ class Rover(object):
     def enc_cb(self, msg):
         self.curr_positions = dict(zip(msg.name, msg.position))
         self.curr_velocities = dict(zip(msg.name, msg.velocity))
-        # measure how much time has elapsed since our last update
-        now = rospy.Time.now()
-        dt = (now - self.odometry.header.stamp).to_sec()
-        self.forward_kinematics()
-        dx = self.curr_twist.twist.linear.x * dt
-        dth = self.curr_twist.twist.angular.z * dt
-        # angle is straightforward: in 2D it's additive
-        current_angle = 2 * math.atan2(self.odometry.pose.pose.orientation.z, 
-                                       self.odometry.pose.pose.orientation.w)
-        new_angle = current_angle + dth
-        self.odometry.pose.pose.orientation.z = math.sin(new_angle/2.)
-        self.odometry.pose.pose.orientation.w = math.cos(new_angle/2.)
-        # the new pose in x and y depends on the current heading
-        self.odometry.pose.pose.position.x += math.cos(new_angle) * dx
-        self.odometry.pose.pose.position.y += math.sin(new_angle) * dx
-        self.odometry.pose.covariance = 36 * [0.0,]
-        self.odometry.twist = self.curr_twist
-        self.odometry.header.stamp = now
-        self.odometry_pub.publish(self.odometry)
-        transform_msg = TransformStamped()
-        transform_msg.header.frame_id = "odom"
-        transform_msg.child_frame_id = "base_link"
-        transform_msg.header.stamp = now
-        transform_msg.transform.translation.x = self.odometry.pose.pose.position.x
-        transform_msg.transform.translation.y = self.odometry.pose.pose.position.y
-        transform_msg.transform.rotation = self.odometry.pose.pose.orientation
-        self.tf_pub.sendTransform(transform_msg)
+        if self.should_calculate_odom:
+            # measure how much time has elapsed since our last update
+            now = rospy.Time.now()
+            dt = (now - self.odometry.header.stamp).to_sec()
+            self.forward_kinematics()
+            dx = self.curr_twist.twist.linear.x * dt
+            dth = self.curr_twist.twist.angular.z * dt
+            # angle is straightforward: in 2D it's additive
+            # first calculate the current_angle in the fixed frame
+            current_angle = 2 * math.atan2(self.odometry.pose.pose.orientation.z, 
+                                           self.odometry.pose.pose.orientation.w)
+            new_angle = current_angle + dth
+            self.odometry.pose.pose.orientation.z = math.sin(new_angle/2.)
+            self.odometry.pose.pose.orientation.w = math.cos(new_angle/2.)
+            # the new pose in x and y depends on the current heading
+            self.odometry.pose.pose.position.x += math.cos(new_angle) * dx
+            self.odometry.pose.pose.position.y += math.sin(new_angle) * dx
+            self.odometry.pose.covariance = 36 * [0.0,]
+            self.odometry.twist = self.curr_twist
+            self.odometry.header.stamp = now
+            self.odometry_pub.publish(self.odometry)
+            transform_msg = TransformStamped()
+            transform_msg.header.frame_id = "odom"
+            transform_msg.child_frame_id = "base_link"
+            transform_msg.header.stamp = now
+            transform_msg.transform.translation.x = self.odometry.pose.pose.position.x
+            transform_msg.transform.translation.y = self.odometry.pose.pose.position.y
+            transform_msg.transform.rotation = self.odometry.pose.pose.orientation
+            self.tf_pub.sendTransform(transform_msg)
 
     def corner_cmd_threshold(self, corner_cmd):
         try:

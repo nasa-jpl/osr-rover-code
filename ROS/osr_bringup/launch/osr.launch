@@ -1,4 +1,7 @@
 <launch>
+	<!-- arguments -->
+	<arg name="enable_odometry" default="false" doc="calculate and publish odometry to the /odom topic and to /tf"/>
+
 	<rosparam file="$(find osr_bringup)/config/osr_params.yaml" />
 
 	<!-- Nodes to run the Open Source Rover -->
@@ -18,7 +21,9 @@
         </node>
 	<rosparam command="load" file="$(find osr_bringup)/config/physical_properties.yaml"/>
 	<rosparam command="load" file="$(find osr_bringup)/config/physical_properties_mod.yaml"/>
-	<node name="rover" pkg="osr" type="rover.py" output="screen"/>
+	<node name="rover" pkg="osr" type="rover.py" output="screen">
+		<param name="enable_odometry" value="$(arg enable_odometry)"/>
+	</node>
 	<node name="led_screen" pkg="led_screen" type="arduino_comm.py"/>
 	<node pkg="joy"
 			type="joy_node" name="joy_node">
