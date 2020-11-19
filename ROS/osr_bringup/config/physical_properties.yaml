@@ -4,7 +4,7 @@ rover_dimensions:
   d3: 0.267  # [m, ~10.5in]
   d4: 0.2556  # [m, ~10.073in]
   wheel_radius: 0.075  # [m]
-drive_no_load_rpm: 31  # no load speed for the drive motors
+drive_no_load_rpm: 223  # no load speed for the drive motors
 drive_acceleration_factor: 0.5  # fraction used to scale the drive motor acceleration (0, 1]
 corner_acceleration_factor: 0.8  # fraction used to scale the corner motor acceleration (0, 1])
 velocity_timeout: 2.0  # maximum time [s] a particular velocity command will stay active without a new command before stopping
