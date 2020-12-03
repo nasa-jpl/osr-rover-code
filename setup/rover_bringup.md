@@ -16,7 +16,13 @@ command the rover by holding the left back button (LB) down and moving the joyst
 the [RPi setup](rpi.md) by holding down the right back button (RB) instead. If this isn't working for you, 
 `rostopic echo /joy`, press buttons, and adjust `bringup.launch` to point to the corresponding buttons and axes. If you have questions, please ask on the Tapatalk forum.
 
-## 2 Automatic bringup with init script
+## 2 Custom osr_mod.launch file
+
+If you want to customize your `osr.launch` file, make a copy of it in the same directory (`osr-rover-code/ROS/osr_bringup/launch/`) and name it osr_mod.launch. The OSR launch script will automatically find it.
+
+This is useful, for example, when you don't have the LED screen. Just remove the `<node name="led_screen" pkg="led_screen" type="arduino_comm.py"/>` line in osr_mod.launch.
+
+## 3 Automatic bringup with launch script
 
 Starting scripts on boot using ROS can be a little more difficult than starting scripts on boot normally from
 the Raspberry Pi because of the default permission settings on the RPi and the fact that that ROS cannot
@@ -29,8 +35,9 @@ roslaunch file, and the other creates a system service to start that bash script
 raspberry Pi and execute the following commands.
 ```
 cd ~/osr_ws/src/osr-rover-code/init_scripts
-sudo cp LaunchOSR.sh ~/LaunchOSR.sh
-sudo chmod +x ~/LaunchOSR.sh
+# use symbolic links so we capture updates to these files in the service
+ln -s $(pwd)/launch_osr.sh ~/launch_osr.sh
+ln -s $(pwd)/osr_paths.sh ~/osr_paths.sh
 sudo cp osr_startup.service /etc/systemd/system/osr_startup.service
 sudo chmod 644 /etc/systemd/system/osr_startup.service
 ```
