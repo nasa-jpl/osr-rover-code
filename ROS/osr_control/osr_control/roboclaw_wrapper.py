@@ -4,7 +4,6 @@ import math
 import rclpy
 from rclpy.node import Node
 
-
 from roboclaw import Roboclaw
 
 from sensor_msgs.msg import JointState
@@ -112,8 +111,11 @@ class RoboclawWrapper(Node):
 
         :raises Exception: when connection to one or more of the roboclaws is unsuccessful
         """
-        self.rc = Roboclaw(rospy.get_param('/motor_controller/device', "/dev/serial0"),
-                           rospy.get_param('/motor_controller/baud_rate', 115200))
+        self.declare_parameter('/motor_controller/device')
+        self.declare_parameter('/motor_controller/baud_rate')
+        serial_port = self.get_parameter('/motor_controller/device').get_parameter_value()
+        baud_rate = self.get_parameter('/motor_controller/baud_rate').get_parameter_value()
+        self.rc = Roboclaw(serial_port, baud_rate)
         self.rc.Open()
 
         address_raw = rospy.get_param('motor_controller/addresses')
