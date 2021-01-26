@@ -1,8 +1,11 @@
 roboclaw_wrapper:
   ros__parameters:
+    drive_acceleration_factor: 0.5  # fraction used to scale the drive motor acceleration (0, 1]
+    corner_acceleration_factor: 0.8  # fraction used to scale the corner motor acceleration (0, 1])
+    velocity_timeout: 2.0  # maximum time [s] a particular velocity command will stay active without a new command before stopping
     baud_rate: 115200
     device: "/dev/serial0"
-    addresses: "128,129,130,131,132"
+    addresses: [128, 129, 130, 131, 132]
     roboclaw_mapping:
       # gear ratio is approx 172, exact value is 171.79 though
       drive_left_front:

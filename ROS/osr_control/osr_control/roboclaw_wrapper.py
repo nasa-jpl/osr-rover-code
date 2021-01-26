@@ -1,13 +1,14 @@
 import serial
 import math
+from collections import defaultdict
 
 import rclpy
 from rclpy.node import Node
 
-from roboclaw import Roboclaw
+from osr_control.roboclaw import Roboclaw
 
 from sensor_msgs.msg import JointState
-from osr_msgs.msg import CommandDrive, CommandCorner, Status
+from osr_interfaces.msg import CommandDrive, CommandCorner, Status
 
 
 class RoboclawWrapper(Node):
@@ -25,8 +26,101 @@ class RoboclawWrapper(Node):
         self.corner_cmd_buffer = None
         self.drive_cmd_buffer = None
 
-        self.declare_parameter("~roboclaw_mapping")
-        self.roboclaw_mapping = self.get_parameter('~roboclaw_mapping').get_parameter_value()
+        self.declare_parameters(
+            namespace='',
+            parameters=[
+                ('baud_rate', None),
+                ('device', None),
+                ('addresses', None),
+                ('roboclaw_mapping', None),
+                ('drive_acceleration_factor', None),
+                ('corner_acceleration_factor', None),
+                ('velocity_timeout', None),
+                ('roboclaw_mapping.drive_left_front.address', None),
+                ('roboclaw_mapping.drive_left_front.channel', None),
+                ('roboclaw_mapping.drive_left_front.ticks_per_rev', None),
+                ('roboclaw_mapping.drive_left_front.gear_ratio', None),
+                ('roboclaw_mapping.drive_left_middle.address', None),
+                ('roboclaw_mapping.drive_left_middle.channel', None),
+                ('roboclaw_mapping.drive_left_middle.ticks_per_rev', None),
+                ('roboclaw_mapping.drive_left_middle.gear_ratio', None),
+                ('roboclaw_mapping.drive_left_back.address', None),
+                ('roboclaw_mapping.drive_left_back.channel', None),
+                ('roboclaw_mapping.drive_left_back.ticks_per_rev', None),
+                ('roboclaw_mapping.drive_left_back.gear_ratio', None),
+                ('roboclaw_mapping.drive_right_front.address', None),
+                ('roboclaw_mapping.drive_right_front.channel', None),
+                ('roboclaw_mapping.drive_right_front.ticks_per_rev', None),
+                ('roboclaw_mapping.drive_right_front.gear_ratio', None),
+                ('roboclaw_mapping.drive_right_middle.address', None),
+                ('roboclaw_mapping.drive_right_middle.channel', None),
+                ('roboclaw_mapping.drive_right_middle.ticks_per_rev', None),
+                ('roboclaw_mapping.drive_right_middle.gear_ratio', None),
+                ('roboclaw_mapping.drive_right_back.address', None),
+                ('roboclaw_mapping.drive_right_back.channel', None),
+                ('roboclaw_mapping.drive_right_back.ticks_per_rev', None),
+                ('roboclaw_mapping.drive_right_back.gear_ratio', None),
+                ('roboclaw_mapping.corner_left_front.address', None),
+                ('roboclaw_mapping.corner_left_front.channel', None),
+                ('roboclaw_mapping.corner_left_front.ticks_per_rev', None),
+                ('roboclaw_mapping.corner_left_front.gear_ratio', None),
+                ('roboclaw_mapping.corner_left_back.address', None),
+                ('roboclaw_mapping.corner_left_back.channel', None),
+                ('roboclaw_mapping.corner_left_back.ticks_per_rev', None),
+                ('roboclaw_mapping.corner_left_back.gear_ratio', None),
+                ('roboclaw_mapping.corner_right_front.address', None),
+                ('roboclaw_mapping.corner_right_front.channel', None),
+                ('roboclaw_mapping.corner_right_front.ticks_per_rev', None),
+                ('roboclaw_mapping.corner_right_front.gear_ratio', None),
+                ('roboclaw_mapping.corner_right_back.address', None),
+                ('roboclaw_mapping.corner_right_back.channel', None),
+                ('roboclaw_mapping.corner_right_back.ticks_per_rev', None),
+                ('roboclaw_mapping.corner_right_back.gear_ratio', None)
+            ]
+        )
+
+        self.roboclaw_mapping = defaultdict(dict)
+        self.roboclaw_mapping["drive_left_front"]["address"] = self.get_parameter('roboclaw_mapping.drive_left_front.address').get_parameter_value().integer_value
+        self.roboclaw_mapping["drive_left_middle"]["address"] = self.get_parameter('roboclaw_mapping.drive_left_middle.address').get_parameter_value().integer_value
+        self.roboclaw_mapping["drive_left_back"]["address"] = self.get_parameter('roboclaw_mapping.drive_left_back.address').get_parameter_value().integer_value
+        self.roboclaw_mapping["drive_right_front"]["address"] = self.get_parameter('roboclaw_mapping.drive_right_front.address').get_parameter_value().integer_value
+        self.roboclaw_mapping["drive_right_middle"]["address"] = self.get_parameter('roboclaw_mapping.drive_right_middle.address').get_parameter_value().integer_value
+        self.roboclaw_mapping["drive_right_back"]["address"] = self.get_parameter('roboclaw_mapping.drive_right_back.address').get_parameter_value().integer_value
+        self.roboclaw_mapping["corner_left_front"]["address"] = self.get_parameter('roboclaw_mapping.corner_left_front.address').get_parameter_value().integer_value
+        self.roboclaw_mapping["corner_left_back"]["address"] = self.get_parameter('roboclaw_mapping.corner_left_back.address').get_parameter_value().integer_value
+        self.roboclaw_mapping["corner_right_front"]["address"] = self.get_parameter('roboclaw_mapping.corner_right_front.address').get_parameter_value().integer_value
+        self.roboclaw_mapping["corner_right_back"]["address"] = self.get_parameter('roboclaw_mapping.corner_right_back.address').get_parameter_value().integer_value
+        self.roboclaw_mapping["drive_left_front"]["channel"] = self.get_parameter('roboclaw_mapping.drive_left_front.channel').get_parameter_value().string_value
+        self.roboclaw_mapping["drive_left_middle"]["channel"] = self.get_parameter('roboclaw_mapping.drive_left_middle.channel').get_parameter_value().string_value
+        self.roboclaw_mapping["drive_left_back"]["channel"] = self.get_parameter('roboclaw_mapping.drive_left_back.channel').get_parameter_value().string_value
+        self.roboclaw_mapping["drive_right_front"]["channel"] = self.get_parameter('roboclaw_mapping.drive_right_front.channel').get_parameter_value().string_value
+        self.roboclaw_mapping["drive_right_middle"]["channel"] = self.get_parameter('roboclaw_mapping.drive_right_middle.channel').get_parameter_value().string_value
+        self.roboclaw_mapping["drive_right_back"]["channel"] = self.get_parameter('roboclaw_mapping.drive_right_back.channel').get_parameter_value().string_value
+        self.roboclaw_mapping["corner_left_front"]["channel"] = self.get_parameter('roboclaw_mapping.corner_left_front.channel').get_parameter_value().string_value
+        self.roboclaw_mapping["corner_left_back"]["channel"] = self.get_parameter('roboclaw_mapping.corner_left_back.channel').get_parameter_value().string_value
+        self.roboclaw_mapping["corner_right_front"]["channel"] = self.get_parameter('roboclaw_mapping.corner_right_front.channel').get_parameter_value().string_value
+        self.roboclaw_mapping["corner_right_back"]["channel"] = self.get_parameter('roboclaw_mapping.corner_right_back.channel').get_parameter_value().string_value
+        self.roboclaw_mapping["drive_left_front"]["ticks_per_rev"] = self.get_parameter('roboclaw_mapping.drive_left_front.ticks_per_rev').get_parameter_value().integer_value
+        self.roboclaw_mapping["drive_left_middle"]["ticks_per_rev"] = self.get_parameter('roboclaw_mapping.drive_left_middle.ticks_per_rev').get_parameter_value().integer_value
+        self.roboclaw_mapping["drive_left_back"]["ticks_per_rev"] = self.get_parameter('roboclaw_mapping.drive_left_back.ticks_per_rev').get_parameter_value().integer_value
+        self.roboclaw_mapping["drive_right_front"]["ticks_per_rev"] = self.get_parameter('roboclaw_mapping.drive_right_front.ticks_per_rev').get_parameter_value().integer_value
+        self.roboclaw_mapping["drive_right_middle"]["ticks_per_rev"] = self.get_parameter('roboclaw_mapping.drive_right_middle.ticks_per_rev').get_parameter_value().integer_value
+        self.roboclaw_mapping["drive_right_back"]["ticks_per_rev"] = self.get_parameter('roboclaw_mapping.drive_right_back.ticks_per_rev').get_parameter_value().integer_value
+        self.roboclaw_mapping["corner_left_front"]["ticks_per_rev"] = self.get_parameter('roboclaw_mapping.corner_left_front.ticks_per_rev').get_parameter_value().integer_value
+        self.roboclaw_mapping["corner_left_back"]["ticks_per_rev"] = self.get_parameter('roboclaw_mapping.corner_left_back.ticks_per_rev').get_parameter_value().integer_value
+        self.roboclaw_mapping["corner_right_front"]["ticks_per_rev"] = self.get_parameter('roboclaw_mapping.corner_right_front.ticks_per_rev').get_parameter_value().integer_value
+        self.roboclaw_mapping["corner_right_back"]["ticks_per_rev"] = self.get_parameter('roboclaw_mapping.corner_right_back.ticks_per_rev').get_parameter_value().integer_value
+        self.roboclaw_mapping["drive_left_front"]["gear_ratio"] = self.get_parameter('roboclaw_mapping.drive_left_front.gear_ratio').get_parameter_value().double_value
+        self.roboclaw_mapping["drive_left_middle"]["gear_ratio"] = self.get_parameter('roboclaw_mapping.drive_left_middle.gear_ratio').get_parameter_value().double_value
+        self.roboclaw_mapping["drive_left_back"]["gear_ratio"] = self.get_parameter('roboclaw_mapping.drive_left_back.gear_ratio').get_parameter_value().double_value
+        self.roboclaw_mapping["drive_right_front"]["gear_ratio"] = self.get_parameter('roboclaw_mapping.drive_right_front.gear_ratio').get_parameter_value().double_value
+        self.roboclaw_mapping["drive_right_middle"]["gear_ratio"] = self.get_parameter('roboclaw_mapping.drive_right_middle.gear_ratio').get_parameter_value().double_value
+        self.roboclaw_mapping["drive_right_back"]["gear_ratio"] = self.get_parameter('roboclaw_mapping.drive_right_back.gear_ratio').get_parameter_value().double_value
+        self.roboclaw_mapping["corner_left_front"]["gear_ratio"] = self.get_parameter('roboclaw_mapping.corner_left_front.gear_ratio').get_parameter_value().double_value
+        self.roboclaw_mapping["corner_left_back"]["gear_ratio"] = self.get_parameter('roboclaw_mapping.corner_left_back.gear_ratio').get_parameter_value().double_value
+        self.roboclaw_mapping["corner_right_front"]["gear_ratio"] = self.get_parameter('roboclaw_mapping.corner_right_front.gear_ratio').get_parameter_value().double_value
+        self.roboclaw_mapping["corner_right_back"]["gear_ratio"] = self.get_parameter('roboclaw_mapping.corner_right_back.gear_ratio').get_parameter_value().double_value
+
         self.encoder_limits = {}
         self.establish_roboclaw_connections()
         self.stop_motors()  # don't move at start
@@ -43,16 +137,14 @@ class RoboclawWrapper(Node):
         # corner motor acceleration
         # Even though the actual method takes longs (2*32-1), roboclaw blog says 2**15 is 100%
         accel_max = 2**15-1
-        self.declare_parameter('/corner_acceleration_factor')
-        accel_rate = self.get_parameter('/corner_acceleration_factor').get_parameter_value()
+        accel_rate = self.get_parameter('corner_acceleration_factor').get_parameter_value().double_value
         self.corner_accel = int(accel_max * accel_rate)
         self.roboclaw_overflow = 2**15-1
         # drive motor acceleration
         accel_max = 2**15-1
-        self.declare_parameter('/drive_acceleration_factor')
-        accel_rate = self.get_parameter('/drive_acceleration_factor')
+        accel_rate = self.get_parameter('drive_acceleration_factor').get_parameter_value().double_value
         self.drive_accel = int(accel_max * accel_rate)
-        self.velocity_timeout = rospy.Duration(self.get_parameter('/velocity_timeout').get_parameter_value())
+        self.velocity_timeout = self.get_parameter('velocity_timeout').get_parameter_value().double_value
         self.time_last_cmd = self.get_clock().now()
 
         self.stop_motors()
@@ -111,18 +203,12 @@ class RoboclawWrapper(Node):
 
         :raises Exception: when connection to one or more of the roboclaws is unsuccessful
         """
-        self.declare_parameter('/motor_controller/device')
-        self.declare_parameter('/motor_controller/baud_rate')
-        serial_port = self.get_parameter('/motor_controller/device').get_parameter_value()
-        baud_rate = self.get_parameter('/motor_controller/baud_rate').get_parameter_value()
+        serial_port = self.get_parameter('device').get_parameter_value().string_value
+        baud_rate = self.get_parameter('baud_rate').get_parameter_value().integer_value
         self.rc = Roboclaw(serial_port, baud_rate)
         self.rc.Open()
-
-        address_raw = rospy.get_param('motor_controller/addresses')
-        address_list = (address_raw.split(','))
-        self.address = [None]*len(address_list)
-        for i in range(len(address_list)):
-            self.address[i] = int(address_list[i])
+        self.address = self.get_parameter('addresses').get_parameter_value().integer_array_value
+        self.get_logger().error(str(self.address[0]))
 
         # initialize connection status to successful
         all_connected = True
@@ -131,7 +217,7 @@ class RoboclawWrapper(Node):
             version_response = self.rc.ReadVersion(address)
             connected = bool(version_response[0])
             if not connected:
-                self.get_logger().err("Unable to connect to roboclaw at '{}'".format(address))
+                self.get_logger().error("Unable to connect to roboclaw at '{}'".format(address))
                 all_connected = False
             else:
                 self.get_logger().debug("Roboclaw version for address '{}': '{}'".format(address, version_response[1]))
@@ -429,7 +515,7 @@ class RoboclawWrapper(Node):
         for i in range(len(self.address)):
             err[i] = self.rc.ReadError(self.address[i])[1]
             if err[i] != 0:
-                self.get_logger().err("Motor controller '{}' reported error code {}".format(self.address[i], err[i]))
+                self.get_logger().error("Motor controller '{}' reported error code {}".format(self.address[i], err[i]))
         
         return err
 

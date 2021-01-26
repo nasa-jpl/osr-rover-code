@@ -16,38 +16,40 @@ class Rover(Node):
         super().__init__("rover")
         self.get_logger().info("Initializing Rover")
 
-        self.declare_parameter("/rover_dimensions")
-        rover_dimensions = self.get_parameter('/rover_dimensions').get_parameter_value()
-        self.d1 = rover_dimensions["d1"]
-        self.d2 = rover_dimensions["d2"]
-        self.d3 = rover_dimensions["d3"]
-        self.d4 = rover_dimensions["d4"]
+        self.declare_parameters(
+            namespace='',
+            parameters=[
+                ('rover_dimensions.d1', None),
+                ('rover_dimensions.d2', None),
+                ('rover_dimensions.d3', None),
+                ('rover_dimensions.d4', None),
+                ('rover_dimensions.wheel_radius', None),
+                ('drive_no_load_rpm', None)
+            ]
+        )
+        self.d1 = self.get_parameter('rover_dimensions.d1').get_parameter_value().double_value
+        self.d2 = self.get_parameter('rover_dimensions.d2').get_parameter_value().double_value
+        self.d3 = self.get_parameter('rover_dimensions.d3').get_parameter_value().double_value
+        self.d4 = self.get_parameter('rover_dimensions.d4').get_parameter_value().double_value
 
         self.min_radius = 0.45  # [m]
         self.max_radius = 6.4  # [m]
 
         self.no_cmd_thresh = 0.05  # [rad]
-        self.declare_parameter("/rover_dimensions/wheel_radius")
-        self.declare_parameter("/drive_no_load_rpm")
         self.wheel_radius = self.get_parameter(
-            "/rover_dimensions/wheel_radius").get_parameter_value()  # [m]
+            "rover_dimensions.wheel_radius").get_parameter_value().double_value  # [m]
         drive_no_load_rpm = self.get_parameter(
-            "/drive_no_load_rpm").get_parameter_value()
+            "drive_no_load_rpm").get_parameter_value().double_value
         self.max_vel = self.wheel_radius * drive_no_load_rpm / 60 * 2 * math.pi  # [m/s]
         self.curr_twist = Twist()
         self.curr_turning_radius = self.max_radius
 
-        self.cmd_vel_sub = self.create_subscription(Twist, "/cmd_vel", 
-                                                    partial(self.cmd_cb, False), queue_size=1)
-        self.cmd_vel_sub = self.create_subscription(Twist, "/cmd_vel_intuitive", 
-                                                    partial(self.cmd_cb, True), queue_size=1)
-        self.encoder_sub = self.create_subscription(JointState, "/encoder", 
-                                                    self.enc_cb, queue_size=1)
+        self.cmd_vel_sub = self.create_subscription(Twist, "/cmd_vel", partial(self.cmd_cb, False), 1)
+        self.cmd_vel_int_sub = self.create_subscription(Twist, "/cmd_vel_intuitive", partial(self.cmd_cb, True), 1)
+        self.encoder_sub = self.create_subscription(JointState, "/encoder", self.enc_cb, 1)
 
-        self.corner_cmd_pub = self.create_publisher(CommandCorner, 
-                                                    "/cmd_corner", queue_size=1)
-        self.drive_cmd_pub = self.create_publisher(CommandDrive, 
-                                                   "/cmd_drive", queue_size=1)
+        self.corner_cmd_pub = self.create_publisher(CommandCorner, "/cmd_corner", 1)
+        self.drive_cmd_pub = self.create_publisher(CommandDrive, "/cmd_drive", 1)
 
     def cmd_cb(self, twist_msg, intuitive=False):
         """
@@ -285,7 +287,7 @@ class Rover(Node):
         approx_turning_radius = sum(sorted([r_front_farthest, r_front_closest, r_back_farthest, r_back_closest])[1:3])/2.0
         if math.isnan(approx_turning_radius):
             approx_turning_radius = self.max_radius
-        rospy.logdebug_throttle(1, "Current approximate turning radius: {}".format(round(approx_turning_radius, 2)))
+        self.get_logger().debug("Current approximate turning radius: {}".format(round(approx_turning_radius, 2)))
         self.curr_turning_radius = approx_turning_radius
 
 

@@ -33,6 +33,7 @@ def generate_launch_description():
             name='rover',
             output='screen',
             emulate_tty=True,
+            parameters=[osr_params],
             remappings=[
                 ('/input/pose', '/turtlesim1/turtle1/pose'),
                 ('/output/cmd_vel', '/turtlesim2/turtle1/cmd_vel'),
