@@ -64,52 +64,47 @@ class RoboclawWrapper(Node):
         self.enc_pub = self.create_publisher(JointState, "/encoder", queue_size=1)
         self.status_pub = self.create_publisher(Status, "/status", queue_size=1)
 
-    def run(self):
-        """Blocking loop which runs after initialization has completed"""
-        rate = rospy.Rate(8)
- 
+        self.status = Status()
+        fast_loop_rate = 0.125  # seconds
+        slow_loop_rate = 3  # seconds
+        self.fast_timer = self.create_timer(fast_loop_rate, self.fast_update)
+        self.slow_timer = self.create_timer(slow_loop_rate, self.slow_update)
 
-        status = Status()
+    def fast_update(self):
+        """Read from and write to roboclaws"""
+        # Check to see if there are commands in the buffer to send to the motor controller
+        if self.drive_cmd_buffer:
+            drive_fcn = self.send_drive_buffer_velocity
+            drive_fcn(self.drive_cmd_buffer)
+            self.drive_cmd_buffer = None
+            
+        if self.corner_cmd_buffer:
+            self.send_corner_buffer(self.corner_cmd_buffer)
+            self.corner_cmd_buffer = None
 
-        counter = 0
-        while not rospy.is_shutdown():
+        # read from roboclaws and publish
+        try:
+            self.read_encoder_values()
+            self.enc_pub.publish(self.current_enc_vals)
+        except AssertionError as read_exc:
+            self.get_logger().warn( "Failed to read encoder values")
 
-            # Check to see if there are commands in the buffer to send to the motor controller
-            if self.drive_cmd_buffer:
-                drive_fcn = self.send_drive_buffer_velocity
-                drive_fcn(self.drive_cmd_buffer)
-                self.drive_cmd_buffer = None
-                
-            if self.corner_cmd_buffer:
-                self.send_corner_buffer(self.corner_cmd_buffer)
-                self.corner_cmd_buffer = None
+        # stop the motors if we haven't received a command in a while
+        # this should be a timer instead
+        now = self.get_clock().now()
+        if now - self.time_last_cmd > self.velocity_timeout:
+            # rather than a hard stop, send a ramped velocity command
+            self.drive_cmd_buffer = CommandDrive()
+            self.send_drive_buffer_velocity(self.drive_cmd_buffer)
+            self.time_last_cmd = now  # so this doesn't get called all the time
 
-            # read from roboclaws and publish
-            try:
-                self.read_encoder_values()
-                self.enc_pub.publish(self.current_enc_vals)
-            except AssertionError as read_exc:
-                self.get_logger().warn( "Failed to read encoder values")
-
-            # Downsample the rate of less important data
-            if (counter >= 5):
-                status.battery = self.read_battery()
-                status.temp = self.read_temperatures()
-                status.current = self.read_currents()
-                status.error_status = self.read_errors()
-                counter = 0
-
-            # stop the motors if we haven't received a command in a while
-            now = self.get_clock().now()
-            if now - self.time_last_cmd > self.velocity_timeout:
-                # rather than a hard stop, send a ramped velocity command
-                self.drive_cmd_buffer = CommandDrive()
-                self.send_drive_buffer_velocity(self.drive_cmd_buffer)
-                self.time_last_cmd = now  # so this doesn't get called all the time
-
-            self.status_pub.publish(status)
-            counter += 1
-            rate.sleep()
+    def slow_update(self):
+        """Slower roboclaw read/write cycle"""
+        status.battery = self.read_battery()
+        status.temp = self.read_temperatures()
+        status.current = self.read_currents()
+        status.error_status = self.read_errors()
+        self.status_pub.publish(status)
 
     def establish_roboclaw_connections(self):
         """
