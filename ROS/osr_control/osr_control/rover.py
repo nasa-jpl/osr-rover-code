@@ -1,18 +1,22 @@
-#!/usr/bin/env python
-
-import rospy
 import math
+
+import rclpy
+from rclpy.node import Node
 
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import Twist
-from osr_msgs.msg import CommandDrive, CommandCorner
+from osr_interfaces.msg import CommandDrive, CommandCorner
 
 
-class Rover(object):
+class Rover(Node):
     """Math and motor control algorithms to move the rover"""
 
     def __init__(self):
-        rover_dimensions = rospy.get_param('/rover_dimensions', {"d1": 0.184, "d2": 0.267, "d3": 0.267, "d4": 0.256})
+        super().__init__("rover")
+        self.get_logger().info("Initializing Rover")
+
+        self.declare_parameter("/rover_dimensions")
+        rover_dimensions = self.get_parameter('/rover_dimensions').get_parameter_value()
         self.d1 = rover_dimensions["d1"]
         self.d2 = rover_dimensions["d2"]
         self.d3 = rover_dimensions["d3"]
@@ -22,19 +26,28 @@ class Rover(object):
         self.max_radius = 6.4  # [m]
 
         self.no_cmd_thresh = 0.05  # [rad]
-        self.wheel_radius = rospy.get_param("/rover_dimensions/wheel_radius", 0.075)  # [m]
-        drive_no_load_rpm = rospy.get_param("/drive_no_load_rpm", 130)
+        self.declare_parameter("/rover_dimensions/wheel_radius")
+        self.declare_parameter("/drive_no_load_rpm")
+        self.wheel_radius = self.get_parameter(
+            "/rover_dimensions/wheel_radius").get_parameter_value()  # [m]
+        drive_no_load_rpm = self.get_parameter(
+            "/drive_no_load_rpm").get_parameter_value()
         self.max_vel = self.wheel_radius * drive_no_load_rpm / 60 * 2 * math.pi  # [m/s]
 
-        rospy.Subscriber("/cmd_vel", Twist, self.cmd_cb)
-        rospy.Subscriber("/encoder", JointState, self.enc_cb)
+        self.cmd_vel_sub = self.create_subscription(Twist, "/cmd_vel", 
+                                                    self.cmd_cb, queue_size=1)
+        self.encoder_sub = self.create_subscription(JointState, "/encoder", 
+                                                    self.enc_cb, queue_size=1)
 
-        self.corner_cmd_pub = rospy.Publisher("/cmd_corner", CommandCorner, queue_size=1)
-        self.drive_cmd_pub = rospy.Publisher("/cmd_drive", CommandDrive, queue_size=1)
+        self.corner_cmd_pub = self.create_publisher(CommandCorner, 
+                                                    "/cmd_corner", queue_size=1)
+        self.drive_cmd_pub = self.create_publisher(CommandDrive, 
+                                                   "/cmd_drive", queue_size=1)
 
     def cmd_cb(self, twist_msg):
         desired_turning_radius = self.calculate_turning_radius(twist_msg.angular.z)
-        rospy.logdebug("desired turning radius: {}".format(desired_turning_radius))
+        self.get_logger().debug("desired turning radius: " +
+                                "{}".format(desired_turning_radius))
         corner_cmd_msg = self.calculate_corner_positions(desired_turning_radius)
 
         # if we're turning, calculate the max velocity the middle of the rover can go
@@ -42,11 +55,11 @@ class Rover(object):
         if math.isnan(max_vel):  # turning radius infinite, going straight
             max_vel = self.max_vel
         velocity = min(max_vel, twist_msg.linear.x)
-        rospy.logdebug("velocity drive cmd: {} m/s".format(velocity))
+        self.get_logger().debug("velocity drive cmd: {} m/s".format(velocity))
         # TODO shouldn't supply commanded steering, should supply current steering.
         drive_cmd_msg = self.calculate_drive_velocities(velocity, desired_turning_radius)
-        rospy.logdebug("drive cmd:\n{}".format(drive_cmd_msg))
-        rospy.logdebug("corner cmd:\n{}".format(corner_cmd_msg)) 
+        self.get_logger().debug("drive cmd:\n{}".format(drive_cmd_msg))
+        self.get_logger().debug("corner cmd:\n{}".format(corner_cmd_msg)) 
         if self.corner_cmd_threshold(corner_cmd_msg):
             self.corner_cmd_pub.publish(corner_cmd_msg)
         self.drive_cmd_pub.publish(drive_cmd_msg)
@@ -182,8 +195,15 @@ class Rover(object):
         return radius
 
 
-if __name__ == '__main__':
-    rospy.init_node('rover', log_level=rospy.INFO)
-    rospy.loginfo("Starting the rover node")
+def main(args=None):
+    rclpy.init(args=args)
+
     rover = Rover()
-    rospy.spin()
+
+    rclpy.spin(rover)
+    rover.destroy_node()
+    rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()

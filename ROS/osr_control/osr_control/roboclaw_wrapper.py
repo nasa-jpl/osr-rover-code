@@ -1,6 +1,6 @@
-#!/usr/bin/env python
 import serial
 import math
+
 import rclpy
 from rclpy.node import Node
 
@@ -15,8 +15,8 @@ class RoboclawWrapper(Node):
     """Interface between the roboclaw motor drivers and the higher level rover code"""
 
     def __init__(self):
-        super().__init__(RoboclawWrapper)
-        self.get_logger().info( "Initializing motor controllers")
+        super().__init__("roboclaw_wrapper")
+        self.get_logger().info("Initializing motor controllers")
 
         # initialize attributes
         self.rc = None
@@ -440,12 +440,15 @@ class RoboclawWrapper(Node):
         return err
 
 
-if __name__ == "__main__":
-    rclpy.init()
+def main(args=None):
+    rclpy.init(args=args)
 
     wrapper = RoboclawWrapper()
-    rospy.on_shutdown(wrapper.stop_motors)
-    wrapper.run()
 
+    rclpy.spin(wrapper)
+    wrapper.stop_motors()
     wrapper.destroy_node()
     rclpy.shutdown()
+
+if __name__ == "__main__":
+    main()

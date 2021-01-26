@@ -9,28 +9,30 @@ def generate_launch_description():
 
     roboclaw_params = os.path.join(
         get_package_share_directory('osr_bringup'),
-        'roboclaw_params',
+        'config',
         'roboclaw_params.yaml'
     )
     osr_params = os.path.join(
         get_package_share_directory('osr_bringup'),
-        'osr_params',
+        'config',
         'osr_params.yaml'
     )
 
     return LaunchDescription([
         Node(
             package='osr_control',
-            executable='roboclaw_wrapper.py',
+            executable='roboclaw_wrapper',
             name='roboclaw_wrapper',
             output='screen',
+            emulate_tty=True,
             parameters=[roboclaw_params]
         ),
         Node(
             package='osr_control',
-            executable='rover.py',
+            executable='rover',
             name='rover',
             output='screen',
+            emulate_tty=True,
             remappings=[
                 ('/input/pose', '/turtlesim1/turtle1/pose'),
                 ('/output/cmd_vel', '/turtlesim2/turtle1/cmd_vel'),

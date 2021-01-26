@@ -24,7 +24,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'talker = osr_control.publisher_member_function:main',
+            'rover = osr_control.rover:main',
+            'roboclaw_wrapper = osr_control.roboclaw_wrapper:main'
         ],
     },
 )
