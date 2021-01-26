@@ -1,4 +1,5 @@
 import math
+from functools import partial
 
 import rclpy
 from rclpy.node import Node
@@ -33,9 +34,13 @@ class Rover(Node):
         drive_no_load_rpm = self.get_parameter(
             "/drive_no_load_rpm").get_parameter_value()
         self.max_vel = self.wheel_radius * drive_no_load_rpm / 60 * 2 * math.pi  # [m/s]
+        self.curr_twist = Twist()
+        self.curr_turning_radius = self.max_radius
 
         self.cmd_vel_sub = self.create_subscription(Twist, "/cmd_vel", 
-                                                    self.cmd_cb, queue_size=1)
+                                                    partial(self.cmd_cb, False), queue_size=1)
+        self.cmd_vel_sub = self.create_subscription(Twist, "/cmd_vel_intuitive", 
+                                                    partial(self.cmd_cb, True), queue_size=1)
         self.encoder_sub = self.create_subscription(JointState, "/encoder", 
                                                     self.enc_cb, queue_size=1)
 
@@ -44,8 +49,25 @@ class Rover(Node):
         self.drive_cmd_pub = self.create_publisher(CommandDrive, 
                                                    "/cmd_drive", queue_size=1)
 
-    def cmd_cb(self, twist_msg):
-        desired_turning_radius = self.calculate_turning_radius(twist_msg.angular.z)
+    def cmd_cb(self, twist_msg, intuitive=False):
+        """
+        Respond to an incoming Twist command in one of two ways depending on the mode (intuitive)
+
+        The Mathematically correct mode (intuitive=False) means that 
+         * when the linear velocity is zero, an angular velocity does not cause the corner motors to move
+           (since simply steering the corners while standing still doesn't generate a twist)
+         * when driving backwards, steering behaves opposite as what you intuitively might expect
+           (this is to hold true to the commanded twist)
+        Use this topic with a controller that generated velocities based on targets. When you're
+        controlling the robot with a joystick or other manual input topic, consider using the 
+        /cmd_vel_intuitive topic instead.
+
+        The Intuitive mode (intuitive=True) means that sending a positive angular velocity (moving joystick left)
+        will always make the corner wheels turn 'left' regardless of the linear velocity.
+
+        :param intuitive: determines the mode
+        """
+        desired_turning_radius = self.twist_to_turning_radius(twist_msg, intuitive_mode=intuitive)
         self.get_logger().debug("desired turning radius: " +
                                 "{}".format(desired_turning_radius))
         corner_cmd_msg = self.calculate_corner_positions(desired_turning_radius)
@@ -55,17 +77,20 @@ class Rover(Node):
         if math.isnan(max_vel):  # turning radius infinite, going straight
             max_vel = self.max_vel
         velocity = min(max_vel, twist_msg.linear.x)
+
         self.get_logger().debug("velocity drive cmd: {} m/s".format(velocity))
-        # TODO shouldn't supply commanded steering, should supply current steering.
         drive_cmd_msg = self.calculate_drive_velocities(velocity, desired_turning_radius)
         self.get_logger().debug("drive cmd:\n{}".format(drive_cmd_msg))
         self.get_logger().debug("corner cmd:\n{}".format(corner_cmd_msg)) 
+
         if self.corner_cmd_threshold(corner_cmd_msg):
             self.corner_cmd_pub.publish(corner_cmd_msg)
         self.drive_cmd_pub.publish(drive_cmd_msg)
 
     def enc_cb(self, msg):
         self.curr_positions = dict(zip(msg.name, msg.position))
+        self.curr_velocities = dict(zip(msg.name, msg.velocity))
+        self.forward_kinematics()
 
     def corner_cmd_threshold(self, corner_cmd):
         try:
@@ -151,6 +176,9 @@ class Rover(Node):
         A large turning radius means mostly straight. Any radius larger than max_radius is essentially straight
         because of the encoders' resolution
 
+        The positions are expressed in the motor's frame with the positive z-axis pointing down. This means
+        that a positive angle corresponds to a right turn
+
         :param radius: positive value means turn left. 0.45 < abs(turning_radius) < inf
         """
         cmd_msg = CommandCorner()
@@ -162,37 +190,103 @@ class Rover(Node):
         theta_front_farthest = math.atan2(self.d3, abs(radius) + self.d1)
 
         if radius > 0:
-            cmd_msg.left_front_pos = theta_front_closest
-            cmd_msg.left_back_pos = -theta_front_closest
-            cmd_msg.right_back_pos = -theta_front_farthest
-            cmd_msg.right_front_pos = theta_front_farthest
+            cmd_msg.left_front_pos = -theta_front_closest
+            cmd_msg.left_back_pos = theta_front_closest
+            cmd_msg.right_back_pos = theta_front_farthest
+            cmd_msg.right_front_pos = -theta_front_farthest
         else:
-            cmd_msg.left_front_pos = -theta_front_farthest
-            cmd_msg.left_back_pos = theta_front_farthest
-            cmd_msg.right_back_pos = theta_front_closest
-            cmd_msg.right_front_pos = -theta_front_closest
+            cmd_msg.left_front_pos = theta_front_farthest
+            cmd_msg.left_back_pos = -theta_front_farthest
+            cmd_msg.right_back_pos = -theta_front_closest
+            cmd_msg.right_front_pos = theta_front_closest
 
         return cmd_msg
 
-    def calculate_turning_radius(self, angle):
+    def twist_to_turning_radius(self, twist, clip=True, intuitive_mode=False):
         """
-        Convert a commanded angle into an actual turning radius
+        Convert a commanded twist into an actual turning radius
 
-        :param angle: angle around the vertical which expresses how much the rover will rotate if it moves forward
+        ackermann steering: if l is distance travelled, rho the turning radius, and theta the heading of the middle of the robot,
+        then: dl = rho * dtheta. With dt -> 0, dl/dt = rho * dtheta/dt
+        dl/dt = twist.linear.x, dtheta/dt = twist.angular.z
+
+        :param twist: geometry_msgs/Twist. Only linear.x and angular.z are used
+        :param clip: whether the values should be clipped from min_radius to max_radius
+        :param intuitive_mode: whether the turning radius should be mathematically correct (see cmd_cb()) or intuitive
         :return: physical turning radius in meter, clipped to the rover's limits
         """
         try:
-            radius = self.d3 / math.tan(angle)
+            if intuitive_mode and twist.linear.x < 0:
+                radius = twist.linear.x / -twist.angular.z
+            else:
+                radius = twist.linear.x / twist.angular.z
         except ZeroDivisionError:
-            return float("Inf")
-        
+                return float("Inf")
+
         # clip values so they lie in (-max_radius, -min_radius) or (min_radius, max_radius)
+        if not clip:
+            return radius
+        if radius == 0:
+            if intuitive_mode:
+                if twist.angular.z == 0:
+                    return self.max_radius
+                else:
+                    radius = self.min_radius * self.max_vel / twist.angular.z  # proxy
+            else:  # mathematical mode: standing still, so can't generate an angular velocity
+                return self.max_radius  
         if radius > 0:
             radius = max(self.min_radius, min(self.max_radius, radius))
         else:
             radius = max(-self.max_radius, min(-self.min_radius, radius))
 
         return radius
+
+    def angle_to_turning_radius(self, angle):
+        """
+        Convert the angle of a virtual wheel positioned in the middle of the front two wheels to a turning radius
+        Turning left and positive angle corresponds to a positive turning radius
+
+        :param angle: [-pi/4, pi/4]
+        :return: turning radius for the given angle in [m]
+        """
+        try:
+            radius = self.d3 / math.tan(angle)
+        except ZeroDivisionError:
+            return float("Inf")
+
+        return radius
+
+    def forward_kinematics(self):
+        """
+        Calculate current twist of the rover given current drive and corner motor velocities
+        Also approximate current turning radius.
+
+        Note that forward kinematics means solving an overconstrained system since the corner 
+        motors may not be aligned perfectly and drive velocities might fight each other
+        """
+        # calculate current turning radius according to each corner wheel's angle
+        # corner motor angles should be flipped since different coordinate axes in this node (positive z up)
+        theta_fl = -self.curr_positions['corner_left_front']
+        theta_fr = -self.curr_positions['corner_right_front']
+        theta_bl = -self.curr_positions['corner_left_back']
+        theta_br = -self.curr_positions['corner_right_back']
+        # sum wheel angles to find out which direction the rover is mostly turning in
+        if theta_fl + theta_fr + theta_bl + theta_br > 0:  # turning left
+            r_front_closest = self.d1 + self.angle_to_turning_radius(theta_fl)
+            r_front_farthest = -self.d1 + self.angle_to_turning_radius(theta_fr)
+            r_back_closest = -self.d1 - self.angle_to_turning_radius(theta_bl)
+            r_back_farthest = self.d1 - self.angle_to_turning_radius(theta_br)
+        else:  # turning right
+            r_front_farthest = self.d1 + self.angle_to_turning_radius(theta_fl)
+            r_front_closest = -self.d1 + self.angle_to_turning_radius(theta_fr)
+            r_back_farthest = -self.d1 - self.angle_to_turning_radius(theta_bl)
+            r_back_closest = self.d1 - self.angle_to_turning_radius(theta_br)
+        # get a best estimate of the turning radius by taking the median value (avg sensitive to outliers)
+        approx_turning_radius = sum(sorted([r_front_farthest, r_front_closest, r_back_farthest, r_back_closest])[1:3])/2.0
+        if math.isnan(approx_turning_radius):
+            approx_turning_radius = self.max_radius
+        rospy.logdebug_throttle(1, "Current approximate turning radius: {}".format(round(approx_turning_radius, 2)))
+        self.curr_turning_radius = approx_turning_radius
 
 
 def main(args=None):
