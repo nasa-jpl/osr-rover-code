@@ -44,8 +44,10 @@ class Rover(Node):
         self.curr_twist = Twist()
         self.curr_turning_radius = self.max_radius
 
-        self.cmd_vel_sub = self.create_subscription(Twist, "/cmd_vel", partial(self.cmd_cb, False), 1)
-        self.cmd_vel_int_sub = self.create_subscription(Twist, "/cmd_vel_intuitive", partial(self.cmd_cb, True), 1)
+        self.cmd_vel_sub = self.create_subscription(Twist, "/cmd_vel", 
+                                                    partial(self.cmd_cb, intuitive=False), 1)
+        self.cmd_vel_int_sub = self.create_subscription(Twist, "/cmd_vel_intuitive", 
+                                                        partial(self.cmd_cb, intuitive=True), 1)
         self.encoder_sub = self.create_subscription(JointState, "/encoder", self.enc_cb, 1)
 
         self.corner_cmd_pub = self.create_publisher(CommandCorner, "/cmd_corner", 1)
@@ -64,7 +66,7 @@ class Rover(Node):
         controlling the robot with a joystick or other manual input topic, consider using the 
         /cmd_vel_intuitive topic instead.
 
-        The Intuitive mode (intuitive=True) means that sending a positive angular velocity (moving joystick left)
+        The Intuitive mode (intuitive=True) means that sending a positive anguwlar velocity (moving joystick left)
         will always make the corner wheels turn 'left' regardless of the linear velocity.
 
         :param intuitive: determines the mode
