@@ -125,15 +125,18 @@ class Roboclaw:
 	def _sendcommand(self,address,command):
 		self.crc_clear()
 		self.crc_update(address)
-		self._port.write(chr(address).encode())
+#		self._port.write(chr(address))
+		self._port.write(address.to_bytes(1, 'big'))
 		self.crc_update(command)
-		self._port.write(chr(command).encode())
+#		self._port.write(chr(command))
+		self._port.write(command.to_bytes(1, 'big'))
 		return
 
 	def _readchecksumword(self):
 		data = self._port.read(2)
 		if len(data)==2:
-			crc = (ord(data[0])<<8) | ord(data[1])
+#			crc = (ord(data[0])<<8) | ord(data[1])
+			crc = (data[0]<<8) | data[1]
 			return (1,crc)	
 		return (0,0)
 		
@@ -175,7 +178,8 @@ class Roboclaw:
 
 	def _writebyte(self,val):
 		self.crc_update(val&0xFF)
-		self._port.write(chr(val&0xFF))
+#		self._port.write(chr(val&0xFF))
+		self._port.write(val.to_bytes(1, 'big'))
 
 	def _writesbyte(self,val):
 		self._writebyte(val)
@@ -642,7 +646,8 @@ class Roboclaw:
 	def SendRandomData(self,cnt):
 		for i in range(0,cnt):
 			byte = random.getrandbits(8)
-			self._port.write(chr(byte))
+#			self._port.write(chr(byte))
+			self._port.write(byte.to_bytes(1, 'big'))
 		return
 
 	def ForwardM1(self,address,val):
@@ -716,7 +721,8 @@ class Roboclaw:
 					self.crc_update(val)
 					if(val==0):
 						break
-					str+=data[0]
+#					str+=data[0]
+					str+=chr(data[0])
 				else:
 					passed = False
 					break
@@ -751,10 +757,12 @@ class Roboclaw:
 		return self._write1(address,self.Cmd.SETMAXLB,val)
 
 	def SetM1VelocityPID(self,address,p,i,d,qpps):
-		return self._write4444(address,self.Cmd.SETM1PID,long(d*65536),long(p*65536),long(i*65536),qpps)
+#		return self._write4444(address,self.Cmd.SETM1PID,long(d*65536),long(p*65536),long(i*65536),qpps)
+		return self._write4444(address,self.Cmd.SETM1PID,d*65536,p*65536,i*65536,qpps)
 
 	def SetM2VelocityPID(self,address,p,i,d,qpps):
-		return self._write4444(address,self.Cmd.SETM2PID,long(d*65536),long(p*65536),long(i*65536),qpps)
+#		return self._write4444(address,self.Cmd.SETM2PID,long(d*65536),long(p*65536),long(i*65536),qpps)
+		return self._write4444(address,self.Cmd.SETM2PID,d*65536,p*65536,i*65536,qpps)
 
 	def ReadISpeedM1(self,address):
 		return self._read4_1(address,self.Cmd.GETM1ISPEED)
@@ -893,10 +901,12 @@ class Roboclaw:
 		return (0,0,0)
 
 	def SetM1PositionPID(self,address,kp,ki,kd,kimax,deadzone,min,max):
-		return self._write4444444(address,self.Cmd.SETM1POSPID,long(kd*1024),long(kp*1024),long(ki*1024),kimax,deadzone,min,max)
+#		return self._write4444444(address,self.Cmd.SETM1POSPID,long(kd*1024),long(kp*1024),long(ki*1024),kimax,deadzone,min,max)
+		return self._write4444444(address,self.Cmd.SETM1POSPID,kd*1024,kp*1024,ki*1024,kimax,deadzone,min,max)
 
 	def SetM2PositionPID(self,address,kp,ki,kd,kimax,deadzone,min,max):
-		return self._write4444444(address,self.Cmd.SETM2POSPID,long(kd*1024),long(kp*1024),long(ki*1024),kimax,deadzone,min,max)
+#		return self._write4444444(address,self.Cmd.SETM2POSPID,long(kd*1024),long(kp*1024),long(ki*1024),kimax,deadzone,min,max)
+		return self._write4444444(address,self.Cmd.SETM2POSPID,kd*1024,kp*1024,ki*1024,kimax,deadzone,min,max)
 
 	def ReadM1PositionPID(self,address):
 		data = self._read_n(address,self.Cmd.READM1POSPID,7)
@@ -1035,7 +1045,7 @@ class Roboclaw:
 			self._port.flushInput()
 			self._sendcommand(address,self.Cmd.READEEPROM)
 			self.crc_update(ee_address)
-			self._port.write(chr(ee_address).encode())
+			self._port.write(chr(ee_address))
 			val1 = self._readword()
 			if val1[0]:
 				crc = self._readchecksumword()
@@ -1069,4 +1079,3 @@ class Roboclaw:
 		except:
 			return 0
 		return 1
-
