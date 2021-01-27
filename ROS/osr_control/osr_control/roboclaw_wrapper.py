@@ -144,16 +144,17 @@ class RoboclawWrapper(Node):
         accel_max = 2**15-1
         accel_rate = self.get_parameter('drive_acceleration_factor').get_parameter_value().double_value
         self.drive_accel = int(accel_max * accel_rate)
-        self.velocity_timeout = self.get_parameter('velocity_timeout').get_parameter_value().double_value
+        self.velocity_timeout = rclpy.duration.Duration(seconds=self.get_parameter('velocity_timeout').get_parameter_value().double_value, 
+                                                        nanoseconds=0)
         self.time_last_cmd = self.get_clock().now()
 
         self.stop_motors()
 
         # set up publishers and subscribers
-        self.corner_cmd_sub = self.create_subscription(CommandCorner, "/cmd_corner", self.corner_cmd_cb, queue_size=1)
-        self.drive_cmd_sub = self.create_subscription(CommandDrive, "/cmd_drive", self.drive_cmd_cb, queue_size=1)
-        self.enc_pub = self.create_publisher(JointState, "/encoder", queue_size=1)
-        self.status_pub = self.create_publisher(Status, "/status", queue_size=1)
+        self.corner_cmd_sub = self.create_subscription(CommandCorner, "/cmd_corner", self.corner_cmd_cb, 1)
+        self.drive_cmd_sub = self.create_subscription(CommandDrive, "/cmd_drive", self.drive_cmd_cb, 1)
+        self.enc_pub = self.create_publisher(JointState, "/encoder", 1)
+        self.status_pub = self.create_publisher(Status, "/status", 1)
 
         self.status = Status()
         fast_loop_rate = 0.125  # seconds
@@ -191,11 +192,11 @@ class RoboclawWrapper(Node):
 
     def slow_update(self):
         """Slower roboclaw read/write cycle"""
-        status.battery = self.read_battery()
-        status.temp = self.read_temperatures()
-        status.current = self.read_currents()
-        status.error_status = self.read_errors()
-        self.status_pub.publish(status)
+        self.status.battery = self.read_battery()
+        self.status.temp = self.read_temperatures()
+        self.status.current = self.read_currents()
+        self.status.error_status = self.read_errors()
+        self.status_pub.publish(self.status)
 
     def establish_roboclaw_connections(self):
         """
@@ -208,7 +209,6 @@ class RoboclawWrapper(Node):
         self.rc = Roboclaw(serial_port, baud_rate)
         self.rc.Open()
         self.address = self.get_parameter('addresses').get_parameter_value().integer_array_value
-        self.get_logger().error(str(self.address[0]))
 
         # initialize connection status to successful
         all_connected = True
@@ -228,7 +228,7 @@ class RoboclawWrapper(Node):
 
     def setup_encoders(self):
         """Set up the encoders"""
-        for motor_name, properties in self.roboclaw_mapping.iteritems():
+        for motor_name, properties in self.roboclaw_mapping.items():
             if "corner" in motor_name:
                 enc_min, enc_max = self.read_encoder_limits(properties["address"], properties["channel"])
                 self.encoder_limits[motor_name] = (enc_min, enc_max)
@@ -240,7 +240,7 @@ class RoboclawWrapper(Node):
         """Query roboclaws and update current motors status in encoder ticks"""
         enc_msg = JointState()
         enc_msg.header.stamp = self.get_clock().now().to_msg()
-        for motor_name, properties in self.roboclaw_mapping.iteritems():
+        for motor_name, properties in self.roboclaw_mapping.items():
             enc_msg.name.append(motor_name)
             position = self.read_encoder_position(properties["address"], properties["channel"])
             velocity = self.read_encoder_velocity(properties["address"], properties["channel"])
