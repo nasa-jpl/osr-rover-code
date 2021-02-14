@@ -1,6 +1,6 @@
 # Setting up the Raspberry Pi (RPi)
 
-In this section, we’ll go over setting up the Raspberry Pi (RPi) and setting up all the code that will run the rover. Our rover uses ROS (Robotic Operating System), which will be installed on your choice of operating system; we will set these up below.
+In this section, we’ll go over setting up the Raspberry Pi (RPi) and setting up all the code that will run the rover. Our rover uses ROS (Robotic Operating System); we will set these up below.
 
 These instructions should work for both the RPi 3 and 4. You are free to use other versions of RPi, ROS, or OS, but setting these up is not covered here and it is not guaranteed that those will work.
 
@@ -8,7 +8,7 @@ These instructions should work for both the RPi 3 and 4. You are free to use oth
 
 The first step is to install the Ubuntu Operating System on your Raspberry Pi.
 
-Download Ubuntu 18.04 from [here](https://ubuntu.com/download/raspberry-pi) for your RPi version. For an RPi3 the best default is 32-bit, but if you're on an Rpi4 then you can go for 64-bit.
+Download Ubuntu 20.04 from [here](https://ubuntu.com/download/raspberry-pi) for your RPi version. For an RPi3 the best default is 32-bit, but if you're on an Rpi4 then you can (should) go for 64-bit.
 
 Preparing the image for the RPi and boot it up:
 
@@ -18,7 +18,9 @@ Preparing the image for the RPi and boot it up:
 - Power it on
 - Login, using "ubuntu" for the username and password. You should be prompted to make a new password.
 
-You should now be logged in to your newly minted copy of Ubuntu 18.04!
+You should now be logged in to your newly minted copy of Ubuntu!
+As you will have noticed, there is no Graphical User Interface (GUI). We installed the bare minimum, the 'server' version of Ubuntu because you don't
+necessarily need all that (it takes up a lot of computer power). However we recommend for those new to Linux to install the GUI as below.
 
 ## 2 Further setup: wifi, desktop GUI (optional), ssh
 
@@ -50,92 +52,76 @@ You probably will also want to connect to your newly configured RPi remotely ove
 
 ## 3 Installing ROS
 
-We'll install ROS (Robot Operating System) Melodic on the RPi.
+We'll install ROS2 (Robot Operating System) Foxy on the RPi. If you're new to ROS, we recommend learning it as it is a crucial part in the code base.
 
 You'll need to be logged in to the RPi via ssh, or open a terminal in the desktop GUI if you installed it above.
 
-The below steps are based off of [these instructions](http://wiki.ros.org/melodic/Installation/Ubuntu). Consult them for more details.
+Follow the [instructions](https://index.ros.org/doc/ros2/Installation/Foxy/Linux-Install-Debians/) for installing ROS2.
 
-Setup
-```
-# Setup your computer to accept software from packages.ros.org
-sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
-
-# set up keys
-sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
-```
-
-Installation
-```
-# make sure your Debian package index is up-to-date
-sudo apt update
-
-# desktop-Full Install: (Recommended) : ROS, rqt, rviz, robot-generic libraries, 2D/3D simulators and 2D/3D perception
-sudo apt install ros-melodic-desktop-full
-```
-
-Dependencies for building packages
-```
-# install 'em
-sudo apt install python-rosdep python-rosinstall python-rosinstall-generator python-wstool build-essential
-
-# initialize rosdep
-sudo rosdep init
-rosdep update
-```
+You can choose to either install the 'full version' (`sudo apt install ros-foxy-desktop`
+) which comes with graphical packages like RViz and QT or install just the barebones version (`sudo apt install ros-foxy-ros-base`). The latter
+allows you to install packages in the full version whenever you need them. If you didn't install the GUI on Ubuntu, definitely install the base
+version as you will have little use for GUI applications in the full version.
 
 ## 4 Setting up ROS environment and building the rover code
 
 ### 4.1 Setup ROS build environment
 
-First we'll create a workspace for the rover code. 
+First we'll create a ROS workspace for the rover code. 
 
 ```
-# Create a catkin workspace directory, which will contain all ROS compilation and 
-# source code files, and move into it
+# Create a colcon workspace directory, which will contain all ROS compilation and 
+# source code files, and navigate into it
 mkdir -p ~/osr_ws/src && cd ~/osr_ws
 
 # Source your newly created ROS environment
-source /opt/ros/melodic/setup.bash
+source /opt/ros/foxy/setup.bash
+
+# install the build tool colcon
+sudo apt install python3-colcon-common-extensions
 ```
 
 ### 4.2 Clone and build the rover code
 For this section, you'll be working with the version control software `git`. Now's a good time to [read up](https://try.github.io/) on how that works if you're new to it and make a GitHub account!
 In the newly created catkin workspace you just made, clone this repo:
 ```commandline
-sudo apt-get install git
+sudo apt install git
 cd ~/osr_ws/src
 git clone https://github.com/nasa-jpl/osr-rover-code.git
 
 # install the dependencies
 cd ..
 rosdep install --from-paths src --ignore-src
-catkin_make
+# build the ROS packages
+colcon build --symlink-install
+```
+It should run successfully. If it doesn't, please ask on Slack or [submit an issue](https://github.com/nasa-jpl/osr-rover-code/issues/new).
 
-# add the generated files to the path so ROS can find them
-source devel/setup.bash
+Now let's add the generated files to the path so ROS can find them
+```
+source install/setup.bash
 ```
 
 The rover has some customizable settings that will overwrite the default values. 
 Whether you have any changes compared to the defaults or not, you have to manually create these files:
 ```
 cd ~/osr_ws/src/osr-rover-code/ROS/osr_bringup/config
-touch physical_properties_mod.yaml roboclaw_params_mod.yaml
+touch osr_params_mod.yaml roboclaw_params_mod.yaml
 ```
 
-To change any values from the default, modify these files (the _mod.yaml ones) instead so your changes don't get committed to git. 
+To change any values from the default (if your rover doesn't match the default instructions), modify these files (the _mod.yaml ones) instead if the original ones. This way your changes don't get committed to git. 
 The files follow the same structure as the default. Just include the values that you need to change as the default
 values for other parameters may change over time.
 
-You might also want to modify the file `osr-rover-code/ROS/osr_bringup/launch/osr.launch` to change the velocities the gamepad controller will
-send to the rover. These values in the node joy2twist are of interest:
+You might also want to modify the file `osr-rover-code/ROS/osr_bringup/launch/osr_launch.py` to change the velocities the gamepad controller will
+send to the rover. These values in the node joy_to_twist are of interest:
 ```
-<param name="scale_linear" value="0.18"/>
-<param name="scale_angular" value="0.4"/>
-<param name="scale_linear_turbo" value="0.24"/>
+    {"scale_linear": 0.8},  # scale to apply to drive speed, in m/s: drive_motor_rpm * 2pi / 60 * wheel radius * slowdown_factor
+    {"scale_angular": 1.75},  # scale to apply to angular speed, in rad/s: scale_linear / min_radius
+    {"scale_linear_turbo": 1.78},  # scale to apply to linear speed, in m/s
 ```
 The maximum speed your rover can go is determined by the no-load speed of your drive motors. The default no-load speed is located
-in the file [physical_properties.yaml](../ROS/osr_bringup/config/physical_properties.yaml) as `drive_no_load_rpm`, unless you modified it in the corresponding `_mod.yaml` file. 
+in the file [osr_params.yaml](../ROS/osr_bringup/config/osr_params.yaml) as `drive_no_load_rpm`, unless you modified it in the corresponding `_mod.yaml` file. 
 This maximum speed corresponds to `scale_linear_turbo` and can be calculated as `drive_no_load_rpm * 2pi / 60 * wheel radius (=0.075m)`.
 Based on this upper limit, let's set our regular moving speed to a sensible fraction of that which you can configure to your liking.
 Start with e.g. 0.75 * scale_linear_turbo. If you think it's too slow or too fast, simply scale it up or down.
@@ -148,8 +134,8 @@ should be set to `scale_linear / min_radius`. For the default configuration, the
 The `source...foo.bash` lines above are used to manually configure your ROS environment. We can do this automatically in the future by doing:
 ```
 cd ~
-echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc 
-echo "source ~/osr_ws/devel/setup.bash" >> ~/.bashrc
+echo "source /opt/ros/foxy/setup.bash" >> ~/.bashrc 
+echo "source ~/osr_ws/install/setup.bash" >> ~/.bashrc
 ```
 This adds the `source` lines to `~/.bashrc`, which runs whenever a new shell is opened on the RPi - by logging in via ssh, for example. So, from now on, when you log into the RPi your new command line environment will have the appropriate configuration for ROS and the rover code.
 
@@ -168,13 +154,12 @@ sudo systemctl disable serial-getty@ttyS0.service
 sudo systemctl mask serial-getty@ttyS0.service
 ```
 
-
 Now we'll need to copy over a udev rules file, which is used to configure needed device files in `/dev`; namely, `ttyS0 and ttyAMA0`. Here's a [good primer](http://reactivated.net/writing_udev_rules.html) on udev. 
 
 ```
 # copy udev file from the repo to your system
 cd ~/osr_ws/src/osr-rover-code/config
-sudo cp serial_udev_ubuntu1804.rules /etc/udev/rules.d/10-local.rules
+sudo cp serial_udev_ubuntu.rules /etc/udev/rules.d/10-local.rules
 
 # reload the udev rules so that the devices files are set up correctly.
 sudo udevadm control --reload-rules && sudo udevadm trigger
