@@ -33,10 +33,34 @@ def generate_launch_description():
             name='rover',
             output='screen',
             emulate_tty=True,
-            parameters=[osr_params],
+            parameters=[osr_params]
+        ),
+        Node(
+            package='teleop_twist_joy',
+            executable='teleop_node',
+            name='teleop_twist_joy',
+            output='screen',
+            emulate_tty=True,
+            parameters=[
+                {"scale_linear": 0.8},  # scale to apply to drive speed, in m/s: drive_motor_rpm * 2pi / 60 * wheel radius * slowdown_factor
+                {"axis_angular": 3},  # which joystick axis to use for driving
+                {"scale_angular": 1.75},  # scale to apply to angular speed, in rad/s: scale_linear / min_radius
+                {"scale_linear_turbo": 1.78},  # scale to apply to linear speed, in m/s
+                {"enable_button": 4},  # which button to press to enable movement
+                {"enable_turbo_button": 5}  # -1 to disable turbo
+            ],
             remappings=[
-                ('/input/pose', '/turtlesim1/turtle1/pose'),
-                ('/output/cmd_vel', '/turtlesim2/turtle1/cmd_vel'),
+                ('/cmd_vel', '/cmd_vel_intuitive')
+            ]
+        ),
+        Node(
+            package='joy',
+            executable='joy_node',
+            name='joy',
+            output='screen',
+            emulate_tty=True,
+            parameters=[
+                {"autorepeat_rate": 5.0},
             ]
         )
     ])
