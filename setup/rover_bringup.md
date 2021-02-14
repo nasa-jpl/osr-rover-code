@@ -4,17 +4,17 @@ Note that these instructions assume you followed the steps in [rpi setup](rpi.md
 
 ## 1 Manual rover bringup
 
-In a sourced terminal (`source /opt/ros/melodic/setup.bash && source ~/osr_ws/devel/setup.bash`), run
+In a sourced terminal (`source /opt/ros/foxy/setup.bash && source ~/osr_ws/install/setup.bash`), run
 
 ```commandline
-roslaunch osr_bringup osr.launch
+ros2 launch osr_bringup osr_launch.py
 ```
 to run the rover.
 
 Any errors or warnings will be displayed there in case something went wrong. If you're using the Xbox wireless controller,
 command the rover by holding the left back button (LB) down and moving the joysticks. You can boost as described in
 the [RPi setup](rpi.md) by holding down the right back button (RB) instead. If this isn't working for you, 
-`rostopic echo /joy`, press buttons, and adjust `bringup.launch` to point to the corresponding buttons and axes. If you have questions, please ask on the Tapatalk forum.
+`ros2 topic echo /joy`, press buttons, and adjust `osr_launch.py` to point to the corresponding buttons and axes. If you have questions, please [submit an issue](https://github.com/nasa-jpl/osr-rover-code/issues/new) or post on the Slack forum.
 
 ## 2 Automatic bringup with init script
 
@@ -55,7 +55,7 @@ for the robot we suggest disabling the service and doing manual launch of the sc
 testing phases. This will help you more easily debug any issues with your code.**
 
 Once you have fully tested the robot and made sure that everything is running correctly by starting the rover code manually
-via `roslaunch osr bringup osr.launch`, enable the startup service on the robot with the command below:
+via `ros2 launch osr_bringup osr_launch.py`, enable the startup service on the robot with the command below:
 ```
 sudo systemctl enable osr startup.service
 ```
