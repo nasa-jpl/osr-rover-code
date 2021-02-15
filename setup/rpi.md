@@ -89,7 +89,8 @@ sudo apt install git
 cd ~/osr_ws/src
 git clone https://github.com/nasa-jpl/osr-rover-code.git
 
-# install the dependencies
+# install the dependencies using rosdep
+sudo apt install python3-rosdep
 cd ..
 rosdep install --from-paths src --ignore-src
 # build the ROS packages
