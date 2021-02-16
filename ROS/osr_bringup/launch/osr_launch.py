@@ -1,8 +1,6 @@
 import os
 
 from launch import LaunchDescription
-from launch.substitutions import LaunchConfiguration
-from launch.actions import DeclareLaunchArgument
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 
@@ -57,7 +55,6 @@ def generate_launch_description():
                 ('/cmd_vel', '/cmd_vel_intuitive')
             ]
         ),
-        DeclareLaunchArgument(name='log_level', default_value='debug'),
         Node(
             package='joy',
             executable='joy_node',
@@ -67,7 +64,5 @@ def generate_launch_description():
             parameters=[
                 {"autorepeat_rate": 5.0},
                 {"device_id": 0},  # This might be different on your computer. Run `ls -l /dev/input/js0`. If you have js1, put 1.
-            ],
-            arguments=['--ros-args', '--log-level', LaunchConfiguration('log_level')]
-        )
+            ]        )
     ])
