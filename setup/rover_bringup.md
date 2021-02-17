@@ -16,6 +16,11 @@ command the rover by holding the left back button (LB) down and moving the joyst
 the [RPi setup](rpi.md) by holding down the right back button (RB) instead. If this isn't working for you, 
 `ros2 topic echo /joy`, press buttons, and adjust `osr_launch.py` to point to the corresponding buttons and axes. If you have questions, please [submit an issue](https://github.com/nasa-jpl/osr-rover-code/issues/new) or post on the Slack forum.
 
+If the joysticks aren't sending through data (nothing shows when you run `ros2 topic echo /joy`) in a separate terminal, make sure
+they have the appropriate permissions; `sudo chmod a+rw /dev/input/event0`. (The specific number may vary, run `ls -l /dev/input/*` to find out).
+Then try again. You might want to consider using udev rules to automate this which you will need for automatic bringup using systemd services below.
+If you need help, please post on GitHub Discussions or on the Slack forum.
+
 ## 2 Automatic bringup with init script
 
 Starting scripts on boot using ROS can be a little more difficult than starting scripts on boot normally from
