@@ -57,7 +57,7 @@ testing phases. This will help you more easily debug any issues with your code.*
 Once you have fully tested the robot and made sure that everything is running correctly by starting the rover code manually
 via `roslaunch osr bringup osr.launch`, enable the startup service on the robot with the command below:
 ```
-sudo systemctl enable osr startup.service
+sudo systemctl enable osr_startup.service
 ```
 
 At this point, your rover should be fully functional and automatically run whenever you boot it up! Congratulations and happy roving!!
