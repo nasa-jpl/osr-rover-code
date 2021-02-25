@@ -20,7 +20,7 @@ the [RPi setup](rpi.md) by holding down the right back button (RB) instead. If t
 
 If you want to customize your `osr.launch` file, make a copy of it in the same directory (`osr-rover-code/ROS/osr_bringup/launch/`) and name it `osr_mod.launch`. The OSR launch script will automatically find it.
 
-This is useful, for example, when you don't have the LED screen. Just remove the `<node name="led_screen" pkg="led_screen" type="arduino_comm.py"/>` line in osr_mod.launch.
+This is useful, for example, when you don't have the LED screen. In that case you would just remove the `<node name="led_screen" pkg="led_screen" type="arduino_comm.py"/>` line in `osr_mod.launch`.
 
 ## 3 Automatic bringup with launch script
 
