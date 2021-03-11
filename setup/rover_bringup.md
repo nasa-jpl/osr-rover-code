@@ -22,7 +22,13 @@ If you want the code to calculate and publish wheel odometry, launch with the ar
 ![](wheel_odom_example.png)
 Odometry is used for localization and SLAM.
 
-## 2 Automatic bringup with init script
+## 2 Custom osr_mod.launch file
+
+If you want to customize your `osr.launch` file, make a copy of it in the same directory (`osr-rover-code/ROS/osr_bringup/launch/`) and name it `osr_mod.launch`. The OSR launch script will automatically find it.
+
+This is useful, for example, when you don't have the LED screen. In that case you would just remove the `<node name="led_screen" pkg="led_screen" type="arduino_comm.py"/>` line in `osr_mod.launch`.
+
+## 3 Automatic bringup with launch script
 
 Starting scripts on boot using ROS can be a little more difficult than starting scripts on boot normally from
 the Raspberry Pi because of the default permission settings on the RPi and the fact that that ROS cannot
@@ -35,8 +41,9 @@ roslaunch file, and the other creates a system service to start that bash script
 raspberry Pi and execute the following commands.
 ```
 cd ~/osr_ws/src/osr-rover-code/init_scripts
-sudo cp LaunchOSR.sh ~/LaunchOSR.sh
-sudo chmod +x ~/LaunchOSR.sh
+# use symbolic links so we capture updates to these files in the service
+ln -s $(pwd)/launch_osr.sh ~/launch_osr.sh
+ln -s $(pwd)/osr_paths.sh ~/osr_paths.sh
 sudo cp osr_startup.service /etc/systemd/system/osr_startup.service
 sudo chmod 644 /etc/systemd/system/osr_startup.service
 ```
@@ -63,7 +70,7 @@ testing phases. This will help you more easily debug any issues with your code.*
 Once you have fully tested the robot and made sure that everything is running correctly by starting the rover code manually
 via `roslaunch osr bringup osr.launch`, enable the startup service on the robot with the command below:
 ```
-sudo systemctl enable osr startup.service
+sudo systemctl enable osr_startup.service
 ```
 
 At this point, your rover should be fully functional and automatically run whenever you boot it up! Congratulations and happy roving!!
