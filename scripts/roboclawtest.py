@@ -15,11 +15,11 @@ from roboclaw import Roboclaw
 if __name__ == "__main__":
     
     address = int(sys.argv[1]) 
-    roboclaw = Roboclaw("/dev/serial0", 115200)
+    roboclaw = Roboclaw("/dev/serial1", 115200)
     try:
         assert roboclaw.Open() == 1
     except AssertionError as e:
-        raise e("Could not open comport /dev/serial0, make sure it has the correct permissions and is available")
+        raise e("Could not open comport /dev/serial1, make sure it has the correct permissions and is available")
 
     print(roboclaw.ReadVersion(address))
     print(roboclaw.ReadEncM1(address))
