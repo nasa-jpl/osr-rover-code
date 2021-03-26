@@ -1,6 +1,6 @@
 #!/bin/bash
-bash -c ". /home/$USER/osr_ws/devel/setup.sh"
-bash -c ". /home/$USER/osr_ws/devel/setup.bash"
-bash -c ". /opt/ros/kinetic/setup.sh"
-bash -c ". /opt/ros/kinetic/setup.bash"
-bash -i -c "roslaunch osr_bringup osr.launch"
+bash -c ". /opt/ros/foxy/setup.sh"
+bash -c ". /opt/ros/foxy/setup.bash"
+bash -c ". /home/$USER/osr_ws/install/setup.sh"
+bash -c ". /home/$USER/osr_ws/install/setup.bash"
+bash -i -c "ros2 launch osr_bringup osr_launch.py"

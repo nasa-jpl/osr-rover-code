@@ -1,5 +1,9 @@
-motor_controller:
-  baud: 115200
-  device: "/dev/serial0"
-  addresses: "128,129,130,131,132"
-
+rover:
+  ros__parameters:
+    rover_dimensions:
+      d1: 0.184  # [m, ~7.254in]
+      d2: 0.267  # [m, ~10.5in]
+      d3: 0.267  # [m, ~10.5in]
+      d4: 0.2556  # [m, ~10.073in]
+      wheel_radius: 0.075  # [m], needs to be a float
+    drive_no_load_rpm: 31.0  # no load speed for the drive motors. NOTE: needs to be a float value

@@ -2,6 +2,8 @@
 
 **These instructions are up-to-date as of 8/17/2020, but will not be regularly updated**
 
+**NOTE: Running ROS2 requires a newer version of Raspbian. Use this tutorial as a reference only.**
+
 ## 1 Intalling Raspbian
 
 To install Raspbian, we recommend following the "Getting started with Raspberry Pi" tutorial below. 
