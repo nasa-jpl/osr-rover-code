@@ -66,7 +66,7 @@ class Rover(Node):
         controlling the robot with a joystick or other manual input topic, consider using the 
         /cmd_vel_intuitive topic instead.
 
-        The Intuitive mode (intuitive=True) means that sending a positive anguwlar velocity (moving joystick left)
+        The Intuitive mode (intuitive=True) means that sending a positive angular velocity (moving joystick left)
         will always make the corner wheels turn 'left' regardless of the linear velocity.
 
         :param intuitive: determines the mode

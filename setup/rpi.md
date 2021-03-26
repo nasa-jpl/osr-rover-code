@@ -88,10 +88,15 @@ In the newly created catkin workspace you just made, clone this repo:
 sudo apt install git
 cd ~/osr_ws/src
 git clone https://github.com/nasa-jpl/osr-rover-code.git
+cd osr-rover-code
+git fetch origin
+git checkout foxy-devel
 
 # install the dependencies using rosdep
 sudo apt install python3-rosdep
 cd ..
+sudo rosdep init
+rosdep update
 rosdep install --from-paths src --ignore-src
 # build the ROS packages
 colcon build --symlink-install
