@@ -46,12 +46,14 @@ class Rover(Node):
             "drive_no_load_rpm").get_parameter_value().double_value
         self.max_vel = self.wheel_radius * drive_no_load_rpm / 60 * 2 * math.pi  # [m/s]
         self.should_calculate_odom = self.get_parameter("enable_odometry").get_parameter_value().bool_value
-        self.odometry = Odometry()
-        self.odometry.header.stamp = self.get_clock().now().to_msg()
-        self.odometry.header.frame_id = "odom"
-        self.odometry.child_frame_id = "base_link"
-        self.odometry.pose.pose.orientation.z = 1.
-        self.odometry.pose.pose.orientation.w = 1.
+        if self.should_calculate_odom:
+            self.get_logger().info("Calculting wheel odometry and publishing to /odom topic")
+            self.odometry = Odometry()
+            self.odometry.header.stamp = self.get_clock().now().to_msg()
+            self.odometry.header.frame_id = "odom"
+            self.odometry.child_frame_id = "base_link"
+            self.odometry.pose.pose.orientation.z = 1.
+            self.odometry.pose.pose.orientation.w = 1.
         self.curr_twist = TwistWithCovariance()
         self.curr_turning_radius = self.max_radius
 
@@ -64,7 +66,7 @@ class Rover(Node):
         self.turning_radius_pub = self.create_publisher(Float64, "/turning_radius", 1)
         if self.should_calculate_odom:
             self.odometry_pub = self.create_publisher(Odometry, "/odom", 2)
-            self.tf_pub = tf2_ros.TransformBroadcaster()
+            self.tf_pub = tf2_ros.TransformBroadcaster(self)
 
         self.corner_cmd_pub = self.create_publisher(CommandCorner, "/cmd_corner", 1)
         self.drive_cmd_pub = self.create_publisher(CommandDrive, "/cmd_drive", 1)
@@ -113,8 +115,7 @@ class Rover(Node):
         if self.should_calculate_odom:
             # measure how much time has elapsed since our last update
             now = self.get_clock().now()
-            seconds, ns = (now - self.odometry.header.stamp.from_msg())
-            dt = seconds + float(ns)/10**9
+            dt = float(now.nanoseconds - (self.odometry.header.stamp.sec*10**9 + self.odometry.header.stamp.nanosec)) / 10**9
             self.forward_kinematics()
             dx = self.curr_twist.twist.linear.x * dt
             dth = self.curr_twist.twist.angular.z * dt
