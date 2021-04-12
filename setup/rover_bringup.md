@@ -21,7 +21,19 @@ they have the appropriate permissions; `sudo chmod a+rw /dev/input/event0`. (The
 Then try again. You might want to consider using udev rules to automate this which you will need for automatic bringup using systemd services below.
 If you need help, please post on GitHub Discussions or on the Slack forum.
 
-## 2 Automatic bringup with init script
+### Optional arguments
+
+If you want the code to calculate and publish wheel odometry, launch with the argument `enable_odometry:=true`.
+![](wheel_odom_example.png)
+Odometry is used for localization and SLAM.
+
+## 2 Custom osr_mod.launch file
+
+If you want to customize your `osr.launch` file, make a copy of it in the same directory (`osr-rover-code/ROS/osr_bringup/launch/`) and name it `osr_mod.launch`. The OSR launch script will automatically find it.
+
+This is useful, for example, when you don't have the LED screen. In that case you would just remove the `<node name="led_screen" pkg="led_screen" type="arduino_comm.py"/>` line in `osr_mod.launch`.
+
+## 3 Automatic bringup with launch script
 
 Starting scripts on boot using ROS can be a little more difficult than starting scripts on boot normally from
 the Raspberry Pi because of the default permission settings on the RPi and the fact that that ROS cannot
@@ -34,8 +46,9 @@ roslaunch file, and the other creates a system service to start that bash script
 raspberry Pi and execute the following commands.
 ```
 cd ~/osr_ws/src/osr-rover-code/init_scripts
-sudo cp LaunchOSR.sh ~/LaunchOSR.sh
-sudo chmod +x ~/LaunchOSR.sh
+# use symbolic links so we capture updates to these files in the service
+ln -s $(pwd)/launch_osr.sh ~/launch_osr.sh
+ln -s $(pwd)/osr_paths.sh ~/osr_paths.sh
 sudo cp osr_startup.service /etc/systemd/system/osr_startup.service
 sudo chmod 644 /etc/systemd/system/osr_startup.service
 ```

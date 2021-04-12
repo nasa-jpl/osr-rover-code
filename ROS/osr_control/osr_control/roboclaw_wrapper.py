@@ -159,36 +159,56 @@ class RoboclawWrapper(Node):
         self.status = Status()
         fast_loop_rate = 0.125  # seconds
         slow_loop_rate = 3  # seconds
+        # true if we're idling and started rapping down velocity to bring the motors to full stop
+        self.idle_ramp = False
+        # if we're idled
+        self.idle = False
         self.fast_timer = self.create_timer(fast_loop_rate, self.fast_update)
         self.slow_timer = self.create_timer(slow_loop_rate, self.slow_update)
 
     def fast_update(self):
         """Read from and write to roboclaws"""
         # Check to see if there are commands in the buffer to send to the motor controller
+        now = self.get_clock().now()
         if self.drive_cmd_buffer:
             drive_fcn = self.send_drive_buffer_velocity
             drive_fcn(self.drive_cmd_buffer)
             self.drive_cmd_buffer = None
+            self.idle_ramp = False
+            self.idle = False
+            self.time_last_cmd = now
             
         if self.corner_cmd_buffer:
             self.send_corner_buffer(self.corner_cmd_buffer)
             self.corner_cmd_buffer = None
+            self.idle_ramp = False
+            self.idle = False
+            self.time_last_cmd = now
 
         # read from roboclaws and publish
         try:
             self.read_encoder_values()
             self.enc_pub.publish(self.current_enc_vals)
         except AssertionError as read_exc:
-            self.get_logger().warn( "Failed to read encoder values")
+            self.get_logger().warn("Failed to read encoder values")
 
         # stop the motors if we haven't received a command in a while
-        # this should be a timer instead
-        now = self.get_clock().now()
-        if now - self.time_last_cmd > self.velocity_timeout:
-            # rather than a hard stop, send a ramped velocity command
-            self.drive_cmd_buffer = CommandDrive()
-            self.send_drive_buffer_velocity(self.drive_cmd_buffer)
-            self.time_last_cmd = now  # so this doesn't get called all the time
+        if not self.idle and (now - self.time_last_cmd > self.velocity_timeout):
+            # rather than a hard stop, send a ramped velocity command to 0
+            if not self.idle_ramp:
+                self.get_logger().info("Idling: ramping down velocity to zero")
+                self.idle_ramp = True
+                drive_cmd_buffer = CommandDrive()
+                self.send_drive_buffer_velocity(drive_cmd_buffer)
+            # if we've already ramped down, send a full stop to minimize
+            # idle power consumption
+            else:
+                rospy.loginfo( "Idling: full stopping motors")
+                self.stop_motors()
+                self.idle = True
+            
+            # so that's there's a delay between ramping and full stop
+            self.time_last_cmd = now
 
     def slow_update(self):
         """Slower roboclaw read/write cycle"""
@@ -263,7 +283,6 @@ class RoboclawWrapper(Node):
         on the next iteration of the run() loop.
         """
         self.get_logger().debug("Corner command callback received: {}".format(cmd))
-        self.time_last_cmd = self.get_clock().now()
         self.corner_cmd_buffer = cmd
 
     def send_corner_buffer(self, cmd):
@@ -309,7 +328,6 @@ class RoboclawWrapper(Node):
         
         self.get_logger().debug("Drive command callback received: {}".format(cmd))
         self.drive_cmd_buffer = cmd
-        self.time_last_cmd = self.get_clock().now()
 
     def send_drive_buffer_velocity(self, cmd):
         """
