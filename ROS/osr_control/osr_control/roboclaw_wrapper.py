@@ -196,14 +196,14 @@ class RoboclawWrapper(Node):
         if not self.idle and (now - self.time_last_cmd > self.velocity_timeout):
             # rather than a hard stop, send a ramped velocity command to 0
             if not self.idle_ramp:
-                self.get_logger().info("Idling: ramping down velocity to zero")
+                self.get_logger().debug("Idling: ramping down velocity to zero")
                 self.idle_ramp = True
                 drive_cmd_buffer = CommandDrive()
                 self.send_drive_buffer_velocity(drive_cmd_buffer)
             # if we've already ramped down, send a full stop to minimize
             # idle power consumption
             else:
-                rospy.loginfo( "Idling: full stopping motors")
+                self.get_logger().debug("Idling: full stopping motors")
                 self.stop_motors()
                 self.idle = True
             

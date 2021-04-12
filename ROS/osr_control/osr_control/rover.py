@@ -27,7 +27,7 @@ class Rover(Node):
                 ('rover_dimensions.d3', None),
                 ('rover_dimensions.d4', None),
                 ('rover_dimensions.wheel_radius', None),
-                ('drive_no_load_rpm', None).
+                ('drive_no_load_rpm', None),
                 ('enable_odometry', None)
             ]
         )
@@ -47,7 +47,7 @@ class Rover(Node):
         self.max_vel = self.wheel_radius * drive_no_load_rpm / 60 * 2 * math.pi  # [m/s]
         self.should_calculate_odom = self.get_parameter("enable_odometry").get_parameter_value().bool_value
         self.odometry = Odometry()
-        self.odometry.header.stamp = rospy.Time.now()
+        self.odometry.header.stamp = self.get_clock().now().to_msg()
         self.odometry.header.frame_id = "odom"
         self.odometry.child_frame_id = "base_link"
         self.odometry.pose.pose.orientation.z = 1.
