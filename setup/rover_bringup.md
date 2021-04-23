@@ -16,6 +16,12 @@ command the rover by holding the left back button (LB) down and moving the joyst
 the [RPi setup](rpi.md) by holding down the right back button (RB) instead. If this isn't working for you, 
 `rostopic echo /joy`, press buttons, and adjust `bringup.launch` to point to the corresponding buttons and axes. If you have questions, please ask on the Tapatalk forum.
 
+### Optional arguments
+
+If you want the code to calculate and publish wheel odometry, launch with the argument `enable_odometry:=true`.
+![](wheel_odom_example.png)
+Odometry is used for localization and SLAM.
+
 ## 2 Custom osr_mod.launch file
 
 If you want to customize your `osr.launch` file, make a copy of it in the same directory (`osr-rover-code/ROS/osr_bringup/launch/`) and name it `osr_mod.launch`. The OSR launch script will automatically find it.
