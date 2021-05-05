@@ -5,7 +5,7 @@ set -ex
 source osr_paths.sh
 launch_dir=$OSR_CODE_DIR/ROS/osr_bringup/launch
 
-bash -c ". /home/$USER/osr_ws/devel/setup.sh"
+bash -c ". /home/$USER/osr_ws/install/setup.sh"
 bash -c ". /home/$USER/osr_ws/devel/setup.bash"
 bash -c ". /opt/ros/melodic/setup.sh"
 bash -c ". /opt/ros/melodic/setup.bash"
