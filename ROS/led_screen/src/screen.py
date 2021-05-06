@@ -152,7 +152,7 @@ class LedScreen():
 				result += tmp
 			self.out_msg[STEER_CUR + i] = result		
 	
-	def transistion_to_idle(self):
+	def transition_to_idle(self):
 		self.out_msg[CONN] = 0xFF
 		self.build_chksum()
 		self.send_msg()
