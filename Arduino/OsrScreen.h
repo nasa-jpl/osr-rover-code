@@ -85,6 +85,7 @@ public:
     void eight_bit_eye(int,int);
     void eight_bit_face();
     void happy_face();
+	void shocked_face();
     void sleepy_face();
     void clear_face();
 
