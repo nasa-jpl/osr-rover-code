@@ -325,8 +325,7 @@ class Rover(object):
         self.curr_twist.twist.linear.x = drive_angular_velocity * self.wheel_radius
         # now calculate angular velocity from its relation with linear velocity and turning radius
         self.curr_twist.twist.angular.z = self.curr_twist.twist.linear.x / self.curr_turning_radius
-        # covariance
-        self.curr_twist.covariance = 36 * [0.0,]
+
 
 if __name__ == '__main__':
     rospy.init_node('rover', log_level=rospy.INFO)
