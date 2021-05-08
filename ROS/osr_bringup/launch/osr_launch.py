@@ -1,6 +1,8 @@
 import os
 
 from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 
@@ -18,7 +20,9 @@ def generate_launch_description():
         'osr_params.yaml'
     )
 
-    return LaunchDescription([
+    ld = LaunchDescription()
+    
+    ld.add_action(
         Node(
             package='osr_control',
             executable='roboclaw_wrapper',
@@ -26,15 +30,23 @@ def generate_launch_description():
             output='screen',
             emulate_tty=True,
             parameters=[roboclaw_params]
-        ),
+        )
+    )
+    ld.add_action(
+        DeclareLaunchArgument('enable_odometry', default_value='false')
+    )
+    ld.add_action(
         Node(
             package='osr_control',
             executable='rover',
             name='rover',
             output='screen',
             emulate_tty=True,
-            parameters=[osr_params]
-        ),
+            parameters=[osr_params,
+                        {'enable_odometry': LaunchConfiguration('enable_odometry')}]
+        )
+    )
+    ld.add_action(
         Node(
             package='teleop_twist_joy',
             executable='teleop_node',
@@ -54,7 +66,9 @@ def generate_launch_description():
             remappings=[
                 ('/cmd_vel', '/cmd_vel_intuitive')
             ]
-        ),
+        )
+    )
+    ld.add_action(
         Node(
             package='joy',
             executable='joy_node',
@@ -64,5 +78,8 @@ def generate_launch_description():
             parameters=[
                 {"autorepeat_rate": 5.0},
                 {"device_id": 0},  # This might be different on your computer. Run `ls -l /dev/input/js0`. If you have js1, put 1.
-            ]        )
-    ])
+            ]        
+        )
+    )
+
+    return ld

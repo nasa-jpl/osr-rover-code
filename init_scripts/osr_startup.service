@@ -6,7 +6,7 @@ After=network.target
 User=ubuntu
 Group=ubuntu
 WorkingDirectory=/home/ubuntu/
-ExecStart=/home/ubuntu/LaunchOSR.sh
+ExecStart=/home/ubuntu/launch_osr.sh
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 
