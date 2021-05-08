@@ -354,8 +354,7 @@ class Rover(Node):
             self.get_logger().warn("Current turning radius was calculated as zero which"
                                    "is an illegal value. Check your wheel calibration.")
             self.curr_twist.twist.angular.z = 0.  # turning in place is currently unsupported
-        # covariance
-        self.curr_twist.covariance = 36 * [0.0,]
+
 
 def main(args=None):
     rclpy.init(args=args)
