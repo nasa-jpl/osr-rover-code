@@ -5,8 +5,8 @@
 There are 4 catkin packages contained in this repo. Each of these packages performs a specific purpose in the ROS 
 structure, which are covered below
 
-  * `osr`: core code that talks to motor drivers and listens to commands 
-  * `osr_msgs`: custom message definitions
+  * `osr_control`: core code that talks to motor drivers and listens to commands 
+  * `osr_interfaces`: custom message definitions
   * `osr_bringup`: configuration and launch files for starting the rover
   * `led_screen`: code to communicate to the Arduino Uno to run the LED screen
 

@@ -1,3 +1,5 @@
 *.pyc
 .vscode
 ROS/osr_bringup/config/*_mod.yaml
+*.sublime-project
+*.sublime-workspace
