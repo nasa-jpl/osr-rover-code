@@ -330,8 +330,7 @@ class Rover(object):
             rospy.logwarn_throttle(1, "Current turning radius was calculated as zero which"
                                    "is an illegal value. Check your wheel calibration."
             self.curr_twist.twist.angular.z = 0.  # turning in place is currently unsupported
-        # covariance
-        self.curr_twist.covariance = 36 * [0.0,]
+
 
 if __name__ == '__main__':
     rospy.init_node('rover', log_level=rospy.INFO)
