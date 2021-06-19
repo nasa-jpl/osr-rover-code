@@ -94,7 +94,7 @@ git checkout foxy-devel
 
 # install the dependencies using rosdep
 sudo apt install python3-rosdep
-cd ..
+cd ../..
 sudo rosdep init
 rosdep update
 rosdep install --from-paths src --ignore-src
