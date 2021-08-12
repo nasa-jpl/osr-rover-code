@@ -27,11 +27,11 @@ If you want the code to calculate and publish wheel odometry, launch with the ar
 ![](wheel_odom_example.png)
 Odometry is used for localization and SLAM.
 
-## 2 Custom osr_mod.launch file
+## 2 Custom osr_mod_launch.py file
 
-If you want to customize your `osr.launch` file, make a copy of it in the same directory (`osr-rover-code/ROS/osr_bringup/launch/`) and name it `osr_mod.launch`. The [systemd script](../init_scripts/launch_osr.sh) will automatically find it.
+If you want to customize your `osr_launch.py` file, make a copy of it in the same directory (`osr-rover-code/ROS/osr_bringup/launch/`) and name it `osr_mod_launch.py`. The [systemd script](../init_scripts/launch_osr.sh) will automatically find it.
 
-This is useful, for example, when you don't have the LED screen. In that case you would just remove the `<node name="led_screen" pkg="led_screen" type="arduino_comm.py"/>` line in `osr_mod.launch`.
+This is useful, for example, when you don't have the LED screen. In that case you would just remove the `<node name="led_screen" pkg="led_screen" type="arduino_comm.py"/>` line in `osr_mod_launch.py`.
 
 ## 3 Automatic bringup with launch script
 
@@ -47,8 +47,8 @@ raspberry Pi and execute the following commands.
 ```
 cd ~/osr_ws/src/osr-rover-code/init_scripts
 # use symbolic links so we capture updates to these files in the service
-ln -s $(pwd)/launch_osr.sh ~/launch_osr.sh
-ln -s $(pwd)/osr_paths.sh ~/osr_paths.sh
+ln -s $(pwd)/launch_osr.sh /usr/local/bin/launch_osr.sh
+ln -s $(pwd)/osr_paths.sh /usr/local/bin/osr_paths.sh
 sudo cp osr_startup.service /etc/systemd/system/osr_startup.service
 sudo chmod 644 /etc/systemd/system/osr_startup.service
 ```
