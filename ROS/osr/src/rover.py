@@ -33,7 +33,7 @@ class Rover(object):
         self.odometry.header.stamp = rospy.Time.now()
         self.odometry.header.frame_id = "odom"
         self.odometry.child_frame_id = "base_link"
-        self.odometry.pose.pose.orientation.z = 1.
+        self.odometry.pose.pose.orientation.z = 0.
         self.odometry.pose.pose.orientation.w = 1.
         self.curr_twist = TwistWithCovariance()
         self.curr_turning_radius = self.max_radius
