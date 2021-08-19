@@ -106,11 +106,12 @@ class Rover(object):
             self.odometry.pose.pose.position.x += math.cos(new_angle) * dx
             self.odometry.pose.pose.position.y += math.sin(new_angle) * dx
             self.odometry.pose.covariance = 36 * [0.0,]
+            self.odometry.twist.covariance = 36 * [0.0,]
             # explanation for values at https://www.freedomrobotics.ai/blog/tuning-odometry-for-wheeled-robots
-            self.odometry.pose.covariance[0] = 0.0225
-            self.odometry.pose.covariance[5] = 0.01
-            self.odometry.pose.covariance[-5] = 0.0225
-            self.odometry.pose.covariance[-1] = 0.04
+            self.odometry.twist.covariance[0] = 0.0225
+            self.odometry.twist.covariance[5] = 0.01
+            self.odometry.twist.covariance[-5] = 0.0225
+            self.odometry.twist.covariance[-1] = 0.04
             self.odometry.twist = self.curr_twist
             self.odometry.header.stamp = now
             self.odometry_pub.publish(self.odometry)
