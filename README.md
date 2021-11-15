@@ -16,7 +16,7 @@ changed.
 
 * The [ROS overview](ROS/README.md) gives an overview of the setup related to ROS and links to specific implementations
 such as how the drive and corner commands are being calculated
-* The [Arduino readme](Arduino/README.md) details the code that runs on the Arduino, used to control the LED screen.
+* The [OsrScreen readme](OsrScreen/README.md) details the code that runs on the Arduino, used to control the LED screen.
 
 ## Setup
 
