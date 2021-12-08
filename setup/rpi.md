@@ -97,7 +97,7 @@ sudo apt install python3-rosdep
 cd ../..
 sudo rosdep init
 rosdep update
-rosdep install --from-paths src --ignore-src
+rosdep install --from-paths src --ignore-src --rosdistro=foxy
 # build the ROS packages
 colcon build --symlink-install
 ```
@@ -177,13 +177,14 @@ sudo udevadm control --reload-rules && sudo udevadm trigger
 
 This configuration should persist across RPi reboots.
 
-### 5.3 Add user to tty group
+### 5.3 Add user to tty and dialout groups
 
-Finally, add the user to the `tty` group:
+Finally, add the user to the `tty` and `dialout` groups:
 ```
-sudo adduser ubuntu tty
+sudo adduser $USER tty
+sudo adduser $USER dialout
 ```
-(or whatever your username is, if not ubuntu)
+You might have to create the dialout group if it doesn't already exist.
 
 <!-- You'll need to log out of your ssh session and log back in for this to take effect. Or you can restart Ubuntu. -->
 
