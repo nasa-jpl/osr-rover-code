@@ -227,11 +227,11 @@ We need to restart for all of these changes to take effect. Execute: `sudo reboo
 Run the roboclawtest.py script with all of the motor addresses:
 ```
 cd ~/osr_ws/src/osr-rover-code/scripts
-python roboclawtest.py 128
-python roboclawtest.py 129
-python roboclawtest.py 130
-python roboclawtest.py 131
-python roboclawtest.py 132
+python3 roboclawtest.py 128
+python3 roboclawtest.py 129
+python3 roboclawtest.py 130
+python3 roboclawtest.py 131
+python3 roboclawtest.py 132
 ```
 Each of these should output something like, within a very short execution time:
 ```
