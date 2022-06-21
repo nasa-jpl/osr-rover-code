@@ -47,8 +47,8 @@ raspberry Pi and execute the following commands.
 ```
 cd ~/osr_ws/src/osr-rover-code/init_scripts
 # use symbolic links so we capture updates to these files in the service
-ln -s $(pwd)/launch_osr.sh /usr/local/bin/launch_osr.sh
-ln -s $(pwd)/osr_paths.sh /usr/local/bin/osr_paths.sh
+sudo ln -s $(pwd)/launch_osr.sh /usr/local/bin/launch_osr.sh
+sudo ln -s $(pwd)/osr_paths.sh /usr/local/bin/osr_paths.sh
 sudo cp osr_startup.service /etc/systemd/system/osr_startup.service
 sudo chmod 644 /etc/systemd/system/osr_startup.service
 ```
