@@ -13,7 +13,7 @@ def callback(data):
 	screen.check_for_afffirm()
 
 def shutdown():
-	screen.transistion_to_idle()
+	screen.transition_to_idle()
 	return 0
 
 if __name__ == "__main__":
