@@ -48,7 +48,6 @@ class RoboclawWrapper(object):
         accel_rate = rospy.get_param('/drive_acceleration_factor', 0.5)
         self.drive_accel = int(accel_max * accel_rate)
         self.velocity_timeout = rospy.Duration(rospy.get_param('/velocity_timeout', 2.0))
-        self.time_last_cmd = rospy.Time.now()
 
         self.stop_motors()
 
@@ -61,22 +60,38 @@ class RoboclawWrapper(object):
     def run(self):
         """Blocking loop which runs after initialization has completed"""
         rate = rospy.Rate(8)
- 
 
         status = Status()
 
+        # time last command was executed in the run loop
+        time_last_cmd = rospy.Time.now()
+
+        # true if we're idling and started rapping down velocity to
+        # bring the motors to full stop
+        idle_ramp = False
+        # if we're idled
+        idle = False
+
         counter = 0
         while not rospy.is_shutdown():
+            now = rospy.Time.now()
 
             # Check to see if there are commands in the buffer to send to the motor controller
             if self.drive_cmd_buffer:
                 drive_fcn = self.send_drive_buffer_velocity
                 drive_fcn(self.drive_cmd_buffer)
                 self.drive_cmd_buffer = None
+                time_last_cmd = now
+                idle_ramp = False
+                idle = False
                 
             if self.corner_cmd_buffer:
                 self.send_corner_buffer(self.corner_cmd_buffer)
                 self.corner_cmd_buffer = None
+                time_last_cmd = now
+                idle_ramp = False
+                idle = False
+
 
             # read from roboclaws and publish
             try:
@@ -92,14 +107,25 @@ class RoboclawWrapper(object):
                 status.current = self.read_currents()
                 status.error_status = self.read_errors()
                 counter = 0
+            
 
             # stop the motors if we haven't received a command in a while
-            now = rospy.Time.now()
-            if now - self.time_last_cmd > self.velocity_timeout:
-                # rather than a hard stop, send a ramped velocity command
-                self.drive_cmd_buffer = CommandDrive()
-                self.send_drive_buffer_velocity(self.drive_cmd_buffer)
-                self.time_last_cmd = now  # so this doesn't get called all the time
+            if not idle and (now - time_last_cmd > self.velocity_timeout):
+                # rather than a hard stop, send a ramped velocity command to 0
+                if not idle_ramp:
+                    rospy.loginfo( "Idling: ramping down velocity to zero")
+                    idle_ramp = True
+                    drive_cmd_buffer = CommandDrive()
+                    self.send_drive_buffer_velocity(drive_cmd_buffer)
+                # if we've already ramped down, send a full stop to minimize
+                # idle power consumption
+                else:
+                    rospy.loginfo( "Idling: full stopping motors")
+                    self.stop_motors()
+                    idle = True
+                
+                # so that's there's a delay between ramping and full stop
+                time_last_cmd = now
 
             self.status_pub.publish(status)
             counter += 1
@@ -124,7 +150,7 @@ class RoboclawWrapper(object):
         # initialize connection status to successful
         all_connected = True
         for address in self.address:
-            rospy.logdebug("Attempting to talk to motor controller ''".format(address))
+            rospy.logdebug("Attempting to talk to motor controller '{}'".format(address))
             version_response = self.rc.ReadVersion(address)
             connected = bool(version_response[0])
             if not connected:
@@ -175,7 +201,6 @@ class RoboclawWrapper(object):
         """
         
         rospy.logdebug("Corner command callback received: {}".format(cmd))
-        self.time_last_cmd = rospy.Time.now()
         self.corner_cmd_buffer = cmd
 
     def send_corner_buffer(self, cmd):
@@ -223,7 +248,6 @@ class RoboclawWrapper(object):
         
         rospy.logdebug("Drive command callback received: {}".format(cmd))
         self.drive_cmd_buffer = cmd
-        self.time_last_cmd = rospy.Time.now()
 
     def send_drive_buffer_velocity(self, cmd):
         """
