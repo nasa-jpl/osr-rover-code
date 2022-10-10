@@ -7,13 +7,13 @@ This folder is not a part of the ROS package structure. It contains the code tha
 This section describes the internals of communication between the Raspberry Pi and the Arduino. You don't need
 to understand these if you just want to get your rover running.
 
-### Initilization Packet
-There is an initilization exchange between the Raspberry Pi and Arduino which is used to let each device know the other 
+### Initialization Packet
+There is an initialization exchange between the Raspberry Pi and Arduino which is used to let each device know the other 
 one is ready to send/receive data. Until each device has correctly agreed upon them they will both be in an IDLE state. 
 
-The Raspberry Pi will continually send its initilization command at a 2Hz frequency until it recieves the Arduino's 
-initilization command. The Arduino sits and listens constantly until it hears this command, and then transistions into 
-a RUNNING state, and sends its' initilization command. While in IDLE the RPi listens for this command, and will also 
+The Raspberry Pi will continually send its initialization command at a 2Hz frequency until it recieves the Arduino's 
+initialization command. The Arduino sits and listens constantly until it hears this command, and then transistions into 
+a RUNNING state, and sends its' initialization command. While in IDLE the RPi listens for this command, and will also 
 transistion to RUNNING upon receiving it. 
 
 |    `Name`     |      `Value`     |  
@@ -21,9 +21,9 @@ transistion to RUNNING upon receiving it.
 | RPi Init      | 0xA              |
 | Arduino Init  | 0xCD             |
 
-Once both of them have agreed upon recieving each other's initilization command they will both be in a RUNNING state 
+Once both of them have agreed upon recieving each other's initialization command they will both be in a RUNNING state 
 sending the normal telemetry packet. If either system hits the timeout constant on listening for the telemetry packet 
-they will be transistioned back to the IDLE state, in which initilization must occur again.
+they will be transistioned back to the IDLE state, in which initialization must occur again.
 
 ### Preamble
 The preamble (or syncword) is used to do bit-level syncronization of the data frames between the two system. 
