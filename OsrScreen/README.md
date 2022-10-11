@@ -55,7 +55,7 @@ Connected Status of the remote controller to the Robot. 1 Byte length
 |---------|---------------------------------------------------------|
 | 0x01    | Remote connected                                        |
 | 0x00    | Remote disconnected                                     |
-| 0xFF    | Overloaded to transistion the arduino back to IDLE state|
+| 0xFF    | Overloaded to transition the arduino back to IDLE state|
 
 ##### BATTERY
 Battery value read in by the motor controllers. 1 Byte length. The value ranges from 0x00 to 0x1F, based on battery %
@@ -73,7 +73,7 @@ Battery value read in by the motor controllers. 1 Byte length. The value ranges 
 Error status of each individual motor controller. 1 Byte length. Each motor controller error status is x << i bits, 
 where x indicates an error, is 1 if error and 0 otherwise
 
-| Motor Controler Address | Binary (if error) |
+| Motor Controller Address | Binary (if error) |
 |-------------------------|-------------------|
 | 128                     | 0001 0000         | 
 | 129                     | 0000 1000         |
