@@ -119,7 +119,7 @@ To change any values from the default (if your rover doesn't match the default i
 The files follow the same structure as the default. Just include the values that you need to change as the default
 values for other parameters may change over time.
 
-You might also want to modify the file `osr-rover-code/ROS/osr_bringup/launch/osr_launch.py` to change the velocities the gamepad controller will
+You might also want to modify the file `osr-rover-code/ROS/osr_bringup/launch/osr_mod_launch.py` to change the velocities the gamepad controller will
 send to the rover. These values in the node joy_to_twist are of interest:
 ```
     {"scale_linear": 0.8},  # scale to apply to drive speed, in m/s: drive_motor_rpm * 2pi / 60 * wheel radius * slowdown_factor
