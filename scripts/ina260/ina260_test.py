@@ -57,8 +57,12 @@ output should look like (note that voltage is 0.0000V because the ina260
 import ina260
 import RPi.GPIO as gpio
 
+# default address out of the box
+# ADDRESS=ina260.INA260_I2CADDR_DEFAULT
+# use 0x45 if solder applied to both A0 and A1
+ADDRESS=ina260.INA260_I2CADDR_A0A1
 
-pm = ina260.INA260()
+pm = ina260.INA260(addr=ADDRESS)
 
 ## Commenting out gpio alert pin stuff for now
 # gpio.setmode(gpio.BCM)
