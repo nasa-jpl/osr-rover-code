@@ -346,6 +346,13 @@ class INA260():
 
 	def getAlarmType(self):
 		return self._myAlarmType
+				
+	def getAlarmState(self):
+		dig = self._readDigital(INA260_REG_MASK_ENABLE) & 0x10
+		if dig:
+			return True
+		else:
+			return False
 
 	def setOverCurrentLimit(self, limit):
 		if self._myBus and (self._myAlarmType == ALARM_NOTSET):

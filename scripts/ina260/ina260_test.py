@@ -80,6 +80,7 @@ if pm:
 	else:
 		print ("Oops!")
 
+	# a lot of times, this voltage measurement comes out wrong (0.00)
 	print("Voltage: %2.4f" % (pm.readVoltage()))
 	print("Current: %2.4f" % (pm.readCurrent()))
 	conf = pm.readConfig()
@@ -118,13 +119,26 @@ if pm:
 	curConv = pm.readCurrCnvTime()
 	print("Current Conversion: 0x%X" % (curConv))
 	
-# 	limit = pm.readLimitRegister()
-# 	print ("Limit register: 0x%X" % (limit))
-# 	pm.setOverVoltageLimit(17.0)
-# # GPIO4 will go to zero during an alarm. 
-# 	pm.setAlertPolarity(1)
-# #	pm.setAlertLatch()
-# 	print "Alarm:", gpio.input(4)
+	# voltage limits don't work well, because it doesn't seem to be measuring voltage correctly, at least on my board
+	# pm.setUnderVoltageLimit(10.0)
+	# pm.setOverVoltageLimit(17.0)
+
+	# 0.40 should trigger the alert signal and LED
+	pm.setOverCurrentLimit(0.40)
+	# 0.60 should not
+	# pm.setOverCurrentLimit(0.60)
+	limit = pm.readLimitRegister()
+	print ("Limit register: 0x%X" % (limit))
+	
+	alert = pm.getAlarmState()
+	if alert:
+		print("ALARM!\n")
+	else:
+		print("No Alarm\n")
+
+	# pm.setAlertPolarity(1)
+	# pm.setAlertLatch()
+
 
 	mask = pm.readMaskEnable()
 	print ("Mask/enable: 0x%X" % (mask))
