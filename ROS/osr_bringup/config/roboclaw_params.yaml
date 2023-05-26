@@ -5,26 +5,26 @@ roboclaw_wrapper:
     velocity_timeout: 2.0  # maximum time [s] a particular velocity command will stay active without a new command before stopping
     baud_rate: 115200
     device: "/dev/serial1"
-    addresses: [128, 129, 130, 131, 132]
+    addresses: [128, 130, 132]
     roboclaw_mapping:
       # gear ratio is approx 172, exact value is 171.79 though
       drive_left_front:
-        address: 130
-        channel: M2
-        ticks_per_rev: 28
-        gear_ratio: 26.9
-      drive_left_middle:
-        address: 130
+        address: 132
         channel: M1
         ticks_per_rev: 28
         gear_ratio: 26.9
+      drive_left_middle:
+        address: 132
+        channel: M2
+        ticks_per_rev: 28
+        gear_ratio: 26.9
       drive_left_back:
-        address: 129
+        address: 130
         channel: M2
         ticks_per_rev: 28
         gear_ratio: 26.9
       drive_right_back:
-        address: 129
+        address: 128
         channel: M1
         ticks_per_rev: 28
         gear_ratio: 26.9
@@ -34,30 +34,30 @@ roboclaw_wrapper:
         ticks_per_rev: 28
         gear_ratio: 26.9
       drive_right_front:
-        address: 128
+        address: 130
         channel: M1
         ticks_per_rev: 28
         gear_ratio: 26.9
       # gear ratio for the corner motors is 16/48 as the CPR is measured after the gearbox, but
       # to the output shaft through the gears connecting the absolute encoder
       # ticks per revolution for the absolute analog encoders: 0-2V with 1mV steps --> 2000
-      corner_left_front:
-        address: 132
-        channel: M2
-        ticks_per_rev: 2000
-        gear_ratio: 0.3333
-      corner_left_back:
-        address: 132
-        channel: M1
-        ticks_per_rev: 2000
-        gear_ratio: 0.3333
-      corner_right_back:
-        address: 131
-        channel: M2
-        ticks_per_rev: 2000
-        gear_ratio: 0.3333
-      corner_right_front:
-        address: 131
-        channel: M1
-        ticks_per_rev: 2000
-        gear_ratio: 0.3333
+      # corner_left_front:
+      #   address: 132
+      #   channel: M2
+      #   ticks_per_rev: 2000
+      #   gear_ratio: 0.3333
+      # corner_left_back:
+      #   address: 132
+      #   channel: M1
+      #   ticks_per_rev: 2000
+      #   gear_ratio: 0.3333
+      # corner_right_back:
+      #   address: 131
+      #   channel: M2
+      #   ticks_per_rev: 2000
+      #   gear_ratio: 0.3333
+      # corner_right_front:
+      #   address: 131
+      #   channel: M1
+      #   ticks_per_rev: 2000
+      #   gear_ratio: 0.3333

@@ -25,7 +25,8 @@ setup(
     entry_points={
         'console_scripts': [
             'rover = osr_control.rover:main',
-            'roboclaw_wrapper = osr_control.roboclaw_wrapper:main'
+            'roboclaw_wrapper = osr_control.roboclaw_wrapper:main',
+            'servo_control = osr_control.servo_control:main'
         ],
     },
 )
