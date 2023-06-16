@@ -53,6 +53,8 @@ class Rover(Node):
             self.odometry.header.frame_id = "odom"
             self.odometry.child_frame_id = "base_link"
             self.odometry.pose.pose.orientation.w = 1.
+        self.curr_positions = {}
+        self.curr_velocities = {}
         self.curr_twist = TwistWithCovariance()
         self.curr_turning_radius = self.max_radius
 
@@ -60,7 +62,8 @@ class Rover(Node):
                                                     partial(self.cmd_cb, intuitive=False), 1)
         self.cmd_vel_int_sub = self.create_subscription(Twist, "/cmd_vel_intuitive", 
                                                         partial(self.cmd_cb, intuitive=True), 1)
-        self.encoder_sub = self.create_subscription(JointState, "/encoder", self.enc_cb, 1)
+        self.drive_enc_sub = self.create_subscription(JointState, "/drive_state", self.enc_cb, 1)
+        self.corner_enc_sub = self.create_subscription(JointState, "/corner_state", self.enc_cb, 1)
 
         self.turning_radius_pub = self.create_publisher(Float64, "/turning_radius", 1)
         if self.should_calculate_odom:
@@ -109,9 +112,11 @@ class Rover(Node):
         self.drive_cmd_pub.publish(drive_cmd_msg)
 
     def enc_cb(self, msg):
-        self.curr_positions = dict(zip(msg.name, msg.position))
-        self.curr_velocities = dict(zip(msg.name, msg.velocity))
-        if self.should_calculate_odom:
+        """When we get a JointState message from the drive or corner motors"""
+        # merge dictionaries since we could get corner or drive motor feedback
+        self.curr_positions = {**self.curr_positions, **dict(zip(msg.name, msg.position))}
+        self.curr_velocities = {**self.curr_velocities, **dict(zip(msg.name, msg.velocity))}
+        if self.should_calculate_odom and len(self.curr_positions) == 10:
             # measure how much time has elapsed since our last update
             now = self.get_clock().now()
             dt = float(now.nanoseconds - (self.odometry.header.stamp.sec*10**9 + self.odometry.header.stamp.nanosec)) / 10**9

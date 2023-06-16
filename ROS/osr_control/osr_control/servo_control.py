@@ -1,16 +1,23 @@
 import rclpy
 from rclpy.node import Node
+import math
 
 # project libraries
 from adafruit_servokit import ServoKit
 
 
 # message imports
+from sensor_msgs.msg import JointState
 from osr_interfaces.msg import CommandCorner, Status
+
+RAD_TO_DEG = 180 / math.pi
 
 
 class ServoWrapper(Node):
     """Interface between the PCA9685 controlling the servos and the higher level rover code"""
+    corner_motors = ['corner_left_back', 'corner_left_front', 'corner_right_front', 'corner_right_back']
+    # corner_motors = ['left_back_pos', 'left_front_pos', 'right_front_pos', 'right_back_pos']
+
     def __init__(self):
         super().__init__("servo_wrapper")
         self.log = self.get_logger()
@@ -18,13 +25,27 @@ class ServoWrapper(Node):
         self.log.info("Initializing corner servo controllers")
         self.kit = None
 
-        self.connect_pca9685()        
+        # PWM settings from https://www.gobilda.com/2000-series-dual-mode-servo-25-2-torque/
+        self.servo_actuation_range = 300  # [deg]
+        self.pulse_width_range = (500, 2500)  # [microsec]
+        self.deg_per_sec = 200
+        # initial values for position estimate (first element) and goal (second element) for each corner motor in deg
+        self.corner_state_goal = [(self.servo_actuation_range/2, self.servo_actuation_range/2)] * 4
+        self.corner_angles_default = [90, 90, -90, -90]
+
+        self.connect_pca9685()
         
+        self.enc_pub = self.create_publisher(JointState, "/corner_state", 1)
         self.corner_cmd_sub = self.create_subscription(CommandCorner, "/cmd_corner", self.corner_cmd_cb, 1)
+        self.enc_pub_timer_period = 0.1  # [s]
+        self.servo_direction = 1  # set to -1 if the servos are positive pwm clockwise
+        self.enc_pub_timer = self.create_timer(self.enc_pub_timer_period, self.publish_encoder_estimate)
 
     def connect_pca9685(self):
         self.kit = ServoKit(channels=16)
-
+        for servo_id in range(4):
+            self.kit.servo[servo_id].actuation_range = self.servo_actuation_range
+            self.kit.servo[servo_id].set_pulse_width_range(*self.pulse_width_range)
 
     def corner_cmd_cb(self, cmd: CommandCorner):
         self.log.debug(f"Received corner command message: {cmd}")
@@ -32,13 +53,49 @@ class ServoWrapper(Node):
             self.log.error("ServoKit not instantiated yet, dropping cmd", throttle_sec=5)
             return
 
-        self.kit.servo[0].angle = max(min(cmd.left_back_pos * 180/3.14, 100), 0)
-        self.kit.servo[1].angle = max(min(cmd.left_front_pos * 180/3.14, 100), 0)
-        self.kit.servo[2].angle = max(min(cmd.right_front_pos * 180/3.14, 100), 0)
-        self.kit.servo[3].angle = max(min(cmd.right_back_pos * 180/3.14, 100), 0)
+        for ind, corner_name in zip(range(3), self.corner_motors):
+            # store goal so we can estimate current angle
+            angle = getattr(cmd, corner_name[7:]+"_pos") * RAD_TO_DEG
+            # TODO make readable, cleaner
+            self.corner_state_goal[ind] = (self.corner_state_goal[ind][0], angle)
+            # offset to coordinate frame where x points to the middle of the rover, z down
+            # and apply middle of actuation range offset, taking into account if servo is positive ccw or cw
+            angle = self.servo_actuation_range/2 - self.corner_angles_default[ind] + angle
+            # limit to operating range of servo
+            angle = max(min(angle, self.servo_actuation_range), 0)
+            # send to motor
+            self.kit.servo[ind].angle = angle
 
-
-
+    def publish_encoder_estimate(self):
+        """
+        Publish an estimate of where each corner motor currently is.
+        
+        Estimate is based on the last estimate + velocity * time delta if there
+        is a difference between goal and current angle
+        and is expressed in the motor frame (z down, x forward)
+        """
+        enc_msg = JointState()
+        enc_msg.header.stamp = self.get_clock().now().to_msg()
+        for ind, motor_name in zip(range(4), self.corner_motors):
+            curr_angle, goal_angle = self.corner_state_goal[ind]
+            goal_differential = goal_angle - curr_angle
+            velocity = 0
+            # compare differential to step size so we can't overshoot and oscillate
+            if abs(goal_differential) > self.deg_per_sec * self.enc_pub_timer_period:
+                # assume we're running at the desired frequency
+                deg_traveled = self.deg_per_sec * self.enc_pub_timer_period
+                self.corner_state_goal[ind]= (curr_angle + math.copysign(deg_traveled, goal_differential), goal_angle)
+                velocity = math.copysign(self.deg_per_sec, goal_differential)
+                
+            elif abs(goal_differential) != 0:
+                # assume we're pretty much there
+                self.corner_state_goal[ind] = (goal_angle, goal_angle)
+            
+            enc_msg.name.append(motor_name)
+            enc_msg.position.append(self.corner_state_goal[ind][0] / RAD_TO_DEG)
+            enc_msg.velocity.append(velocity / RAD_TO_DEG)
+            enc_msg.effort.append(0)
+        self.enc_pub.publish(enc_msg)
 
 def main(args=None):
     rclpy.init(args=args)

@@ -14,19 +14,24 @@ from time import sleep
 from adafruit_servokit import ServoKit
 kit = ServoKit(channels=16)
 
-# kit.servo[0].actuation_range = 160
+sleep(0.1)
 
-while True:
-    # pwm channel 0
-    for i in [0, 100]:
-        for ind in range(1):
-            # print(kit.servo[ind].actuation_range)
-            srv = kit.servo[ind]
-            srv.angle = i
-            for t in range(10):
-                print(srv.angle)
-                sleep(0.01)
-        sleep(1)
+for i in range(4):
+    kit.servo[i].actuation_range = 300
+    kit.servo[i].set_pulse_width_range(200, 2500)
+    kit.servo[i].angle = 150
+
+# while True:
+#     # pwm channel 0
+#     for i in [0, 100]:
+#         for ind in range(1):
+#             # print(kit.servo[ind].actuation_range)
+#             srv = kit.servo[ind]
+#             srv.angle = i
+#             for t in range(10):
+#                 print(srv.angle)
+#                 sleep(0.01)
+#         sleep(1)
 
 
     # kit.servo[0].angle = 150
@@ -38,7 +43,7 @@ while True:
     #     kit.servo[3].angle = i
     # # pwm channel 2
     # kit.servo[2].angle = 0
-    sleep(1)
+    # sleep(1)
     # kit.servo[0].angle = 0
     # kit.servo[2].angle = 180
         # sleep(1)

@@ -1,4 +1,3 @@
-import serial
 import math
 from collections import defaultdict
 
@@ -100,8 +99,6 @@ class RoboclawWrapper(Node):
         for address in self.address:
             self.rc.ReadNVM(address)
 
-        self.corner_max_vel = 1000
-        # corner motor acceleration
         # Even though the actual method takes longs (2*32-1), roboclaw blog says 2**15 is 100%
         accel_max = 2**15-1
         self.roboclaw_overflow = 2**15-1
@@ -117,7 +114,7 @@ class RoboclawWrapper(Node):
 
         # set up publishers and subscribers
         self.drive_cmd_sub = self.create_subscription(CommandDrive, "/cmd_drive", self.drive_cmd_cb, 1)
-        self.enc_pub = self.create_publisher(JointState, "/encoder", 1)
+        self.enc_pub = self.create_publisher(JointState, "/drive_state", 1)
         self.status_pub = self.create_publisher(Status, "/status", 1)
 
         self.status = Status()
@@ -206,12 +203,8 @@ class RoboclawWrapper(Node):
     def setup_encoders(self):
         """Set up the encoders"""
         for motor_name, properties in self.roboclaw_mapping.items():
-            if "corner" in motor_name:
-                enc_min, enc_max = self.read_encoder_limits(properties["address"], properties["channel"])
-                self.encoder_limits[motor_name] = (enc_min, enc_max)
-            else:
-                self.encoder_limits[motor_name] = (None, None)
-                self.rc.ResetEncoders(properties["address"])
+            self.encoder_limits[motor_name] = (None, None)
+            self.rc.ResetEncoders(properties["address"])
 
     def read_encoder_values(self):
         """Query roboclaws and update current motors status in encoder ticks"""
@@ -232,23 +225,8 @@ class RoboclawWrapper(Node):
                                                        properties['gear_ratio']))
             enc_msg.effort.append(current)
 
-        # hack in servo motors for now
-        for servo_name in ['corner_left_front', 'corner_right_front', 'corner_right_back', 'corner_left_back']:
-            enc_msg.name.append(servo_name)
-            enc_msg.position.append(0)
-            enc_msg.velocity.append(0)
-            enc_msg.effort.append(0)
-
         self.current_enc_vals = enc_msg
         
-    def corner_cmd_cb(self, cmd):
-        """
-        Takes the corner command and stores it in the buffer to be sent
-        on the next iteration of the run() loop.
-        """
-        self.get_logger().debug("Corner command callback received: {}".format(cmd))
-        self.corner_cmd_buffer = cmd
-
     def drive_cmd_cb(self, cmd):
         """
         Takes the drive command and stores it in the buffer to be sent
@@ -286,22 +264,6 @@ class RoboclawWrapper(Node):
         vel_cmd = self.velocity2qpps(cmd.right_front_vel, props["ticks_per_rev"], props["gear_ratio"])
         self.send_velocity_cmd(props["address"], props["channel"], vel_cmd)
 
-    def send_position_cmd(self, address, channel, target_tick):
-        """
-        Wrapper around one of the send position commands
-
-        :param address:
-        :param channel:
-        :param target_tick: int
-        """
-        cmd_args = [self.corner_accel, self.corner_max_vel, self.corner_accel, target_tick, 1]
-        if channel == "M1":
-            return self.rc.SpeedAccelDeccelPositionM1(address, *cmd_args)
-        elif channel == "M2":
-            return self.rc.SpeedAccelDeccelPositionM2(address, *cmd_args)
-        else:
-            raise AttributeError("Received unknown channel '{}'. Expected M1 or M2".format(channel))
-
     def read_encoder_position(self, address, channel):
         """Wrapper around self.rc.ReadEncM1 and self.rcReadEncM2 to simplify code"""
         if channel == "M1":
@@ -313,7 +275,6 @@ class RoboclawWrapper(Node):
 
         assert val[0] == 1
         return val[1]
-
 
     def read_encoder_limits(self, address, channel):
         """Wrapper around self.rc.ReadPositionPID and returns subset of the data
