@@ -15,7 +15,8 @@ class RoboclawWrapper(Node):
 
     def __init__(self):
         super().__init__("roboclaw_wrapper")
-        self.get_logger().info("Initializing motor controllers")
+        self.log = self.get_logger()
+        self.log.info("Initializing motor controllers")
 
         # initialize attributes
         self.rc = None

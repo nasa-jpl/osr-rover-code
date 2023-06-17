@@ -94,8 +94,7 @@ class Rover(Node):
         :param intuitive: determines the mode
         """
         desired_turning_radius = self.twist_to_turning_radius(twist_msg, intuitive_mode=intuitive)
-        self.get_logger().debug("desired turning radius: " +
-                                "{}".format(desired_turning_radius))
+        self.get_logger().debug("desired turning radius: " + "{}".format(desired_turning_radius), throttle_duration_sec=1)
         corner_cmd_msg = self.calculate_corner_positions(desired_turning_radius)
 
         # if we're turning, calculate the max velocity the middle of the rover can go
@@ -104,10 +103,10 @@ class Rover(Node):
             max_vel = self.max_vel
         velocity = min(max_vel, twist_msg.linear.x)
 
-        self.get_logger().debug("velocity drive cmd: {} m/s".format(velocity))
+        self.get_logger().debug("velocity drive cmd: {} m/s".format(velocity), throttle_duration_sec=1)
         drive_cmd_msg = self.calculate_drive_velocities(velocity, desired_turning_radius)
-        self.get_logger().debug("drive cmd:\n{}".format(drive_cmd_msg))
-        self.get_logger().debug("corner cmd:\n{}".format(corner_cmd_msg)) 
+        self.get_logger().debug("drive cmd:\n{}".format(drive_cmd_msg), throttle_duration_sec=1)
+        self.get_logger().debug("corner cmd:\n{}".format(corner_cmd_msg), throttle_duration_sec=1) 
 
         # if self.corner_cmd_threshold(corner_cmd_msg):
         self.corner_cmd_pub.publish(corner_cmd_msg)
@@ -346,7 +345,7 @@ class Rover(Node):
         approx_turning_radius = sum(sorted([r_front_farthest, r_front_closest, r_back_farthest, r_back_closest])[1:3])/2.0
         if math.isnan(approx_turning_radius):
             approx_turning_radius = self.max_radius
-        self.get_logger().debug("Current approximate turning radius: {}".format(round(approx_turning_radius, 2)))
+        self.get_logger().debug("Current approximate turning radius: {}".format(round(approx_turning_radius, 2)), throttle_duration_sec=1)
         self.curr_turning_radius = approx_turning_radius
 
         # we know that the linear velocity in x direction is the instantaneous velocity of the middle virtual

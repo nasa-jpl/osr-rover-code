@@ -17,28 +17,24 @@ def test_connection(address):
     connected1 = roboclaw1.Open() == 1
     if connected0:
         print("Connected to /dev/serial0.")
-        print(roboclaw0.ReadVersion(address))
-        print(roboclaw0.ReadEncM1(address))
+        print(f"version: {roboclaw0.ReadVersion(address)}")
+        print(f"encoders: {roboclaw0.ReadEncM1(address)}")
+        return roboclaw0
     elif connected1:
         print("Connected to /dev/serial1.")
-        print(roboclaw1.ReadVersion(address))
-        print(roboclaw1.ReadEncM1(address))
+        print(f"version: {roboclaw1.ReadVersion(address)}")
+        print(f"encoders: {roboclaw1.ReadEncM1(address)}")
+        return roboclaw1
     else:
         print("Could not open comport /dev/serial0 or /dev/serial1, make sure it has the correct permissions and is available")
+        return None
     
 
 if __name__ == "__main__":
     
     address = int(sys.argv[1]) 
     
-    # test_connection(address)
-
-
-    rc = Roboclaw('/dev/serial1', BAUD_RATE)
-    
-    rc.Open()
-    version_response = rc.ReadVersion(address)
-    print(f'version_response: {version_response}')
+    rc = test_connection(address)
 
     ## Set accel
     accel_max = 2**15-1
@@ -58,10 +54,11 @@ if __name__ == "__main__":
     # target_qpps = max(-roboclaw_overflow, min(roboclaw_overflow, target_qpps))
     
     # Move M1
-    rc.SpeedAccelM1(address, drive_accel, target_qpps)
-    sleep(1)
-    speed = rc.ReadSpeedM1(address)
-    print(f'speed: {speed[1]}')
+    for speed in range(100, 1000, 100):
+        rc.SpeedAccelM1(address, drive_accel, target_qpps)
+        speed = rc.ReadSpeedM1(address)
+        print(f'speed: {speed[1]}')
+        sleep(0.5)
     sleep(1)
     # stop motor
     rc.ForwardM1(address, 0)
