@@ -15,7 +15,7 @@ RAD_TO_DEG = 180 / math.pi
 
 class ServoWrapper(Node):
     """Interface between the PCA9685 controlling the servos and the higher level rover code"""
-    corner_motors = ['corner_left_back', 'corner_left_front', 'corner_right_front', 'corner_right_back']
+    corner_motors = ['corner_right_back', 'corner_right_front', 'corner_left_front', 'corner_left_back']
     # corner_motors = ['left_back_pos', 'left_front_pos', 'right_front_pos', 'right_back_pos']
 
     def __init__(self):
@@ -30,7 +30,7 @@ class ServoWrapper(Node):
         self.pulse_width_range = (500, 2500)  # [microsec]
         self.deg_per_sec = 200
         # initial values for position estimate (first element) and goal (second element) for each corner motor in deg
-        self.corner_state_goal = [(self.servo_actuation_range/2, self.servo_actuation_range/2)] * 4
+        self.corner_state_goal = [(0, 0)] * 4
         self.corner_angles_default = [90, 90, -90, -90]
 
         self.connect_pca9685()
@@ -42,7 +42,10 @@ class ServoWrapper(Node):
         self.enc_pub_timer = self.create_timer(self.enc_pub_timer_period, self.publish_encoder_estimate)
 
     def connect_pca9685(self):
+        self.log.debug("Creating ServoKit instance")
         self.kit = ServoKit(channels=16)
+
+        self.log.info("setting servo params")
         for servo_id in range(4):
             self.kit.servo[servo_id].actuation_range = self.servo_actuation_range
             self.kit.servo[servo_id].set_pulse_width_range(*self.pulse_width_range)
@@ -50,17 +53,18 @@ class ServoWrapper(Node):
     def corner_cmd_cb(self, cmd: CommandCorner):
         self.log.debug(f"Received corner command message: {cmd}")
         if not self.kit:
-            self.log.error("ServoKit not instantiated yet, dropping cmd", throttle_sec=5)
+            self.log.error("ServoKit not instantiated yet, dropping cmd", throttle_duration_sec=5)
             return
 
-        for ind, corner_name in zip(range(3), self.corner_motors):
+        for ind, corner_name in zip(range(4), self.corner_motors):
             # store goal so we can estimate current angle
             angle = getattr(cmd, corner_name[7:]+"_pos") * RAD_TO_DEG
             # TODO make readable, cleaner
             self.corner_state_goal[ind] = (self.corner_state_goal[ind][0], angle)
             # offset to coordinate frame where x points to the middle of the rover, z down
             # and apply middle of actuation range offset, taking into account if servo is positive ccw or cw
-            angle = self.servo_actuation_range/2 - self.corner_angles_default[ind] + angle
+            angle = self.servo_actuation_range/2 + angle
+            self.log.debug(f"motor {corner_name} commanded to {angle}")
             # limit to operating range of servo
             angle = max(min(angle, self.servo_actuation_range), 0)
             # send to motor
@@ -78,6 +82,7 @@ class ServoWrapper(Node):
         enc_msg.header.stamp = self.get_clock().now().to_msg()
         for ind, motor_name in zip(range(4), self.corner_motors):
             curr_angle, goal_angle = self.corner_state_goal[ind]
+            self.log.debug(f"motor {motor_name}: curr_angle: {curr_angle}, goal: {goal_angle}", throttle_duration_sec=1)
             goal_differential = goal_angle - curr_angle
             velocity = 0
             # compare differential to step size so we can't overshoot and oscillate

@@ -17,7 +17,9 @@ class Rover(Node):
 
     def __init__(self):
         super().__init__("rover")
-        self.get_logger().info("Initializing Rover")
+        self.log = self.get_logger()
+        self.log.set_level(10)
+        self.log.info("Initializing Rover")
 
         self.declare_parameters(
             namespace='',
@@ -107,8 +109,8 @@ class Rover(Node):
         self.get_logger().debug("drive cmd:\n{}".format(drive_cmd_msg))
         self.get_logger().debug("corner cmd:\n{}".format(corner_cmd_msg)) 
 
-        if self.corner_cmd_threshold(corner_cmd_msg):
-            self.corner_cmd_pub.publish(corner_cmd_msg)
+        # if self.corner_cmd_threshold(corner_cmd_msg):
+        self.corner_cmd_pub.publish(corner_cmd_msg)
         self.drive_cmd_pub.publish(drive_cmd_msg)
 
     def enc_cb(self, msg):
