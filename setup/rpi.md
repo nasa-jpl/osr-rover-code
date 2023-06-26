@@ -34,11 +34,9 @@ You'll need to be logged in to the RPi via ssh, or open a terminal in the deskto
 
 Follow the [instructions](https://index.ros.org/doc/ros2/Installation/Humble/Linux-Install-Debians/) for installing ROS2. 
 
-**NOTE**: Depending on which version of Raspberry Pi OS you installed, you might need to install a [different version of ROS2](https://www.ros.org/reps/rep-2000.html). 
+**NOTE**: Depending on which version of Raspberry Pi OS you installed, you might need to install a [different version of ROS2](https://www.ros.org/reps/rep-2000.html). In what follows, we assume ROS2 `humble`.
 
-You can choose to either install the 'full version' (`sudo apt install ros-foxy-desktop`
-) which comes with graphical packages like RViz and QT or install just the barebones version (`sudo apt install ros-foxy-ros-base`). The latter
-allows you to install packages in the full version whenever you need them.
+You can choose to either install the 'full version' (`sudo apt install ros-humble-desktop`) which comes with graphical packages like RViz and QT or install just the barebones version (`sudo apt install ros-humble-ros-base`). The latter allows you to install packages in the full version whenever you need them.
 
 ## 4 Setting up ROS environment and building the rover code
 
@@ -76,15 +74,18 @@ rosdep install --from-paths src --ignore-src --rosdistro=humble
 # build the ROS packages
 colcon build --symlink-install
 ```
+
 It should run successfully. If it doesn't, please ask on Slack or [submit an issue](https://github.com/nasa-jpl/osr-rover-code/issues/new).
 
 Now let's add the generated files to the path so ROS can find them
+
 ```
 source install/setup.bash
 ```
 
 The rover has some customizable settings that will overwrite the default values. 
 Whether you have any changes compared to the defaults or not, you have to manually create these files:
+
 ```
 cd ~/osr_ws/src/osr-rover-code/ROS/osr_bringup/config
 touch osr_params_mod.yaml roboclaw_params_mod.yaml
@@ -96,11 +97,13 @@ values for other parameters may change over time.
 
 You might also want to modify the file `osr-rover-code/ROS/osr_bringup/launch/osr_mod_launch.py` to change the velocities the gamepad controller will
 send to the rover. These values in the node joy_to_twist are of interest:
+
 ```
     {"scale_linear": 0.8},  # scale to apply to drive speed, in m/s: drive_motor_rpm * 2pi / 60 * wheel radius * slowdown_factor
     {"scale_angular": 1.75},  # scale to apply to angular speed, in rad/s: scale_linear / min_radius
     {"scale_linear_turbo": 1.78},  # scale to apply to linear speed, in m/s
 ```
+
 The maximum speed your rover can go is determined by the no-load speed of your drive motors. The default no-load speed is located
 in the file [osr_params.yaml](../ROS/osr_bringup/config/osr_params.yaml) as `drive_no_load_rpm`, unless you modified it in the corresponding `_mod.yaml` file. 
 This maximum speed corresponds to `scale_linear_turbo` and can be calculated as `drive_no_load_rpm * 2pi / 60 * wheel radius (=0.075m)`.
@@ -113,11 +116,13 @@ should be set to `scale_linear / min_radius`. For the default configuration, the
 ### 4.3 Add ROS config scripts to .bashrc
 
 The `source...foo.bash` lines above are used to manually configure your ROS environment. We can do this automatically in the future by doing:
+
 ```
 cd ~
 echo "source /opt/ros/foxy/setup.bash" >> ~/.bashrc 
 echo "source ~/osr_ws/install/setup.bash" >> ~/.bashrc
 ```
+
 This adds the `source` lines to `~/.bashrc`, which runs whenever a new shell is opened on the RPi - by logging in via ssh, for example. So, from now on, when you log into the RPi your new command line environment will have the appropriate configuration for ROS and the rover code.
 
 
@@ -155,10 +160,12 @@ This configuration should persist across RPi reboots.
 ### 5.3 Add user to tty and dialout groups
 
 Finally, add the user to the `tty` and `dialout` groups:
+
 ```
 sudo adduser $USER tty
 sudo adduser $USER dialout
 ```
+
 You might have to create the dialout group if it doesn't already exist.
 
 <!-- You'll need to log out of your ssh session and log back in for this to take effect. Or you can reboot. -->
@@ -166,13 +173,16 @@ You might have to create the dialout group if it doesn't already exist.
 ## 6 Testing serial comm with the Roboclaw motors controllers
 
 Run the roboclawtest.py script with all of the motor addresses:
+
 ```
 cd ~/osr_ws/src/osr-rover-code/scripts
 python3 roboclawtest.py 128
 python3 roboclawtest.py 129
 python3 roboclawtest.py 130
 ```
+
 Each of these should output something like, within a very short execution time:
+
 ```
 (1, 'USB Roboclaw 2x7a v4.1.34\n')
 (1, 853, 130)
