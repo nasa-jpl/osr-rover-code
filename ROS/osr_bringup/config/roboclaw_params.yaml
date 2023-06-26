@@ -5,36 +5,36 @@ roboclaw_wrapper:
     velocity_timeout: 2.0  # maximum time [s] a particular velocity command will stay active without a new command before stopping
     baud_rate: 115200
     device: "/dev/serial1"
-    addresses: [128, 130, 132]
+    addresses: [128, 129, 130]
     roboclaw_mapping:
       # gear ratio is approx 172, exact value is 171.79 though
       drive_left_front:
-        address: 132
+        address: 128
         channel: M1
         ticks_per_rev: 48
         gear_ratio: 171.79
       drive_left_middle:
-        address: 132
+        address: 128
         channel: M2
         ticks_per_rev: 48
         gear_ratio: 171.79
       drive_left_back:
-        address: 130
+        address: 129
         channel: M2
         ticks_per_rev: 48
         gear_ratio: 171.79
       drive_right_back:
-        address: 128
+        address: 130
         channel: M1
         ticks_per_rev: 48
         gear_ratio: 171.79
       drive_right_middle:
-        address: 128
+        address: 130
         channel: M2
         ticks_per_rev: 48
         gear_ratio: 171.79
       drive_right_front:
-        address: 130
+        address: 129
         channel: M1
         ticks_per_rev: 48
         gear_ratio: 171.79

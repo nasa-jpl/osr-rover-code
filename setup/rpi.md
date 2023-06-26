@@ -4,64 +4,41 @@ In this section, we’ll go over setting up the Raspberry Pi (RPi) and setting u
 
 These instructions should work for both the RPi 3 and 4. You are free to use other versions of RPi, ROS, or OS, but setting these up is not covered here and it is not guaranteed that those will work.
 
-## 1 Installing Ubuntu
+## 1 Installing an Operating System
 
-The first step is to install the Ubuntu Operating System on your Raspberry Pi.
+The first step is to install Raspberry Pi OS on your RPi. Other OS'es like Ubuntu will also work but might require deviation from the instructions. We recommend using the [Raspberry Pi Imager](https://www.raspberrypi.com/documentation/computers/getting-started.html#using-raspberry-pi-imager) to load the OS onto an SD card. If done right, you won't need an external monitor, mouse, or keyboard to set up your RPi!
 
-Download Ubuntu 20.04 from [here](https://ubuntu.com/download/raspberry-pi) for your RPi version. For an RPi3 the best default is 32-bit, but if you're on an Rpi4 then you can (should) go for 64-bit.
+Make sure you set the following settings while configuring the image to be flashed onto the SD card (ctrl/cmd+shift+x):
 
-Preparing the image for the RPi and boot it up:
+* Select `Enable SSH` to you can connect to the rover over your local WiFi connection rather than having to attach a screen, keyboard, and mouse to the RPi each time. We recommend using a password.
+* `Set username and password`. You will need these later to log into the RPi over SSH.
+* `Configure wifi` so the RPi knows how to connect to your network when it boots up. 
+* `Set locale settings` to your time zone
 
-- Flash Ubuntu onto your microSD card. There are instructions for doing this on [Ubuntu](https://ubuntu.com/tutorials/create-an-ubuntu-image-for-a-raspberry-pi-on-ubuntu#1-overview), [Windows](https://ubuntu.com/tutorials/create-an-ubuntu-image-for-a-raspberry-pi-on-windows), and [Mac](https://ubuntu.com/tutorials/create-an-ubuntu-image-for-a-raspberry-pi-on-macos)
-- Attach a monitor and keyboard to the RPi (note an alternative is to use `screen`, see [here](https://elinux.org/RPi_Serial_Connection))
-- Insert the flashed SD card in the RPi
-- Power it on
-- Login, using "ubuntu" for the username and password. You should be prompted to make a new password.
+When done flashing, insert the SD card into the Raspberry Pi. When the Raspberry Pi is powered (make sure to use a proper power supply or connect it to the rover), it should connect to the WiFi connection and be visible from your router's 'devices' page. If possible, we recommend assigning a static IP address to your RPi so you can reach it using that IP address. Otherwise you should also be able to reach it using its hostname (which you selected in the Imager process), potentially with `.local` appended to the end.
 
-You should now be logged in to your newly minted copy of Ubuntu!
-As you will have noticed, there is no Graphical User Interface (GUI). We installed the bare minimum, the 'server' version of Ubuntu because you don't
-necessarily need all that (it takes up a lot of computer power). However we recommend for those new to Linux to install the GUI as below.
+From another computer, try connecting to the Raspberry Pi using SSH. You should be able to do so from a terminal in Windows, Linux, or MacOS using the following syntax: `ssh user@machine`, where the user is the username you set during the SD card flashing process earlier. For example:
 
-## 2 Further setup: wifi, desktop GUI (optional), ssh
+```
+ssh osr_user@raspberrypi.local
+ssh alfred@192.168.1.17
+```
 
-### 2.1 Connect to wifi from the command line
-
-Get your new device on the internet. Instructions [here](https://linuxconfig.org/ubuntu-20-04-connect-to-wifi-from-command-line). 
-
-1. Basically, you need to edit the `/etc/netplan/50-cloud-init.yaml` file and add your wifi network)
-2. `SSID-NAME-HERE` is your network's name, and `PASSWORD-HERE` is the password for it.
-3. After following these steps, you should see an ip address assigned in the output of `ip a`. It will be an `inet` value like `192.168.1.18`, underneath an interface entry like `wlan0`
-
-### 2.2 Install a desktop GUI environment (optional)
-
-This is a good option for newbies to the linux world. It's pretty easy to do, though it'll take a while (maybe an hour).
-
-Follow the instructions [here](https://phoenixnap.com/kb/how-to-install-a-gui-on-ubuntu#htoc-update-repositories-and-packages).
-
-1. We recommend using SLiM as the Display Manager, it seems lighter weight than the other options
-2. We also recommend using GNOME for the GUI
-3. Note that you'll probably need to `sudo tasksel` (instead of without sudo, per the instructions), otherwise you'll get a permissions error.
-
-### 2.3 Enable SSH
-
-You probably will also want to connect to your newly configured RPi remotely over ssh, rather than having to using a separate monitor every time. Instructions [here](https://askubuntu.com/a/681768).
-
-1. Basically, run `sudo systemctl enable ssh.socket` from the command line
-3. Now you should be able to login from your dev machine. `ssh ubuntu@192.168.1.18`, using the ip address for your RPi that you found above.
-4. It should prompt you for a password. Once you enter it successfully, you'll be logged on! The `enable` step above should configure the ssh server to automatically come up on reboot, so you can just login to the RPi remotely from now on.
+It should prompt for your password and then form a connection to a terminal window on the RPi!
 
 ## 3 Installing ROS
 
-We'll install ROS2 (Robot Operating System) Foxy on the RPi. If you're new to ROS, we recommend learning it as it is a crucial part in the code base.
+We'll install ROS2 (Robot Operating System) on the RPi. If you're new to ROS, we recommend learning it as it is a crucial part in the code base.
 
-You'll need to be logged in to the RPi via ssh, or open a terminal in the desktop GUI if you installed it above.
+You'll need to be logged in to the RPi via ssh, or open a terminal in the desktop GUI if you're connected via a monitor and mouse/keyboard.
 
-Follow the [instructions](https://index.ros.org/doc/ros2/Installation/Foxy/Linux-Install-Debians/) for installing ROS2.
+Follow the [instructions](https://index.ros.org/doc/ros2/Installation/Humble/Linux-Install-Debians/) for installing ROS2. 
+
+**NOTE**: Depending on which version of Raspberry Pi OS you installed, you might need to install a [different version of ROS2](https://www.ros.org/reps/rep-2000.html). 
 
 You can choose to either install the 'full version' (`sudo apt install ros-foxy-desktop`
 ) which comes with graphical packages like RViz and QT or install just the barebones version (`sudo apt install ros-foxy-ros-base`). The latter
-allows you to install packages in the full version whenever you need them. If you didn't install the GUI on Ubuntu, definitely install the base
-version as you will have little use for GUI applications in the full version.
+allows you to install packages in the full version whenever you need them.
 
 ## 4 Setting up ROS environment and building the rover code
 
@@ -74,30 +51,28 @@ First we'll create a ROS workspace for the rover code.
 # source code files, and navigate into it
 mkdir -p ~/osr_ws/src && cd ~/osr_ws
 
-# Source your newly created ROS environment
-source /opt/ros/foxy/setup.bash
-
-# install the build tool colcon
-sudo apt install python3-colcon-common-extensions
+# Source your newly created ROS environment. If you get "No such file or directory", either you have not installed ROS2 properly, or the environment variables aren't set correctly. Ask for help on Slack on the troubleshooting channel.
+source /opt/ros/${ROS_DISTRO}/setup.bash
 ```
 
 ### 4.2 Clone and build the rover code
 For this section, you'll be working with the version control software `git`. Now's a good time to [read up](https://try.github.io/) on how that works if you're new to it and make a GitHub account!
-In the newly created catkin workspace you just made, clone this repo:
+In the newly created colcon workspace you just made, clone this repo:
+
 ```commandline
 sudo apt install git
 cd ~/osr_ws/src
 git clone https://github.com/nasa-jpl/osr-rover-code.git
 cd osr-rover-code
 git fetch origin
-git checkout foxy-devel
+git checkout v2-humble
 
 # install the dependencies using rosdep
 sudo apt install python3-rosdep
 cd ..
 sudo rosdep init
 rosdep update
-rosdep install --from-paths src --ignore-src --rosdistro=foxy
+rosdep install --from-paths src --ignore-src --rosdistro=humble
 # build the ROS packages
 colcon build --symlink-install
 ```
@@ -186,41 +161,7 @@ sudo adduser $USER dialout
 ```
 You might have to create the dialout group if it doesn't already exist.
 
-<!-- You'll need to log out of your ssh session and log back in for this to take effect. Or you can restart Ubuntu. -->
-
-### 5.4 Remove console line in cmdline.txt boot config file
-
-Do the following steps:
-
-```
-cd /boot/firmware
-sudo cp cmdline.txt cmdline.txt.bak
-sudo nano cmdline.txt
-```
-
-- And then delete the substring `console=serial0,115200` from the single line of text in the file. Save and exit.
-
-You can confirm that you edited the file correctly using `cat cmdline.txt` from the command line, and inspecting the output.
-
-Note that the cmdline.txt.bak is just a backup file in case you need to revert this change at some point (that file won't affect the boot process)
-
-For more background on why we do this, see [serial_config_info.md](serial_config_info.md)
-
-### 5.5 Disable bluetooth in config.txt boot config file
-
-Execute the following commands
-
-```
-cd /boot/firmware
-sudo cp config.txt config.txt.bak
-sudo nano config.txt
-```
-
-- And then add the new line `dtoverlay=disable-bt` immediately after the existing line `cmdline=cmdline.txt` towards the bottom of the file
-
-### 5.6 Restart the RPi
-
-We need to restart for all of these changes to take effect. Execute: `sudo reboot now`
+<!-- You'll need to log out of your ssh session and log back in for this to take effect. Or you can reboot. -->
 
 ## 6 Testing serial comm with the Roboclaw motors controllers
 
@@ -230,8 +171,6 @@ cd ~/osr_ws/src/osr-rover-code/scripts
 python3 roboclawtest.py 128
 python3 roboclawtest.py 129
 python3 roboclawtest.py 130
-python3 roboclawtest.py 131
-python3 roboclawtest.py 132
 ```
 Each of these should output something like, within a very short execution time:
 ```
