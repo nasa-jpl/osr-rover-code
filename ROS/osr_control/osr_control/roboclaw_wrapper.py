@@ -424,7 +424,8 @@ class RoboclawWrapper(Node):
         for i in range(len(self.address)):
             err[i] = self.rc.ReadError(self.address[i])[1]
             if err[i] != 0:
-                self.get_logger().error("Motor controller '{}' reported error code {}".format(self.address[i], err[i]))
+                self.log.error(f"Motor controller '{self.address[i]}' reported error code {err[i]} (hex: {hex(err[i])})")
+                err[i] = int(err[i])
         
         return err
 
