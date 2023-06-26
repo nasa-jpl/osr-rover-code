@@ -53,9 +53,26 @@ if __name__ == "__main__":
 
     # target_qpps = max(-roboclaw_overflow, min(roboclaw_overflow, target_qpps))
     
+    # rc.SpeedAccelM1(address, drive_accel, 1000)
+    # sleep(1)
+    # rc.ForwardM1(address, 0)
+    # sleep(0.5)
+    # rc.SpeedAccelM1(address, drive_accel, -1000)
+    # sleep(1)
+    # rc.ForwardM1(address, 0)
+
+    # rc.SpeedAccelM2(address, drive_accel, 1000)
+    # sleep(1)
+    # rc.ForwardM2(address, 0)
+    # sleep(0.5)
+    # rc.SpeedAccelM2(address, drive_accel, -1000)
+    # sleep(1)
+    # rc.ForwardM2(address, 0)
+
+    print("M1:")
     # Move M1
-    for speed in range(100, 1000, 100):
-        rc.SpeedAccelM1(address, drive_accel, target_qpps)
+    for speed_cmd in range(100, target_qpps, 50):
+        rc.SpeedAccelM1(address, drive_accel, speed_cmd)
         speed = rc.ReadSpeedM1(address)
         print(f'speed: {speed[1]}')
         sleep(0.5)
@@ -63,11 +80,13 @@ if __name__ == "__main__":
     # stop motor
     rc.ForwardM1(address, 0)
 
+    print("M2:")
     # Move M2
-    rc.SpeedAccelM2(address, drive_accel, target_qpps)
-    sleep(1)
-    speed = rc.ReadSpeedM2(address)
-    print(f'speed: {speed[1]}')
+    for speed_cmd in range(100, target_qpps, 50):
+        rc.SpeedAccelM2(address, drive_accel, speed_cmd)
+        speed = rc.ReadSpeedM2(address)
+        print(f'speed: {speed[1]}')
+        sleep(0.5)
     sleep(1)
     # stop motor
     rc.ForwardM2(address, 0)
