@@ -16,11 +16,17 @@ kit = ServoKit(channels=16)
 
 sleep(0.1)
 
-for i in range(4):
-    kit.servo[i].actuation_range = 300
-    kit.servo[i].set_pulse_width_range(200, 2500)
-    kit.servo[i].angle = 150
-    sleep(0.5)
+# for i in range(4):
+#     kit.servo[i].actuation_range = 300
+#     kit.servo[i].set_pulse_width_range(500, 2500)
+#     kit.servo[i].angle = 150
+#     sleep(0.5)
+
+i=3
+kit.servo[i].actuation_range = 300
+kit.servo[i].set_pulse_width_range(500, 2500)
+kit.servo[i].angle = 160
+
 
 # while True:
 #     # pwm channel 0

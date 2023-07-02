@@ -40,16 +40,16 @@ if __name__ == "__main__":
     accel_max = 2**15-1
     accel_rate = 0.5
     drive_accel = int(accel_max * accel_rate)
-    drive_accel = 16383 # good accel, speedup not really noticeable
-    # drive_accel = 100 # rul slow accel
+    # drive_accel = 16383 # good accel, speedup not really noticeable
+    drive_accel = 100 # rul slow accel
 
     ## Set speed
     roboclaw_overflow = 2**15-1   # 32767 max speed (way too fast)
     # target_qpps = roboclaw_overflow  # very fast, max speed
     # target_qpps = 2048  # fairly fast
-    target_qpps = 1000  # pretty good test speed
+    # target_qpps = 1000  # pretty good test speed
     # target_qpps = -1000
-    # target_qpps = 100  # pretty slow
+    target_qpps = 100  # pretty slow
 
     # target_qpps = max(-roboclaw_overflow, min(roboclaw_overflow, target_qpps))
     
@@ -71,7 +71,7 @@ if __name__ == "__main__":
 
     print("M1:")
     # Move M1
-    for speed_cmd in range(100, target_qpps, 50):
+    for speed_cmd in range(10, target_qpps, 10):
         rc.SpeedAccelM1(address, drive_accel, speed_cmd)
         speed = rc.ReadSpeedM1(address)
         print(f'speed: {speed[1]}')
@@ -82,7 +82,7 @@ if __name__ == "__main__":
 
     print("M2:")
     # Move M2
-    for speed_cmd in range(100, target_qpps, 50):
+    for speed_cmd in range(10, target_qpps, 10):
         rc.SpeedAccelM2(address, drive_accel, speed_cmd)
         speed = rc.ReadSpeedM2(address)
         print(f'speed: {speed[1]}')

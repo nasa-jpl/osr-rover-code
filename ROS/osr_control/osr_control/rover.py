@@ -185,9 +185,9 @@ class Rover(Node):
             cmd_msg.left_front_vel = angular_vel
             cmd_msg.left_middle_vel = angular_vel
             cmd_msg.left_back_vel = angular_vel
-            cmd_msg.right_back_vel = angular_vel
-            cmd_msg.right_middle_vel = angular_vel
-            cmd_msg.right_front_vel = angular_vel
+            cmd_msg.right_back_vel = -angular_vel
+            cmd_msg.right_middle_vel = -angular_vel
+            cmd_msg.right_front_vel = -angular_vel
 
             return cmd_msg
 
@@ -215,16 +215,16 @@ class Rover(Node):
                 cmd_msg.left_front_vel = ang_vel_corner_closest
                 cmd_msg.left_back_vel = ang_vel_corner_closest
                 cmd_msg.left_middle_vel = ang_vel_middle_closest
-                cmd_msg.right_back_vel = ang_vel_corner_farthest
-                cmd_msg.right_front_vel = ang_vel_corner_farthest
-                cmd_msg.right_middle_vel = ang_vel_middle_farthest
+                cmd_msg.right_back_vel = -ang_vel_corner_farthest
+                cmd_msg.right_front_vel = -ang_vel_corner_farthest
+                cmd_msg.right_middle_vel = -ang_vel_middle_farthest
             else:  # turning right
                 cmd_msg.left_front_vel = ang_vel_corner_farthest
                 cmd_msg.left_back_vel = ang_vel_corner_farthest
                 cmd_msg.left_middle_vel = ang_vel_middle_farthest
-                cmd_msg.right_back_vel = ang_vel_corner_closest
-                cmd_msg.right_front_vel = ang_vel_corner_closest
-                cmd_msg.right_middle_vel = ang_vel_middle_closest
+                cmd_msg.right_back_vel = -ang_vel_corner_closest
+                cmd_msg.right_front_vel = -ang_vel_corner_closest
+                cmd_msg.right_middle_vel = -ang_vel_middle_closest
 
             return cmd_msg
 
