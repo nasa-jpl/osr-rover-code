@@ -93,22 +93,29 @@ class Rover(Node):
 
         :param intuitive: determines the mode
         """
-        desired_turning_radius = self.twist_to_turning_radius(twist_msg, intuitive_mode=intuitive)
-        self.get_logger().debug("desired turning radius: " + "{}".format(desired_turning_radius), throttle_duration_sec=1)
-        corner_cmd_msg = self.calculate_corner_positions(desired_turning_radius)
+        # check if we're supposed to rotate in place
+        if twist_msg.angular.y and not twist_msg.linear.x:
+            # command corners to point to center
+            corner_cmd_msg, drive_cmd_msg = self.calculate_rotate_in_place_cmd(twist_msg)
 
-        # if we're turning, calculate the max velocity the middle of the rover can go
-        max_vel = abs(desired_turning_radius) / (abs(desired_turning_radius) + self.d1) * self.max_vel
-        if math.isnan(max_vel):  # turning radius infinite, going straight
-            max_vel = self.max_vel
-        velocity = min(max_vel, twist_msg.linear.x)
+        else:
+            desired_turning_radius = self.twist_to_turning_radius(twist_msg, intuitive_mode=intuitive)
+            self.get_logger().debug("desired turning radius: " + "{}".format(desired_turning_radius), throttle_duration_sec=1)
+            corner_cmd_msg = self.calculate_corner_positions(desired_turning_radius)
 
-        self.get_logger().debug("velocity drive cmd: {} m/s".format(velocity), throttle_duration_sec=1)
-        drive_cmd_msg = self.calculate_drive_velocities(velocity, desired_turning_radius)
-        self.get_logger().debug("drive cmd:\n{}".format(drive_cmd_msg), throttle_duration_sec=1)
-        self.get_logger().debug("corner cmd:\n{}".format(corner_cmd_msg), throttle_duration_sec=1) 
+            # if we're turning, calculate the max velocity the middle of the rover can go
+            max_vel = abs(desired_turning_radius) / (abs(desired_turning_radius) + self.d1) * self.max_vel
+            if math.isnan(max_vel):  # turning radius infinite, going straight
+                max_vel = self.max_vel
+            velocity = min(max_vel, twist_msg.linear.x)
+            self.get_logger().debug("velocity drive cmd: {} m/s".format(velocity), throttle_duration_sec=1)
+
+            drive_cmd_msg = self.calculate_drive_velocities(velocity, desired_turning_radius)
 
         # if self.corner_cmd_threshold(corner_cmd_msg):
+        self.get_logger().debug("drive cmd:\n{}".format(drive_cmd_msg), throttle_duration_sec=1)
+        self.get_logger().debug("corner cmd:\n{}".format(corner_cmd_msg), throttle_duration_sec=1)
+
         self.corner_cmd_pub.publish(corner_cmd_msg)
         self.drive_cmd_pub.publish(drive_cmd_msg)
 
@@ -261,6 +268,32 @@ class Rover(Node):
             cmd_msg.right_front_pos = theta_front_closest
 
         return cmd_msg
+
+    def calculate_rotate_in_place_cmd(self, twist):
+        """
+        Calculate corner angles and drive motor speeds to rotate the robot in place (turning radius 0)
+        """
+        # TODO these are always the same, should use cache or calculate on parameter change
+        corner_cmd = CommandCorner()
+        corner_cmd.left_front_pos = math.atan(self.d3/self.d1)
+        corner_cmd.left_back_pos = -corner_cmd.left_front_pos
+        corner_cmd.right_back_pos = math.atan(self.d2/self.d1)
+        corner_cmd.right_front_pos = -corner_cmd.right_back_pos
+
+        drive_cmd = CommandDrive()
+        angular_vel = twist.angular.y
+        # velocity of each wheel center = angular velocity of center of rover * distance to wheel center
+        front_wheel_vel = math.hypot(self.d1, self.d3) * angular_vel / self.wheel_radius
+        drive_cmd.left_front_vel = front_wheel_vel
+        drive_cmd.right_front_vel = front_wheel_vel
+        back_wheel_vel = math.hypot(self.d1, self.d2) * angular_vel / self.wheel_radius
+        drive_cmd.left_back_vel = back_wheel_vel
+        drive_cmd.right_back_vel = back_wheel_vel
+        middle_wheel_vel = self.d4 * angular_vel / self.wheel_radius
+        drive_cmd.left_middle_vel = middle_wheel_vel
+        drive_cmd.right_middle_vel = middle_wheel_vel
+
+        return corner_cmd, drive_cmd 
 
     def twist_to_turning_radius(self, twist, clip=True, intuitive_mode=False):
         """
