@@ -27,7 +27,7 @@ class ServoWrapper(Node):
 
         # PWM settings from https://www.gobilda.com/2000-series-dual-mode-servo-25-2-torque/
         self.servo_actuation_range = 300  # [deg]
-        self.centered_pulse_widths = [165, 130, 135, 160]
+        self.centered_pulse_widths = [165, 134, 135, 160]
         self.pulse_width_range = (500, 2500)  # [microsec]
         self.deg_per_sec = 200
         # initial values for position estimate (first element) and goal (second element) for each corner motor in deg
