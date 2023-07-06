@@ -32,11 +32,11 @@ We'll install ROS2 (Robot Operating System) on the RPi. If you're new to ROS, we
 
 You'll need to be logged in to the RPi via ssh, or open a terminal in the desktop GUI if you're connected via a monitor and mouse/keyboard.
 
-Follow the [instructions](https://index.ros.org/doc/ros2/Installation/Humble/Linux-Install-Debians/) for installing ROS2. 
+Follow the [instructions](https://docs.ros.org/en/iron/Installation/Ubuntu-Install-Debians.html) for installing ROS2. 
 
-**NOTE**: Depending on which version of Raspberry Pi OS you installed, you might need to install a [different version of ROS2](https://www.ros.org/reps/rep-2000.html). In what follows, we assume ROS2 `humble`.
+**NOTE**: Depending on which version of Raspberry Pi OS you installed, you might need to install a [different version of ROS2](https://www.ros.org/reps/rep-2000.html). In what follows, we assume ROS2 `Iron`.
 
-You can choose to either install the 'full version' (`sudo apt install ros-humble-desktop`) which comes with graphical packages like RViz and QT or install just the barebones version (`sudo apt install ros-humble-ros-base`). The latter allows you to install packages in the full version whenever you need them.
+You can choose to either install the 'full version' (`sudo apt install ros-iron-desktop`) which comes with graphical packages like RViz and QT or install just the barebones version (`sudo apt install ros-iron-ros-base`). The latter allows you to install packages in the full version whenever you need them and so we recommend following this approach. You can install ROS2 and related graphical packages on a different computer on the same network and you will be able to receive all messages out of the box.
 
 ## 4 Setting up ROS environment and building the rover code
 
@@ -55,7 +55,7 @@ source /opt/ros/${ROS_DISTRO}/setup.bash
 
 ### 4.2 Clone and build the rover code
 For this section, you'll be working with the version control software `git`. Now's a good time to [read up](https://try.github.io/) on how that works if you're new to it and make a GitHub account!
-In the newly created colcon workspace you just made, clone this repo:
+In the newly created colcon workspace you just made, clone (download) this repo:
 
 ```commandline
 sudo apt install git
@@ -70,7 +70,7 @@ sudo apt install python3-rosdep
 cd ..
 sudo rosdep init
 rosdep update
-rosdep install --from-paths src --ignore-src --rosdistro=humble
+rosdep install --from-paths src --ignore-src --rosdistro=iron
 # build the ROS packages
 colcon build --symlink-install
 ```
@@ -130,7 +130,17 @@ This adds the `source` lines to `~/.bashrc`, which runs whenever a new shell is 
 
 The RPi will talk to the motor controllers over serial.
 
+### 5.1 Enabling Serial and I2C
+
+```
+sudo raspi-config
+```
+
+Then use the menu to enable I2C and Serial under `Interfaces`. More on raspi-config [here](https://www.raspberrypi.com/documentation/computers/configuration.html).
+
 ### 5.1 Disable serial-getty@ttyS0.service
+
+*NOTE*: this section may no longer be necessary with newer versions of debian. We suggest skipping it and revisiting if serial does not work.
 
 Because we are using the serial port for communicating with the roboclaw motor controllers, we have to disable the serial-getty@ttyS0.service service. This service has some level of control over serial devices that we use, so if we leave it on it we'll get weird errors ([source](https://spellfoundry.com/2016/05/29/configuring-gpio-serial-port-raspbian-jessie-including-pi-3-4/)). Note that the masking step was suggested [here](https://stackoverflow.com/a/43633467/4292910). It seems to be necessary for some setups of the rpi4 - just using `systemctl disable` won't cut it for disabling the service.
 
