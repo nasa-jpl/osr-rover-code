@@ -22,17 +22,17 @@ pm.setUnderVoltageLimit(12)
 i = 0
 
 if pm:
-	while(i < 3): 
-		print("Voltage: %2.4f" % (pm.readVoltage()))
-		print("Current: %2.4f" % (pm.readCurrent()))
-		print("Power: %2.4f" % (pm.readPower()))
-		print("Alarm %d" % (gpio.input(27)))
-		limit = pm.readLimitRegister()
-		print("Alert Limit 0x%X, %2.4f" % (limit, limit*0.00125))
+    while(i < 3): 
+        print("Voltage: %2.4f" % (pm.readVoltage()))
+        print("Current: %2.4f" % (pm.readCurrent()))
+        print("Power: %2.4f" % (pm.readPower()))
+        print("Alarm %d" % (gpio.input(27)))
+        limit = pm.readLimitRegister()
+        print("Alert Limit 0x%X, %2.4f" % (limit, limit*0.00125))
 #		print("Mask 0x%X\n" % (pm.readMaskEnable()))
-		i += 1
-		
+        i += 1
+        
 else:
-	print("Failed to initialize INA260")
-	
-	
+    print("Failed to initialize INA260")
+    
+    
