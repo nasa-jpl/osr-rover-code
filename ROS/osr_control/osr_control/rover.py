@@ -17,7 +17,9 @@ class Rover(Node):
 
     def __init__(self):
         super().__init__("rover")
-        self.get_logger().info("Initializing Rover")
+        self.log = self.get_logger()
+        self.log.set_level(10)
+        self.log.info("Initializing Rover")
 
         self.declare_parameters(
             namespace='',
@@ -53,6 +55,8 @@ class Rover(Node):
             self.odometry.header.frame_id = "odom"
             self.odometry.child_frame_id = "base_link"
             self.odometry.pose.pose.orientation.w = 1.
+        self.curr_positions = {}
+        self.curr_velocities = {}
         self.curr_twist = TwistWithCovariance()
         self.curr_turning_radius = self.max_radius
 
@@ -60,7 +64,8 @@ class Rover(Node):
                                                     partial(self.cmd_cb, intuitive=False), 1)
         self.cmd_vel_int_sub = self.create_subscription(Twist, "/cmd_vel_intuitive", 
                                                         partial(self.cmd_cb, intuitive=True), 1)
-        self.encoder_sub = self.create_subscription(JointState, "/encoder", self.enc_cb, 1)
+        self.drive_enc_sub = self.create_subscription(JointState, "/drive_state", self.enc_cb, 1)
+        self.corner_enc_sub = self.create_subscription(JointState, "/corner_state", self.enc_cb, 1)
 
         self.turning_radius_pub = self.create_publisher(Float64, "/turning_radius", 1)
         if self.should_calculate_odom:
@@ -88,30 +93,38 @@ class Rover(Node):
 
         :param intuitive: determines the mode
         """
-        desired_turning_radius = self.twist_to_turning_radius(twist_msg, intuitive_mode=intuitive)
-        self.get_logger().debug("desired turning radius: " +
-                                "{}".format(desired_turning_radius))
-        corner_cmd_msg = self.calculate_corner_positions(desired_turning_radius)
+        # check if we're supposed to rotate in place
+        if twist_msg.angular.y and not twist_msg.linear.x:
+            # command corners to point to center
+            corner_cmd_msg, drive_cmd_msg = self.calculate_rotate_in_place_cmd(twist_msg)
 
-        # if we're turning, calculate the max velocity the middle of the rover can go
-        max_vel = abs(desired_turning_radius) / (abs(desired_turning_radius) + self.d1) * self.max_vel
-        if math.isnan(max_vel):  # turning radius infinite, going straight
-            max_vel = self.max_vel
-        velocity = min(max_vel, twist_msg.linear.x)
+        else:
+            desired_turning_radius = self.twist_to_turning_radius(twist_msg, intuitive_mode=intuitive)
+            self.get_logger().debug("desired turning radius: " + "{}".format(desired_turning_radius), throttle_duration_sec=1)
+            corner_cmd_msg = self.calculate_corner_positions(desired_turning_radius)
 
-        self.get_logger().debug("velocity drive cmd: {} m/s".format(velocity))
-        drive_cmd_msg = self.calculate_drive_velocities(velocity, desired_turning_radius)
-        self.get_logger().debug("drive cmd:\n{}".format(drive_cmd_msg))
-        self.get_logger().debug("corner cmd:\n{}".format(corner_cmd_msg)) 
+            # if we're turning, calculate the max velocity the middle of the rover can go
+            max_vel = abs(desired_turning_radius) / (abs(desired_turning_radius) + self.d1) * self.max_vel
+            if math.isnan(max_vel):  # turning radius infinite, going straight
+                max_vel = self.max_vel
+            velocity = min(max_vel, twist_msg.linear.x)
+            self.get_logger().debug("velocity drive cmd: {} m/s".format(velocity), throttle_duration_sec=1)
 
-        if self.corner_cmd_threshold(corner_cmd_msg):
-            self.corner_cmd_pub.publish(corner_cmd_msg)
+            drive_cmd_msg = self.calculate_drive_velocities(velocity, desired_turning_radius)
+
+        # if self.corner_cmd_threshold(corner_cmd_msg):
+        self.get_logger().debug("drive cmd:\n{}".format(drive_cmd_msg), throttle_duration_sec=1)
+        self.get_logger().debug("corner cmd:\n{}".format(corner_cmd_msg), throttle_duration_sec=1)
+
+        self.corner_cmd_pub.publish(corner_cmd_msg)
         self.drive_cmd_pub.publish(drive_cmd_msg)
 
     def enc_cb(self, msg):
-        self.curr_positions = dict(zip(msg.name, msg.position))
-        self.curr_velocities = dict(zip(msg.name, msg.velocity))
-        if self.should_calculate_odom:
+        """When we get a JointState message from the drive or corner motors"""
+        # merge dictionaries since we could get corner or drive motor feedback
+        self.curr_positions = {**self.curr_positions, **dict(zip(msg.name, msg.position))}
+        self.curr_velocities = {**self.curr_velocities, **dict(zip(msg.name, msg.velocity))}
+        if self.should_calculate_odom and len(self.curr_positions) == 10:
             # measure how much time has elapsed since our last update
             now = self.get_clock().now()
             dt = float(now.nanoseconds - (self.odometry.header.stamp.sec*10**9 + self.odometry.header.stamp.nanosec)) / 10**9
@@ -179,9 +192,9 @@ class Rover(Node):
             cmd_msg.left_front_vel = angular_vel
             cmd_msg.left_middle_vel = angular_vel
             cmd_msg.left_back_vel = angular_vel
-            cmd_msg.right_back_vel = angular_vel
-            cmd_msg.right_middle_vel = angular_vel
-            cmd_msg.right_front_vel = angular_vel
+            cmd_msg.right_back_vel = -angular_vel
+            cmd_msg.right_middle_vel = -angular_vel
+            cmd_msg.right_front_vel = -angular_vel
 
             return cmd_msg
 
@@ -209,16 +222,16 @@ class Rover(Node):
                 cmd_msg.left_front_vel = ang_vel_corner_closest
                 cmd_msg.left_back_vel = ang_vel_corner_closest
                 cmd_msg.left_middle_vel = ang_vel_middle_closest
-                cmd_msg.right_back_vel = ang_vel_corner_farthest
-                cmd_msg.right_front_vel = ang_vel_corner_farthest
-                cmd_msg.right_middle_vel = ang_vel_middle_farthest
+                cmd_msg.right_back_vel = -ang_vel_corner_farthest
+                cmd_msg.right_front_vel = -ang_vel_corner_farthest
+                cmd_msg.right_middle_vel = -ang_vel_middle_farthest
             else:  # turning right
                 cmd_msg.left_front_vel = ang_vel_corner_farthest
                 cmd_msg.left_back_vel = ang_vel_corner_farthest
                 cmd_msg.left_middle_vel = ang_vel_middle_farthest
-                cmd_msg.right_back_vel = ang_vel_corner_closest
-                cmd_msg.right_front_vel = ang_vel_corner_closest
-                cmd_msg.right_middle_vel = ang_vel_middle_closest
+                cmd_msg.right_back_vel = -ang_vel_corner_closest
+                cmd_msg.right_front_vel = -ang_vel_corner_closest
+                cmd_msg.right_middle_vel = -ang_vel_middle_closest
 
             return cmd_msg
 
@@ -255,6 +268,32 @@ class Rover(Node):
             cmd_msg.right_front_pos = theta_front_closest
 
         return cmd_msg
+
+    def calculate_rotate_in_place_cmd(self, twist):
+        """
+        Calculate corner angles and drive motor speeds to rotate the robot in place (turning radius 0)
+        """
+        # TODO these are always the same, should use cache or calculate on parameter change
+        corner_cmd = CommandCorner()
+        corner_cmd.left_front_pos = math.atan(self.d3/self.d1)
+        corner_cmd.left_back_pos = -corner_cmd.left_front_pos
+        corner_cmd.right_back_pos = math.atan(self.d2/self.d1)
+        corner_cmd.right_front_pos = -corner_cmd.right_back_pos
+
+        drive_cmd = CommandDrive()
+        angular_vel = twist.angular.y
+        # velocity of each wheel center = angular velocity of center of rover * distance to wheel center
+        front_wheel_vel = math.hypot(self.d1, self.d3) * angular_vel / self.wheel_radius
+        drive_cmd.left_front_vel = front_wheel_vel
+        drive_cmd.right_front_vel = front_wheel_vel
+        back_wheel_vel = math.hypot(self.d1, self.d2) * angular_vel / self.wheel_radius
+        drive_cmd.left_back_vel = back_wheel_vel
+        drive_cmd.right_back_vel = back_wheel_vel
+        middle_wheel_vel = self.d4 * angular_vel / self.wheel_radius
+        drive_cmd.left_middle_vel = middle_wheel_vel
+        drive_cmd.right_middle_vel = middle_wheel_vel
+
+        return corner_cmd, drive_cmd 
 
     def twist_to_turning_radius(self, twist, clip=True, intuitive_mode=False):
         """
@@ -339,7 +378,7 @@ class Rover(Node):
         approx_turning_radius = sum(sorted([r_front_farthest, r_front_closest, r_back_farthest, r_back_closest])[1:3])/2.0
         if math.isnan(approx_turning_radius):
             approx_turning_radius = self.max_radius
-        self.get_logger().debug("Current approximate turning radius: {}".format(round(approx_turning_radius, 2)))
+        self.get_logger().debug("Current approximate turning radius: {}".format(round(approx_turning_radius, 2)), throttle_duration_sec=1)
         self.curr_turning_radius = approx_turning_radius
 
         # we know that the linear velocity in x direction is the instantaneous velocity of the middle virtual
