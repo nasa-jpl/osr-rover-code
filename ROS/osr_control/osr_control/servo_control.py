@@ -21,7 +21,7 @@ class ServoWrapper(Node):
     def __init__(self):
         super().__init__("servo_wrapper")
         self.log = self.get_logger()
-        self.log.set_level(10)
+        # self.log.set_level(10)
         self.log.info("Initializing corner servo controllers")
         self.kit = None
 

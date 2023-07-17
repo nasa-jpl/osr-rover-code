@@ -18,7 +18,7 @@ class Rover(Node):
     def __init__(self):
         super().__init__("rover")
         self.log = self.get_logger()
-        self.log.set_level(10)
+        # self.log.set_level(10)
         self.log.info("Initializing Rover")
 
         self.declare_parameters(
