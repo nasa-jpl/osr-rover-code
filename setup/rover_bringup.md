@@ -37,7 +37,7 @@ The software will load in these changes and apply them. Take a look at the param
 
 The servo motors at each corner have absolute encoders that will 'remember' where the wheels are even when power is turned off but we still have to calibrate them the first time so they know where the zero position is. Since the servo motors have a limited range of about 300 degrees, we'll want to make sure we are able to make use of the full range of motion. Start by unscrewing the M3 screw that connects the corner assembly to the servo output shaft using a 2.5mm hex wrench. Do this for all 4 corners. Detach the corner assembly from the servo so that the servo can spin freely.
 
-![unscrewing corner assembly](images/)
+![unscrewing corner assembly](images/detach_corner_assy.png)
 
 First we'll send the servo motors to their zero positions. Since their range is from 0 to 300, we'll want the default position to be in the middle of that range at 150. Run the following commands:
 
