@@ -3,9 +3,7 @@
 This repository contains the code that runs on the Raspberry Pi (RPi) to control the 
 [JPL open source rover (osr)](https://github.com/nasa-jpl/open-source-rover).
 
-The rover runs on ROS2 (tested on Foxy), mostly using Python 3.
-
-**Status**: actively developed. Please refer to the issues tab in GitHub for an overview of ongoing work.
+The rover runs on ROS2 (tested on Foxy), and uses Python3.
 
 ## Internals & structure
 
