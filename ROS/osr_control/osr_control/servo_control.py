@@ -1,10 +1,10 @@
 import rclpy
 from rclpy.node import Node
 import math
+from rclpy.parameter import Parameter
 
 # project libraries
 from adafruit_servokit import ServoKit
-
 
 # message imports
 from sensor_msgs.msg import JointState
@@ -16,7 +16,6 @@ RAD_TO_DEG = 180 / math.pi
 class ServoWrapper(Node):
     """Interface between the PCA9685 controlling the servos and the higher level rover code"""
     corner_motors = ['corner_right_back', 'corner_right_front', 'corner_left_front', 'corner_left_back']
-    # corner_motors = ['left_back_pos', 'left_front_pos', 'right_front_pos', 'right_back_pos']
 
     def __init__(self):
         super().__init__("servo_wrapper")
@@ -24,10 +23,17 @@ class ServoWrapper(Node):
         # self.log.set_level(10)
         self.log.info("Initializing corner servo controllers")
         self.kit = None
+        self.declare_parameters(
+            namespace='',
+            parameters=[
+                ('centered_pulse_widths', Parameter.Type.INTEGER_ARRAY)
+            ]
+        )
 
         # PWM settings from https://www.gobilda.com/2000-series-dual-mode-servo-25-2-torque/
         self.servo_actuation_range = 300  # [deg]
-        self.centered_pulse_widths = [165, 134, 135, 160]
+        self.centered_pulse_widths = self.get_parameter('centered_pulse_widths').get_parameter_value().integer_array_value
+        assert(len(self.centered_pulse_widths) == 4)
         self.pulse_width_range = (500, 2500)  # [microsec]
         self.deg_per_sec = 200
         # initial values for position estimate (first element) and goal (second element) for each corner motor in deg

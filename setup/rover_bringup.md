@@ -17,8 +17,10 @@ If you have any differences compared to the default build, you can change many p
 The files follow the same structure as the default. Just include the values that you need to change as the default values for other parameters may change over time. Say for example you installed bigger wheels on the rover. The software needs to know this such that it can control what speed to command to each motor. Start by opening the file you just created:
 
 ```commandline
-nano osr_params_mod.yaml  # an editor (nano) should open, if not, you might have to install nano using 'sudo apt install nano'
+nano osr_params_mod.yaml
 ```
+
+An editor (nano) should open, if not, you might have to install nano using 'sudo apt install nano'. You can also use an editor like VScode with an SSH extension so you can use a fully fledged editor while still working from a different computer.
 
 Paste in the following snippet (compare with the contents of [osr_params.yaml](../ROS/osr_bringup/config/osr_params.yaml)).
 
@@ -30,6 +32,44 @@ rover:
 ```
 
 The software will load in these changes and apply them. Take a look at the parameters for the [roboclaws](../ROS/osr_bringup/config/roboclaw_params.yaml) as well.
+
+## Calibrating the corner servos
+
+The servo motors at each corner have absolute encoders that will 'remember' where the wheels are even when power is turned off but we still have to calibrate them the first time so they know where the zero position is. Since the servo motors have a limited range of about 300 degrees, we'll want to make sure we are able to make use of the full range of motion. Start by unscrewing the M3 screw that connects the corner assembly to the servo output shaft using a 2.5mm hex wrench. Do this for all 4 corners. Detach the corner assembly from the servo so that the servo can spin freely.
+
+![unscrewing corner assembly](images/)
+
+First we'll send the servo motors to their zero positions. Since their range is from 0 to 300, we'll want the default position to be in the middle of that range at 150. Run the following commands:
+
+```commandline
+cd ~/osr_ws/src/osr-rover-code/scripts
+python3 calibrate_servos.py 0 150
+python3 calibrate_servos.py 1 150
+python3 calibrate_servos.py 2 150
+python3 calibrate_servos.py 3 150
+```
+
+With each line, you should see the back right (0), then front right (1), then front left (2), and finally back left (3) servo motor move to an angle of 150. If the servo isn't moving, it either means that it's already at that angle or that there's a problem with the wiring, PCB, or PCA9685 connection. Try setting the value to some other angle like 200 for that motor and see if it moves. If so, it's working. Move it back to 150. If not, check if the other servo motors move. 
+
+When all servo motors where set to this angle, re-attach the corner assembly to the shaft using the M3 screw from before. When you do so, we recommend using a little bit of thread lock (e.g. loctite blue) so the screw doesn't unscrew and fall out while driving. In the following step we'll perform a finer calibration, so it's ok if the servo spline doesn't line up perfectly with the zero position of the corner assembly.
+
+With each motor mounted, we can move ahead with aligning each corner assembly so that the wheels are pointing perfectly straight. We will do this by sending each corner assembly to different angles until it looks right. We'll use the same script for this. For one motor at a time, run the script with a slightly different value, for example we'll move the back right corner motor to 160 degrees:
+
+```commandline
+python3 calibrate_servos.py 0 160
+```
+
+If it's moving farther away from the center, try 140, if it's getting closer, try 165 or 170. Repeat this until the wheel is exactly at zero. When you find the value where it's centered, write it down since we'll need it later.
+
+**tip**: Make sure the servo motors are still free to spin without much friction by lifting the servo bracket until the wheel doesn't touch the ground. You can either prop it up or hold it up manually.
+
+Repeat this for wheels at channel 1, 2, and 3. You should have 4 values, for example `[135, 155, 125, 162]`. Now we need to tell the software what these values are, so when you command the corner motors to turn, they will use these values as the true centers. Open the file `osr_mod_launch.py`:
+
+```commandline
+nano ~/osr_ws/src/osr-rover-code/ROS/osr_bringup/launch/osr_mod_launch.py
+```
+
+Look for the line that says `parameters=[{'centered_pulse_widths': [165, 134, 135, 160]}]`. Replace the values using the 4 values you just found. Save and exit using ctrl+o then ctrl+x. The corner servo motors are calibrated and ready to go! Next we'll configure the gamepad to control the rover.
 
 ## Mapping remote controller buttons and axes to rover movement
 
