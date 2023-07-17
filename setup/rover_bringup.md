@@ -82,7 +82,6 @@ You can always come back to this and change these later. In the window where the
 
 Now you're all set up to launch the full rover software stack!
 
-
 ## Manual rover bringup
 
 In a sourced terminal (`source /opt/ros/foxy/setup.bash && source ~/osr_ws/install/setup.bash`, unless you added these to your `~/.bashrc` file) already before, run
@@ -103,7 +102,7 @@ If you have questions, please post on the Slack forum in the `#troubleshooting` 
 ### Optional arguments
 
 If you want the code to calculate and publish wheel odometry, launch with the argument `enable_odometry:=true`.
-![](wheel_odom_example.png)
+![](images/wheel_odom_example.png)
 Odometry is used for localization and SLAM. 
 
 ## Revisiting linear and angular velocity scale
