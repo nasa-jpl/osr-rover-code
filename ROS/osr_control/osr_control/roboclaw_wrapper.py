@@ -531,7 +531,9 @@ class RoboclawWrapper(Node):
         """Checks error status of each motor controller, returns 0 if no errors reported"""
         err = [0] * 5
         for i in range(len(self.address)):
-            err[i] = self.rc.ReadError(self.address[i])[1]
+            err_int = self.rc.ReadError(self.address[i])[1]
+            # convert to hexadecimal and then to string for easy decoding
+            err[i] = str(hex(err_int))
             if err[i] != 0:
                 self.get_logger().error("Motor controller '{}' reported error code {}".format(self.address[i], err[i]))
         
