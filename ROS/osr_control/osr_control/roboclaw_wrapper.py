@@ -425,8 +425,8 @@ class RoboclawWrapper(Node):
             err_int = self.rc.ReadError(self.address[i])[1]
             # convert to hexadecimal and then to string for easy decoding
             err[i] = str(hex(err_int))
-            if err[i] != 0:
-                self.log.error(f"Motor controller '{self.address[i]}' reported error code {err[i]} (hex: {hex(err[i])})")
+            if err_int != 0:
+                self.log.error(f"Motor controller '{self.address[i]}' reported error code {err[i]}")
         
         return err
 
