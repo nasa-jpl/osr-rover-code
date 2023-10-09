@@ -1,0 +1,8 @@
+{
+    "documentId": "e4f00b1a3d2edb1a84bbba1c",
+    "outputFormat": "urdf",
+    "assemblyName": "full-rover",
+    "packageName": "osr_description",
+    "addDummyBaseLink": true,
+    "robotName": "osr"
+}
