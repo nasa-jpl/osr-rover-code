@@ -28,38 +28,38 @@ class RoboclawWrapper(Node):
         self.declare_parameters(
             namespace='',
             parameters=[
-                ('baud_rate', None),
-                ('device', None),
-                ('addresses', None),
+                ('baud_rate', rclpy.Parameter.Type.INTEGER),
+                ('device', rclpy.Parameter.Type.STRING),
+                ('addresses', rclpy.Parameter.Type.INTEGER_ARRAY),
                 ('roboclaw_mapping', None),
-                ('drive_acceleration_factor', None),
-                ('corner_acceleration_factor', None),
-                ('velocity_timeout', None),
-                ('roboclaw_mapping.drive_left_front.address', None),
-                ('roboclaw_mapping.drive_left_front.channel', None),
-                ('roboclaw_mapping.drive_left_front.ticks_per_rev', None),
-                ('roboclaw_mapping.drive_left_front.gear_ratio', None),
-                ('roboclaw_mapping.drive_left_middle.address', None),
-                ('roboclaw_mapping.drive_left_middle.channel', None),
-                ('roboclaw_mapping.drive_left_middle.ticks_per_rev', None),
-                ('roboclaw_mapping.drive_left_middle.gear_ratio', None),
-                ('roboclaw_mapping.drive_left_back.address', None),
-                ('roboclaw_mapping.drive_left_back.channel', None),
-                ('roboclaw_mapping.drive_left_back.ticks_per_rev', None),
-                ('roboclaw_mapping.drive_left_back.gear_ratio', None),
-                ('roboclaw_mapping.drive_right_front.address', None),
-                ('roboclaw_mapping.drive_right_front.channel', None),
-                ('roboclaw_mapping.drive_right_front.ticks_per_rev', None),
-                ('roboclaw_mapping.drive_right_front.gear_ratio', None),
-                ('roboclaw_mapping.drive_right_middle.address', None),
-                ('roboclaw_mapping.drive_right_middle.channel', None),
-                ('roboclaw_mapping.drive_right_middle.ticks_per_rev', None),
-                ('roboclaw_mapping.drive_right_middle.gear_ratio', None),
-                ('roboclaw_mapping.drive_right_back.address', None),
-                ('roboclaw_mapping.drive_right_back.channel', None),
-                ('roboclaw_mapping.drive_right_back.ticks_per_rev', None),
-                ('roboclaw_mapping.drive_right_back.gear_ratio', None)
-            ]
+                ('drive_acceleration_factor', rclpy.Parameter.Type.DOUBLE),
+                ('corner_acceleration_factor', rclpy.Parameter.Type.DOUBLE),
+                ('velocity_timeout', rclpy.Parameter.Type.DOUBLE),
+                ('roboclaw_mapping.drive_left_front.address', rclpy.Parameter.Type.INTEGER),
+                ('roboclaw_mapping.drive_left_front.channel', rclpy.Parameter.Type.STRING),
+                ('roboclaw_mapping.drive_left_front.ticks_per_rev', rclpy.Parameter.Type.INTEGER),
+                ('roboclaw_mapping.drive_left_front.gear_ratio', rclpy.Parameter.Type.DOUBLE),
+                ('roboclaw_mapping.drive_left_middle.address', rclpy.Parameter.Type.INTEGER),
+                ('roboclaw_mapping.drive_left_middle.channel', rclpy.Parameter.Type.STRING),
+                ('roboclaw_mapping.drive_left_middle.ticks_per_rev', rclpy.Parameter.Type.INTEGER),
+                ('roboclaw_mapping.drive_left_middle.gear_ratio', rclpy.Parameter.Type.DOUBLE),
+                ('roboclaw_mapping.drive_left_back.address', rclpy.Parameter.Type.INTEGER),
+                ('roboclaw_mapping.drive_left_back.channel', rclpy.Parameter.Type.STRING),
+                ('roboclaw_mapping.drive_left_back.ticks_per_rev', rclpy.Parameter.Type.INTEGER),
+                ('roboclaw_mapping.drive_left_back.gear_ratio', rclpy.Parameter.Type.DOUBLE),
+                ('roboclaw_mapping.drive_right_front.address', rclpy.Parameter.Type.INTEGER),
+                ('roboclaw_mapping.drive_right_front.channel', rclpy.Parameter.Type.STRING),
+                ('roboclaw_mapping.drive_right_front.ticks_per_rev', rclpy.Parameter.Type.INTEGER),
+                ('roboclaw_mapping.drive_right_front.gear_ratio', rclpy.Parameter.Type.DOUBLE),
+                ('roboclaw_mapping.drive_right_middle.address', rclpy.Parameter.Type.INTEGER),
+                ('roboclaw_mapping.drive_right_middle.channel', rclpy.Parameter.Type.STRING),
+                ('roboclaw_mapping.drive_right_middle.ticks_per_rev', rclpy.Parameter.Type.INTEGER),
+                ('roboclaw_mapping.drive_right_middle.gear_ratio', rclpy.Parameter.Type.DOUBLE),
+                ('roboclaw_mapping.drive_right_back.address', rclpy.Parameter.Type.INTEGER),
+                ('roboclaw_mapping.drive_right_back.channel', rclpy.Parameter.Type.STRING),
+                ('roboclaw_mapping.drive_right_back.ticks_per_rev', rclpy.Parameter.Type.INTEGER),
+                ('roboclaw_mapping.drive_right_back.gear_ratio', rclpy.Parameter.Type.DOUBLE)
+             ]
         )
 
         self.roboclaw_mapping = defaultdict(dict)
@@ -146,6 +146,7 @@ class RoboclawWrapper(Node):
             self.enc_pub.publish(self.current_enc_vals)
         except AssertionError as read_exc:
             self.get_logger().warn("Failed to read encoder values")
+            self.get_logger().warn(read_exc.args)
 
         # stop the motors if we haven't received a command in a while
         if not self.idle and (now - self.time_last_cmd > self.velocity_timeout):
@@ -420,15 +421,93 @@ class RoboclawWrapper(Node):
 
     def read_errors(self):
         """Checks error status of each motor controller, returns 0 if no errors reported"""
-        err = [0] * 3
+        err = ['0'] * 5
         for i in range(len(self.address)):
             err_int = self.rc.ReadError(self.address[i])[1]
-            # convert to hexadecimal and then to string for easy decoding
-            err[i] = str(hex(err_int))
+
             if err_int != 0:
-                self.log.error(f"Motor controller '{self.address[i]}' reported error code {err[i]}")
-        
+                # convert to hexadecimal and then to string for easy decoding
+                err[i] = str(hex(err_int))
+
+                errString, hasError = self.decode_error(err_int)
+
+                if(hasError):
+                    self.log.error(f"Motor controller {self.address[i]} reported error code {err[i]} (hex: {hex(err_int)}),{errString}")
+                else:
+                    self.log.warn(f"Motor controller {self.address[i]} reported warning code {err[i]} (hex: {hex(err_int)}), {errString}")
+
         return err
+
+    def decode_error(self, err_int):
+        """ Decodes error codes according to RoboClaw user manual, pg. 73 """
+
+        errString = ""
+        isError = False
+
+        if(err_int & 0x000001):
+            errString += "\nE-stop"
+        if(err_int & 0x000002):
+            errString += "\nTemperature Error"
+            isError = True
+        if(err_int & 0x000004):
+            errString += "\nTemperature 2 error"
+            isError = True
+        if(err_int & 0x000008):
+            errString += "\nMain voltage High Error"
+            isError = True
+        if(err_int & 0x000010):
+            errString += "\nLogic voltage High Error"
+            isError = True
+        if(err_int & 0x000020):
+            errString += "\nLogic voltage Low Error"
+            isError = True
+        if(err_int & 0x000040):
+            errString += "\nM1 Driver Fault"
+            isError = True
+        if(err_int & 0x000080):
+            errString += "\nM2 Driver Fault"
+            isError = True
+        if(err_int & 0x000100):
+            errString += "\nM1 Speed Error"
+            isError = True
+        if(err_int & 0x000200):
+            errString += "\nM2 Speed Error"
+            isError = True
+        if(err_int & 0x000400):
+            errString += "\nM1 Position Error"
+            isError = True
+        if(err_int & 0x000800):
+            errString += "\nM2 Position Error"
+            isError = True
+        if(err_int & 0x001000):
+            errString += "\nM1 Current Error"
+            isError = True
+        if(err_int & 0x002000):
+            errString += "\nM2 Current Error"
+            isError = True
+
+        if(err_int & 0x010000):
+            errString += "\nM1 Over-Current Warning"
+        if(err_int & 0x020000):
+            errString += "\nM2 Over-Current Warning"
+        if(err_int & 0x040000):
+            errString += "\nMain Voltage High Warning"
+        if(err_int & 0x080000):
+            errString += "\nMain Voltage Low Warning" 
+        if(err_int & 0x100000):
+            errString += "\nTemperature Warning"
+        if(err_int & 0x200000):
+            errString += "\nTemperature 2 Warning"
+        if(err_int & 0x400000):
+            errString += "\nS4 Signal Triggered"
+        if(err_int & 0x800000):
+            errString += "\nS5 Signal Triggered"
+        if(err_int & 0x01000000):
+            errString += "\nSpeed Error Limit Warning"
+        if(err_int & 0x02000000):
+            errString += "\nPosition Error Limit Warning"
+
+        return errString, isError
 
 
 def main(args=None):
