@@ -429,9 +429,9 @@ class RoboclawWrapper(Node):
                 # convert to hexadecimal and then to string for easy decoding
                 err[i] = str(hex(err_int))
 
-                err_string, hasError = self.decode_error(err_int)
+                err_string, has_error = self.decode_error(err_int)
 
-                if(hasError):
+                if(has_error):
                     self.log.error(f"Motor controller {self.address[i]} reported error code {err[i]} (hex: {hex(err_int)}),{err_string}")
                 else:
                     self.log.warn(f"Motor controller {self.address[i]} reported warning code {err[i]} (hex: {hex(err_int)}), {err_string}")
