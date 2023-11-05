@@ -24,13 +24,13 @@ class Rover(Node):
         self.declare_parameters(
             namespace='',
             parameters=[
-                ('rover_dimensions.d1', rclpy.Parameter.Type.DOUBLE),
-                ('rover_dimensions.d2', rclpy.Parameter.Type.DOUBLE),
-                ('rover_dimensions.d3', rclpy.Parameter.Type.DOUBLE),
-                ('rover_dimensions.d4', rclpy.Parameter.Type.DOUBLE),
-                ('rover_dimensions.wheel_radius', rclpy.Parameter.Type.DOUBLE),
-                ('drive_no_load_rpm', rclpy.Parameter.Type.DOUBLE),
-                ('enable_odometry', rclpy.Parameter.Type.BOOL)
+                ('rover_dimensions.d2', None),
+                ('rover_dimensions.d3', None),
+                ('rover_dimensions.d4', None),
+                ('rover_dimensions.d1', None),
+                ('rover_dimensions.wheel_radius', None),
+                ('drive_no_load_rpm', None),
+                ('enable_odometry', None)
             ]
         )
         self.d1 = self.get_parameter('rover_dimensions.d1').get_parameter_value().double_value
