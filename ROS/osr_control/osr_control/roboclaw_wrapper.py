@@ -59,7 +59,7 @@ class RoboclawWrapper(Node):
                 ('roboclaw_mapping.drive_right_back.channel', None),
                 ('roboclaw_mapping.drive_right_back.ticks_per_rev', None),
                 ('roboclaw_mapping.drive_right_back.gear_ratio', None)
-             ]
+            ]
         )
 
         self.roboclaw_mapping = defaultdict(dict)

@@ -24,10 +24,10 @@ class Rover(Node):
         self.declare_parameters(
             namespace='',
             parameters=[
+                ('rover_dimensions.d1', None),
                 ('rover_dimensions.d2', None),
                 ('rover_dimensions.d3', None),
                 ('rover_dimensions.d4', None),
-                ('rover_dimensions.d1', None),
                 ('rover_dimensions.wheel_radius', None),
                 ('drive_no_load_rpm', None),
                 ('enable_odometry', None)
