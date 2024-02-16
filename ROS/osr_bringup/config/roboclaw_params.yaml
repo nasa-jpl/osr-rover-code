@@ -6,6 +6,7 @@ roboclaw_wrapper:
     baud_rate: 115200
     device: "/dev/serial1"
     addresses: [128, 129, 130]
+    duty_mode: true
     roboclaw_mapping:
       # gear ratio is approx 172, exact value is 171.79 though
       drive_left_front:

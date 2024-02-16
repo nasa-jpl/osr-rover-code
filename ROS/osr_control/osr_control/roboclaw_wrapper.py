@@ -36,6 +36,7 @@ class RoboclawWrapper(Node):
                 ('drive_acceleration_factor', Parameter.Type.DOUBLE),
                 ('corner_acceleration_factor', Parameter.Type.DOUBLE),
                 ('velocity_timeout', Parameter.Type.DOUBLE),
+                ('duty_mode', Parameter.Type.BOOL),
                 ('roboclaw_mapping.drive_left_front.address', Parameter.Type.INTEGER),
                 ('roboclaw_mapping.drive_left_front.channel', Parameter.Type.STRING),
                 ('roboclaw_mapping.drive_left_front.ticks_per_rev', Parameter.Type.INTEGER),
@@ -110,6 +111,7 @@ class RoboclawWrapper(Node):
         self.drive_accel = int(accel_max * accel_rate)
         self.velocity_timeout = rclpy.duration.Duration(seconds=self.get_parameter('velocity_timeout').get_parameter_value().double_value, 
                                                         nanoseconds=0)
+        self.duty_mode = self.get_parameter('duty_mode').get_parameter_value().bool_value
         self.time_last_cmd = self.get_clock().now()
 
         self.stop_motors()
@@ -305,9 +307,15 @@ class RoboclawWrapper(Node):
         # clip values
         target_qpps = max(-self.roboclaw_overflow, min(self.roboclaw_overflow, target_qpps))
         if channel == "M1":
-            return self.rc.SpeedAccelM1(address, self.drive_accel, target_qpps)
+            if self.duty_mode:
+                return self.rc.DutyAccelM1(address, self.drive_accel, target_qpps)
+            else:
+                return self.rc.SpeedAccelM1(address, self.drive_accel, target_qpps)
         elif channel == "M2":
-            return self.rc.SpeedAccelM2(address, self.drive_accel, target_qpps)
+            if self.duty_mode:
+                return self.rc.DutyAccelM2(address, self.drive_accel, target_qpps)
+            else:
+                return self.rc.SpeedAccelM2(address, self.drive_accel, target_qpps)
         else:
             raise AttributeError("Received unknown channel '{}'. Expected M1 or M2".format(channel))
 
