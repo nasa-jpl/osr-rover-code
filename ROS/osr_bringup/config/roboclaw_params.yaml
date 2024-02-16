@@ -24,7 +24,7 @@ roboclaw_wrapper:
         ticks_per_rev: 48
         gear_ratio: 171.79
       drive_right_back:
-        address: 130
+        address: 129
         channel: M1
         ticks_per_rev: 48
         gear_ratio: 171.79
@@ -34,7 +34,7 @@ roboclaw_wrapper:
         ticks_per_rev: 48
         gear_ratio: 171.79
       drive_right_front:
-        address: 129
+        address: 130
         channel: M1
         ticks_per_rev: 48
         gear_ratio: 171.79
