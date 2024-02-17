@@ -2,6 +2,7 @@ import math
 from functools import partial
 
 import rclpy
+from rclpy.parameter import Parameter
 from rclpy.node import Node
 import tf2_ros
 
@@ -24,13 +25,13 @@ class Rover(Node):
         self.declare_parameters(
             namespace='',
             parameters=[
-                ('rover_dimensions.d1', None),
-                ('rover_dimensions.d2', None),
-                ('rover_dimensions.d3', None),
-                ('rover_dimensions.d4', None),
-                ('rover_dimensions.wheel_radius', None),
-                ('drive_no_load_rpm', None),
-                ('enable_odometry', None)
+                ('rover_dimensions.d1', Parameter.Type.DOUBLE),
+                ('rover_dimensions.d2', Parameter.Type.DOUBLE),
+                ('rover_dimensions.d3', Parameter.Type.DOUBLE),
+                ('rover_dimensions.d4', Parameter.Type.DOUBLE),
+                ('rover_dimensions.wheel_radius', Parameter.Type.DOUBLE),
+                ('drive_no_load_rpm', Parameter.Type.DOUBLE),
+                ('enable_odometry', Parameter.Type.BOOL)
             ]
         )
         self.d1 = self.get_parameter('rover_dimensions.d1').get_parameter_value().double_value
