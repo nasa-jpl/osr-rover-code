@@ -1,7 +1,7 @@
 import os
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, ExecuteProcess
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
@@ -113,6 +113,15 @@ def generate_launch_description():
                 {"publish_rate": 1.0},
                 {"sensor_address": "0x45"},
             ]        
+        )
+    )
+    ld.add_action(
+        DeclareLaunchArgument('bag_file', default_value='/home/achille/battery_state')
+    )
+    ld.add_action(
+        ExecuteProcess(
+            cmd=['ros2', 'bag', 'record', '/battery_state', '/cmd_vel_intuitive', '-o', LaunchConfiguration('bag_file')],
+            output='screen'
         )
     )
 
