@@ -2,6 +2,7 @@ import math
 from collections import defaultdict
 
 import rclpy
+from rclpy.parameter import Parameter
 from rclpy.node import Node
 
 from osr_control.roboclaw import Roboclaw
@@ -28,37 +29,37 @@ class RoboclawWrapper(Node):
         self.declare_parameters(
             namespace='',
             parameters=[
-                ('baud_rate', None),
-                ('device', None),
-                ('addresses', None),
-                ('roboclaw_mapping', None),
-                ('drive_acceleration_factor', None),
-                ('corner_acceleration_factor', None),
-                ('velocity_timeout', None),
-                ('roboclaw_mapping.drive_left_front.address', None),
-                ('roboclaw_mapping.drive_left_front.channel', None),
-                ('roboclaw_mapping.drive_left_front.ticks_per_rev', None),
-                ('roboclaw_mapping.drive_left_front.gear_ratio', None),
-                ('roboclaw_mapping.drive_left_middle.address', None),
-                ('roboclaw_mapping.drive_left_middle.channel', None),
-                ('roboclaw_mapping.drive_left_middle.ticks_per_rev', None),
-                ('roboclaw_mapping.drive_left_middle.gear_ratio', None),
-                ('roboclaw_mapping.drive_left_back.address', None),
-                ('roboclaw_mapping.drive_left_back.channel', None),
-                ('roboclaw_mapping.drive_left_back.ticks_per_rev', None),
-                ('roboclaw_mapping.drive_left_back.gear_ratio', None),
-                ('roboclaw_mapping.drive_right_front.address', None),
-                ('roboclaw_mapping.drive_right_front.channel', None),
-                ('roboclaw_mapping.drive_right_front.ticks_per_rev', None),
-                ('roboclaw_mapping.drive_right_front.gear_ratio', None),
-                ('roboclaw_mapping.drive_right_middle.address', None),
-                ('roboclaw_mapping.drive_right_middle.channel', None),
-                ('roboclaw_mapping.drive_right_middle.ticks_per_rev', None),
-                ('roboclaw_mapping.drive_right_middle.gear_ratio', None),
-                ('roboclaw_mapping.drive_right_back.address', None),
-                ('roboclaw_mapping.drive_right_back.channel', None),
-                ('roboclaw_mapping.drive_right_back.ticks_per_rev', None),
-                ('roboclaw_mapping.drive_right_back.gear_ratio', None)
+                ('baud_rate', Parameter.Type.INTEGER),
+                ('device', Parameter.Type.STRING),
+                ('addresses', Parameter.Type.INTEGER_ARRAY),
+                # ('roboclaw_mapping', Parameter.Type.INTEGER_ARRAY),
+                ('drive_acceleration_factor', Parameter.Type.DOUBLE),
+                ('corner_acceleration_factor', Parameter.Type.DOUBLE),
+                ('velocity_timeout', Parameter.Type.DOUBLE),
+                ('roboclaw_mapping.drive_left_front.address', Parameter.Type.INTEGER),
+                ('roboclaw_mapping.drive_left_front.channel', Parameter.Type.STRING),
+                ('roboclaw_mapping.drive_left_front.ticks_per_rev', Parameter.Type.INTEGER),
+                ('roboclaw_mapping.drive_left_front.gear_ratio', Parameter.Type.DOUBLE),
+                ('roboclaw_mapping.drive_left_middle.address', Parameter.Type.INTEGER),
+                ('roboclaw_mapping.drive_left_middle.channel', Parameter.Type.STRING),
+                ('roboclaw_mapping.drive_left_middle.ticks_per_rev', Parameter.Type.INTEGER),
+                ('roboclaw_mapping.drive_left_middle.gear_ratio', Parameter.Type.DOUBLE),
+                ('roboclaw_mapping.drive_left_back.address', Parameter.Type.INTEGER),
+                ('roboclaw_mapping.drive_left_back.channel', Parameter.Type.STRING),
+                ('roboclaw_mapping.drive_left_back.ticks_per_rev', Parameter.Type.INTEGER),
+                ('roboclaw_mapping.drive_left_back.gear_ratio', Parameter.Type.DOUBLE),
+                ('roboclaw_mapping.drive_right_front.address', Parameter.Type.INTEGER),
+                ('roboclaw_mapping.drive_right_front.channel', Parameter.Type.STRING),
+                ('roboclaw_mapping.drive_right_front.ticks_per_rev', Parameter.Type.INTEGER),
+                ('roboclaw_mapping.drive_right_front.gear_ratio', Parameter.Type.DOUBLE),
+                ('roboclaw_mapping.drive_right_middle.address', Parameter.Type.INTEGER),
+                ('roboclaw_mapping.drive_right_middle.channel', Parameter.Type.STRING),
+                ('roboclaw_mapping.drive_right_middle.ticks_per_rev', Parameter.Type.INTEGER),
+                ('roboclaw_mapping.drive_right_middle.gear_ratio', Parameter.Type.DOUBLE),
+                ('roboclaw_mapping.drive_right_back.address', Parameter.Type.INTEGER),
+                ('roboclaw_mapping.drive_right_back.channel', Parameter.Type.STRING),
+                ('roboclaw_mapping.drive_right_back.ticks_per_rev', Parameter.Type.INTEGER),
+                ('roboclaw_mapping.drive_right_back.gear_ratio', Parameter.Type.DOUBLE)
             ]
         )
 
