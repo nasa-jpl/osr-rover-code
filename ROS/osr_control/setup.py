@@ -26,7 +26,8 @@ setup(
         'console_scripts': [
             'rover = osr_control.rover:main',
             'roboclaw_wrapper = osr_control.roboclaw_wrapper:main',
-            'servo_control = osr_control.servo_control:main'
+            'servo_control = osr_control.servo_control:main',
+            'ina260 = osr_control.ina_260_pub:main'
         ],
     },
 )

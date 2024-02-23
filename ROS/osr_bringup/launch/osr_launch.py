@@ -102,5 +102,18 @@ def generate_launch_description():
             ]        
         )
     )
+    ld.add_action(
+        Node(
+            package='osr_control',
+            executable='ina260',
+            name='ina260_node',
+            output='screen',
+            emulate_tty=True,
+            parameters=[
+                {"publish_rate": 1.0},
+                {"sensor_address": "0x45"},
+            ]        
+        )
+    )
 
     return ld
