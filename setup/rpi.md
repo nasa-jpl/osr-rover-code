@@ -6,7 +6,7 @@ These instructions should work for both the RPi 3 and 4. You are free to use oth
 
 ## Installing an Operating System
 
-The first step is to install Raspberry Pi OS on your RPi. Other OS'es like Ubuntu will also work but might require deviation from the instructions. We recommend using the [Raspberry Pi Imager](https://www.raspberrypi.com/documentation/computers/getting-started.html#using-raspberry-pi-imager) to load the OS onto an SD card. If done right, you won't need an external monitor, mouse, or keyboard to set up your RPi!
+The first step is to install Ubuntu on your RPi. Other OS'es like Raspberry Pi OS might also work but might require deviation from the instructions. Always check the latest instructions from [the official installation guide](https://docs.ros.org/en/iron/How-To-Guides/Installing-on-Raspberry-Pi.html). We recommend using the [Raspberry Pi Imager](https://www.raspberrypi.com/documentation/computers/getting-started.html#using-raspberry-pi-imager) to load the OS onto an SD card. If done right, you won't need an external monitor, mouse, or keyboard to set up your RPi!
 
 Make sure you set the following settings while configuring the image to be flashed onto the SD card (ctrl/cmd+shift+x):
 
@@ -34,9 +34,11 @@ You'll need to be logged in to the RPi via ssh, or open a terminal in the deskto
 
 Follow the [instructions](https://docs.ros.org/en/iron/Installation/Ubuntu-Install-Debians.html) for installing ROS2. 
 
-**NOTE**: Depending on which version of Raspberry Pi OS you installed, you might need to install a [different version of ROS2](https://www.ros.org/reps/rep-2000.html). In what follows, we assume ROS2 `Iron`.
+**NOTE**: Depending on which Operating System (OS) you installed, you might need to install a [different version of ROS 2](https://www.ros.org/reps/rep-2000.html). In what follows, we assume ROS 2 `Iron`. The OSR code should be independent of which version of ROS 2 you use.
 
-You can choose to either install the 'full version' (`sudo apt install ros-iron-desktop`) which comes with graphical packages like RViz and QT or install just the barebones version (`sudo apt install ros-iron-ros-base`). The latter allows you to install packages in the full version whenever you need them and so we recommend following this approach. You can install ROS2 and related graphical packages on a different computer on the same network and you will be able to receive all messages out of the box.
+You can choose to either install the 'full version' (`sudo apt install ros-iron-desktop`) which comes with graphical packages like RViz and QT or install just the barebones version (`sudo apt install ros-iron-ros-base`). The latter allows you to install packages in the full version whenever you need them and so we recommend following this approach. You can install ROS2 and related graphical packages on a different computer on the same network and you will be able to receive all messages out of the box, as long as you're using the same ROS 2 version.
+
+Check that `ROS 2` is installed correctly. Running `ros2 topic list` from the command line should not say 'Command not found' and `echo $ROS_DISTRO` should show `iron` or whichever ROS 2 version you chose to install.
 
 ## Setting up ROS environment and building the rover code
 
@@ -62,9 +64,6 @@ In the newly created colcon workspace you just made, clone (download) this repo:
 sudo apt install git
 cd ~/osr_ws/src
 git clone https://github.com/nasa-jpl/osr-rover-code.git
-cd osr-rover-code
-git fetch origin
-git checkout v2-humble
 ```
 
 Now we will install the dependencies using rosdep
@@ -74,7 +73,7 @@ sudo apt install python3-rosdep
 cd ..
 sudo rosdep init
 rosdep update
-rosdep install --from-paths src --ignore-src --rosdistro=iron
+rosdep install --from-paths src --ignore-src --rosdistro=$ROS_DISTRO
 pip3 install adafruit-circuitpython-servokit
 # build the ROS packages
 colcon build --symlink-install
@@ -103,7 +102,6 @@ In the [rover bringup instructions](rover_bringup.md) we will edit these files t
 The `source ....bash` lines you typed out earlier are used to manually configure your ROS environment. We can do this automatically in the future by doing:
 
 ```
-cd ~
 echo "source /opt/ros/iron/setup.bash" >> ~/.bashrc 
 echo "source ~/osr_ws/install/setup.bash" >> ~/.bashrc
 ```
@@ -122,9 +120,11 @@ sudo raspi-config
 
 Then use the menu to enable **I2C** and **Serial** under `Interfaces`. More on raspi-config [here](https://www.raspberrypi.com/documentation/computers/configuration.html).
 
+**TIP**: If `raspi-config` isn't installed, run `sudo apt-get install raspi-config`. If that doesn't work, run `echo "deb http://archive.raspberrypi.org/debian/ buster main" >> /etc/apt/sources.list && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 7FA3303E && sudo apt-get update` to allow `apt` to find the program, then try reinstalling with `sudo apt-get install raspi-config`.
+
 ### Disable serial-getty@ttyS0.service
 
-*NOTE*: this section may no longer be necessary with newer versions of debian. We suggest skipping it and revisiting if serial does not work.
+**NOTE**: this section may no longer be necessary with newer versions of debian. We suggest skipping it and revisiting if serial does not work.
 
 Because we are using the serial port for communicating with the roboclaw motor controllers, we have to disable the serial-getty@ttyS0.service service. This service has some level of control over serial devices that we use, so if we leave it on it we'll get weird errors ([source](https://spellfoundry.com/2016/05/29/configuring-gpio-serial-port-raspbian-jessie-including-pi-3-4/)). Note that the masking step was suggested [here](https://stackoverflow.com/a/43633467/4292910). It seems to be necessary for some setups of the rpi4 - just using `systemctl disable` won't cut it for disabling the service.
 
@@ -165,7 +165,7 @@ sudo adduser $USER tty
 sudo adduser $USER dialout
 ```
 
-You might have to create the dialout group if it doesn't already exist.
+You might have to create the dialout group if it doesn't already exist with `groupadd dialout`.
 
 **note**: You'll need to log out of your ssh session and log back in for this to take effect. Or you can reboot with `sudo reboot`.
 
@@ -194,3 +194,4 @@ If the script seems to hang, or returns only zeros inside the parantheses (0,0),
 - Make sure you followed the instructions in the [#Setting up serial communication] section above, and the serial devices are configured correctly on the RPi.
 - Also make sure you went through the calibration instructions from the [main repo](https://github.com/nasa-jpl/open-source-rover/blob/master/Electrical/Calibration.pdf) and set the proper address, serial comm baud rate, and "Enable Multi-Unit Mode" option for every roboclaw controller (if multi-unit mode isn't enabled on every controller, there will be serial bus contention.). If you update anything on a controller, you'll need to fully power cycle it by turning the rover off.
 - If you're still having trouble after the above steps, try unplugging every motor controller except for one, and debug exclusively with that one.
+- If that still doesn't work, please ask on the troubleshooting channel on our Slack group. Include as much relevant information as possible so we can help you find the issue as fast as possible.
