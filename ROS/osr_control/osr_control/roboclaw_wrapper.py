@@ -4,6 +4,7 @@ from collections import defaultdict
 import rclpy
 from rclpy.parameter import Parameter
 from rclpy.node import Node
+from rcl_interfaces.msg import SetParametersResult
 
 from osr_control.roboclaw import Roboclaw
 
@@ -26,6 +27,7 @@ class RoboclawWrapper(Node):
         self.current_enc_vals = None
         self.drive_cmd_buffer = None
 
+        self.add_on_set_parameters_callback(self.parameters_callback)
         self.declare_parameters(
             namespace='',
             parameters=[
@@ -112,7 +114,6 @@ class RoboclawWrapper(Node):
         self.drive_accel = int(accel_max * accel_rate)
         self.velocity_timeout = rclpy.duration.Duration(seconds=self.get_parameter('velocity_timeout').get_parameter_value().double_value, 
                                                         nanoseconds=0)
-        self.duty_mode = self.get_parameter('duty_mode').get_parameter_value().bool_value
         self.velocity_qpps_to_duty_factor = self.get_parameter('velocity_qpps_to_duty_factor').get_parameter_value().integer_value
         self.time_last_cmd = self.get_clock().now()
 
@@ -132,6 +133,15 @@ class RoboclawWrapper(Node):
         self.idle = False
         self.fast_timer = self.create_timer(fast_loop_rate, self.fast_update)
         self.slow_timer = self.create_timer(slow_loop_rate, self.slow_update)
+
+    def parameters_callback(self, params):
+        """Called when a parameter is created or updated."""
+        for param in params:
+            if param.value is None: continue
+            if param.name == "duty_mode":
+                self.duty_mode = param.value
+                self.get_logger().info(f"Duty mode is {'enabled' if param.value else 'disabled'}")
+        return SetParametersResult(successful=True, reason="OK")
 
     def fast_update(self):
         """Read from and write to roboclaws"""
