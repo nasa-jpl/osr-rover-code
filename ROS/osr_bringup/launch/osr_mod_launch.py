@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess
@@ -29,6 +30,7 @@ def generate_launch_description():
             name='roboclaw_wrapper',
             output='screen',
             emulate_tty=True,
+            respawn=True,
             parameters=[roboclaw_params]
         )
     )
@@ -42,7 +44,8 @@ def generate_launch_description():
             name='servo_wrapper',
             output='screen',
             emulate_tty=True,
-            parameters=[{'centered_pulse_widths': [161, 128, 140, 158]}]  # pulse width where the corner motors are in their default position, see rover_bringup.md.
+            respawn=True,
+            parameters=[{'centered_pulse_widths': [161, 128, 147, 160]}]  # pulse width where the corner motors are in their default position, see rover_bringup.md.
         )
     )
     ld.add_action(
@@ -55,6 +58,7 @@ def generate_launch_description():
             name='rover',
             output='screen',
             emulate_tty=True,
+            respawn=True,
             parameters=[osr_params,
                         {'enable_odometry': LaunchConfiguration('enable_odometry')}]
         )
@@ -66,6 +70,7 @@ def generate_launch_description():
             name='teleop_twist_joy',
             output='screen',
             emulate_tty=True,
+            respawn=True,
             parameters=[
                 # {"scale_linear.x": 0.4},  # scale to apply to drive speed, in m/s: drive_motor_rpm * 2pi / 60 * wheel radius * slowdown_factor
                 {"scale_linear.x": -0.4},  # scale to apply to drive speed, in m/s: drive_motor_rpm * 2pi / 60 * wheel radius * slowdown_factor
@@ -91,11 +96,21 @@ def generate_launch_description():
     )
     ld.add_action(
         Node(
+            package='osr_control',
+            executable='joy_extras',
+            output='screen',
+            emulate_tty=True,
+            parameters=[]
+        )
+    )
+    ld.add_action(
+        Node(
             package='joy',
             executable='joy_node',
             name='joy',
             output='screen',
             emulate_tty=True,
+            respawn=True,
             parameters=[
                 {"autorepeat_rate": 5.0},
                 {"device_id": 0},  # This might be different on your computer. Run `ls -l /dev/input/event*`. If you have event1, put 1.
@@ -109,6 +124,8 @@ def generate_launch_description():
             name='ina260_node',
             output='screen',
             emulate_tty=True,
+            respawn=True,
+            respawn_delay=20,
             parameters=[
                 {"publish_rate": 1.0},
                 {"sensor_address": "0x45"},
@@ -116,13 +133,24 @@ def generate_launch_description():
         )
     )
     ld.add_action(
-        DeclareLaunchArgument('bag_file', default_value='/home/achille/battery_state')
-    )
-    ld.add_action(
-        ExecuteProcess(
-            cmd=['ros2', 'bag', 'record', '/battery_state', '/cmd_vel_intuitive', '-o', LaunchConfiguration('bag_file')],
-            output='screen'
+        Node(
+            package='osr_control',
+            executable='joy_extras',
+            output='screen',
+            emulate_tty=True,
+            parameters=[
+                {"duty_button_index": 1}  # which button toggles duty mode on/off
+            ]
         )
     )
+    # ld.add_action(
+    #     DeclareLaunchArgument('bag_file', default_value='/home/achille/bags/bag_'+datetime.now().strftime("%Y-%m-%d-%H-%M"))
+    # )
+    # ld.add_action(
+    #     ExecuteProcess(
+    #         cmd=['ros2', 'bag', 'record', '/battery_state', '/cmd_vel_intuitive', '-o', LaunchConfiguration('bag_file'), '-d', '180'],
+    #         output='screen'
+    #     )
+    # )
 
     return ld

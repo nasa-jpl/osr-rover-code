@@ -231,3 +231,9 @@ sudo systemctl enable osr_startup.service
 ```
 
 At this point, your rover should be fully functional and automatically run whenever you boot it up! Congratulations and happy roving!!
+
+## Trigger custom actions using your gamepad
+
+In `osr_launch.py`, you'll find a commented out node with executable [joy_extras.py](../ROS/osr_control/osr_control/joy_extras.py). This node serves as an example of how to trigger certain actions based on button clicks or axis movements on your gamepad. In the example, when a button is pressed, configured through parameter `duty_button_index`, the code will change the parameter `duty_mode` on the `roboclaw_wrapper` node. This effectively toggles between duty and velocity drive mode.
+
+You can modify this file or create a similar one and instead use the button's axes to perform any other action you'd like. When changing parameters, make sure that like the `duty_mode` parameter, the node you're changing the parameter for supports dynamically reconfiguring paramters through the `add_on_set_parameters_callback` function.
