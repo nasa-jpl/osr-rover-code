@@ -29,6 +29,7 @@ def generate_launch_description():
             name='roboclaw_wrapper',
             output='screen',
             emulate_tty=True,
+            respawn=True,
             parameters=[roboclaw_params]
         )
     )
@@ -42,6 +43,7 @@ def generate_launch_description():
             name='servo_wrapper',
             output='screen',
             emulate_tty=True,
+            respawn=True,
             parameters=[{'centered_pulse_widths': [165, 134, 135, 160]}]  # pulse width where the corner motors are in their default position, see rover_bringup.md.
         )
     )
@@ -55,6 +57,7 @@ def generate_launch_description():
             name='rover',
             output='screen',
             emulate_tty=True,
+            respawn=True,
             parameters=[osr_params,
                         {'enable_odometry': LaunchConfiguration('enable_odometry')}]
         )
@@ -66,6 +69,7 @@ def generate_launch_description():
             name='teleop_twist_joy',
             output='screen',
             emulate_tty=True,
+            respawn=True,
             parameters=[
                 # {"scale_linear.x": 0.4},  # scale to apply to drive speed, in m/s: drive_motor_rpm * 2pi / 60 * wheel radius * slowdown_factor
                 {"scale_linear.x": -0.4},  # scale to apply to drive speed, in m/s: drive_motor_rpm * 2pi / 60 * wheel radius * slowdown_factor
@@ -96,6 +100,7 @@ def generate_launch_description():
             name='joy',
             output='screen',
             emulate_tty=True,
+            respawn=True,
             parameters=[
                 {"autorepeat_rate": 5.0},
                 {"device_id": 0},  # This might be different on your computer. Run `ls -l /dev/input/event*`. If you have event1, put 1.
