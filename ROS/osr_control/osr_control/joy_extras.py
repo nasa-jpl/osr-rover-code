@@ -30,7 +30,7 @@ class JoyButtonSubscriber(Node):
         self.log.info("Initialized JoyButtonSubscriber.")
 
     async def joy_callback(self, msg):
-        if len(msg.buttons) < self.duty_button_index:
+        if len(msg.buttons) <= self.duty_button_index:
             error_msg = f"button index {self.duty_button_index} exceeds the number of buttons available ({len(msg.buttons)})"
             self.log.error(error_msg)
             raise AttributeError(error_msg)

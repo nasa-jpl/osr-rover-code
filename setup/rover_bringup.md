@@ -216,11 +216,11 @@ related to managing this service which you might find useful:
 
 | Description                                  | Command                                    |
 | -------------------------------------------- | ------------------------------------------ |
-| Start service                                | sudo systemctl start osr startup.service   |
-| Stop service                                 | sudo systemctl stop osr startup.service    |
-| Enable service (runs on boot of RPi)         | sudo systemctl enable osr startup.service  |
-| Disable service (doesn’t run on boot of RPi) | sudo systemctl disable osr startup.service |
-| Check status of service                      | sudo systemctl status osr startup.service  |
+| Start service                                | sudo systemctl start osr_startup.service   |
+| Stop service                                 | sudo systemctl stop osr_startup.service    |
+| Enable service (runs on boot of RPi)         | sudo systemctl enable osr_startup.service  |
+| Disable service (doesn’t run on boot of RPi) | sudo systemctl disable osr_startup.service |
+| Check status of service                      | sudo systemctl status osr_startup.service  |
 | View live service list                       | sudo journalctl -f                         |
 
 Once you have fully tested the robot and made sure that everything is running correctly by starting the rover code manually
@@ -231,6 +231,8 @@ sudo systemctl enable osr_startup.service
 ```
 
 At this point, your rover should be fully functional and automatically run whenever you boot it up! Congratulations and happy roving!!
+
+> **Note**: When you're working on the code, recalibrating the servo motors, or otherwise launching the code manually, don't forget to turn off (`stop`) the code running in the background via the systemd service!
 
 ## Trigger custom actions using your gamepad
 
