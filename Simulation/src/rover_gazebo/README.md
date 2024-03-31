@@ -126,3 +126,5 @@ roslaunch rover moon_world.launch
 
 ## Issue
 - The joint type for rocker_bogie 1&2 has been set to 'revolute' to provide degrees of freedom. However, doing so results in the actual tf relationship not being connected between the box and rocker_bogie2. It's necessary to give freedom to the bogie while not affecting the tf relationship.
+- The moon world is currently under modification due to updates in https://github.com/MobileRobots/amr-ros-config/tree/master/gazebo.
+- The updates will be conducted beforehand at https://github.com/dongjineee/rover_gazebo.
