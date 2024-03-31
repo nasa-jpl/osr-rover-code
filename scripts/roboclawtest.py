@@ -24,7 +24,7 @@ if __name__ == "__main__":
         print(roboclaw0.ReadVersion(address))
         print(roboclaw0.ReadEncM1(address))
     elif connected1:
-        print("Connected to /dev/serial1.")
+        print("Connected to /dev/serial1. Only proceed if you know what you're doing, otherwise ask for help on Slack.")
         print(roboclaw1.ReadVersion(address))
         print(roboclaw1.ReadEncM1(address))
     else:

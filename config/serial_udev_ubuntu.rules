@@ -1,7 +1,0 @@
-# make symlinks serial0 and serial1, pointing to the default device names. Grant read/write permissions for the devices
-# note: not sure if these actually ought to be tty, but this works.
-# note2: this mapping from tty* to serial* is apparently the canonical one for RPI 3&4. Should not change this unless 
-#   there's a super good reason to. 
-#   See https://www.engineersgarage.com/microcontroller-projects/articles-raspberry-pi-serial-communication-uart-protocol-serial-linux-devices/
-KERNEL=="ttyS0", SYMLINK+="serial0" GROUP="tty" MODE="0660"
-KERNEL=="ttyAMA0", SYMLINK+="serial1" GROUP="tty" MODE="0660"

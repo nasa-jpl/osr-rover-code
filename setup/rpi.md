@@ -118,43 +118,16 @@ The RPi talks to the motor controllers over serial bus.
 sudo raspi-config
 ```
 
-Then use the menu to enable **I2C** and **Serial** under `Interfaces`. More on raspi-config [here](https://www.raspberrypi.com/documentation/computers/configuration.html).
+Then use the menu to enable **I2C** and **Serial** under `Interfaces`. When you enable `Serial Port`, it will ask:
+
+* Would you like a login shell to be accessible over serial? --> Select 'No' using the arrow keys and 'tab' and 'enter' keys on your keyboard
+* Would you like the serial port hardware to be enabled? --> Yes
+
+If it asks you to reboot, answer 'yes'.
+
+More on raspi-config [here](https://www.raspberrypi.com/documentation/computers/configuration.html).
 
 **TIP**: If `raspi-config` isn't installed, run `sudo apt-get install raspi-config`. If that doesn't work, run `echo "deb http://archive.raspberrypi.org/debian/ buster main" >> /etc/apt/sources.list && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 7FA3303E && sudo apt-get update` to allow `apt` to find the program, then try reinstalling with `sudo apt-get install raspi-config`.
-
-### Disable serial-getty@ttyS0.service
-
-**NOTE**: this section may no longer be necessary with newer versions of debian. We suggest skipping it and revisiting if serial does not work.
-
-Because we are using the serial port for communicating with the roboclaw motor controllers, we have to disable the serial-getty@ttyS0.service service. This service has some level of control over serial devices that we use, so if we leave it on it we'll get weird errors ([source](https://spellfoundry.com/2016/05/29/configuring-gpio-serial-port-raspbian-jessie-including-pi-3-4/)). Note that the masking step was suggested [here](https://stackoverflow.com/a/43633467/4292910). It seems to be necessary for some setups of the rpi4 - just using `systemctl disable` won't cut it for disabling the service.
-
-**Note that the following will stop you from being able to communicate with the RPi over the serial, wired connection. However, it won't affect communication with the rpi with SSH over wifi.**
-
-```
-sudo systemctl stop serial-getty@ttyS0.service
-sudo systemctl disable serial-getty@ttyS0.service
-sudo systemctl mask serial-getty@ttyS0.service
-```
-
-### Copy udev rules
-
-Now we'll need to copy over a udev rules file, which is used to automatically configure needed linux device files in `/dev` namely, `ttyS0 and ttyAMA0`. These are used to connect to the Roboclaws using the RPi's GPIO pins. Here's a [good primer](http://reactivated.net/writing_udev_rules.html) on udev. 
-
-```commandline
-# copy udev file from the repo to your system
-cd ~/osr_ws/src/osr-rover-code/config
-sudo cp serial_udev_ubuntu.rules /etc/udev/rules.d/10-local.rules
-```
-
-and enter your password if requested.
-
-Reload the udev rules so that the rules go into effect and the devices files are set up correctly.
-
-```commandline
-sudo udevadm control --reload-rules && sudo udevadm trigger
-```
-
-This configuration will persist across RPi reboots.
 
 ### Add user to tty and dialout groups
 
