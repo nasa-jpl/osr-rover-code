@@ -40,29 +40,6 @@ sudo apt-get install ros-noetic-joint-state-publisher
 sudo apt-get install ros-noetic-gazebo-ros-pkgs ros-noetic-gazebo-ros-control
 ```
 
-## Installation
-
-### Create and configure a workspace
-Source your ROS installation:
-```bash
-source /opt/ros/noetic/setup.bash
-```
-Create a catkin workspace:
-```bash
-mkdir -p ~/rover_ws/src
-cd ~/rover_ws/src
-catkin_init_workspace
-cd ..
-catkin_make
-```
-Clone and build the packages:
-```bash
-cd ~/rover_ws/src
-git clone https://github.com/dongjineee/rover_gazebo.git
-cd ..
-catkin_make
-source devel/setup.bash
-```
 ## Visualisation
 
 ### `rover_rviz`
