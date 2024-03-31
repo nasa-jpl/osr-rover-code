@@ -4,3 +4,6 @@ ROS/osr_bringup/config/*_mod.yaml
 *.sublime-project
 *.sublime-workspace
 .DS_Store
+Simulation/build
+Simulation/devel
+Simulation/.catkin_workspace

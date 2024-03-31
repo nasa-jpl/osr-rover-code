@@ -1,0 +1,78 @@
+joint_state_controller:
+   type: joint_state_controller/JointStateController
+   publish_rate: 100
+
+FR_CON:
+  type: "position_controllers/JointPositionController"
+  joint: "front_wheel_joint_R"
+  pid: {p: 100.0, i: 0.01, d: 10.0}
+
+FL_CON:
+  type: "position_controllers/JointPositionController"
+  joint: "front_wheel_joint_L"
+  pid: {p: 100.0, i: 0.01, d: 10.0}
+
+RR_CON:
+  type: "position_controllers/JointPositionController"
+  joint: "rear_wheel_joint_R"
+  pid: {p: 100.0, i: 0.01, d: 10.0}
+
+RL_CON:
+  type: "position_controllers/JointPositionController"
+  joint: "rear_wheel_joint_L"
+  pid: {p: 100.0, i: 0.01, d: 10.0}
+
+# Joint velocity controllers ---------------------------------
+rover_motor_fr_controller:
+  type: velocity_controllers/JointVelocityController
+  joint: front_wheel_joint_right
+  pid:
+    p: 5.0
+    i: 20.0
+    d: 0.0
+    i_clamp: 100.0
+
+rover_motor_fl_controller:
+  type: velocity_controllers/JointVelocityController
+  joint: front_wheel_joint_left
+  pid:
+    p: 5.0
+    i: 20.0
+    d: 0.0
+    i_clamp: 100.0
+
+rover_motor_rl_controller:
+  type: velocity_controllers/JointVelocityController
+  joint: rear_wheel_joint_left
+  pid:
+    p: 5.0
+    i: 20.0
+    d: 0.0
+    i_clamp: 100.0
+
+rover_motor_rr_controller:
+  type: velocity_controllers/JointVelocityController
+  joint: rear_wheel_joint_right
+  pid:
+    p: 5.0
+    i: 20.0
+    d: 0.0
+    i_clamp: 100.0
+
+rover_motor_ml_controller:
+  type: velocity_controllers/JointVelocityController
+  joint: middle_wheel_joint_left
+  pid:
+    p: 5.0
+    i: 20.0
+    d: 0.0
+    i_clamp: 100.0
+
+rover_motor_mr_controller:
+  type: velocity_controllers/JointVelocityController
+  joint: middle_wheel_joint_right
+  pid:
+    p: 5.0
+    i: 20.0
+    d: 0.0
+    i_clamp: 100.0

@@ -1,0 +1,6 @@
+<launch>
+    <param name="robot_description" command="$(find xacro)/xacro $(find rover)/urdf/rover.urdf.xacro"/>
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher"/>
+    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher"/>
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find rover)/rviz/rover.rviz"/>
+</launch>

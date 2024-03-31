@@ -1,0 +1,19 @@
+<launch>
+    <env name="QT_AUTO_SCREEN_SCALE_FACTOR" value="0"/>
+    <env name="GAZEBO_RESOURCE_PATH" value="$(find rover)"/>
+
+    <rosparam file="$(find rover)/config/gazebo_pid_gains.yaml" command="load"/>
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="false"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+        <!-- <arg name="world_name" value="world/gazebo_bogie.world"/> -->
+    </include>
+
+    <include file="$(find rover)/launch/upload_robot.launch"/>
+
+    <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
+            args="-urdf -model rover -param robot_description" launch-prefix="bash -c 'sleep 2.0; $0 $@' "/>
+</launch>
