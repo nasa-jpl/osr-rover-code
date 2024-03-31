@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="rover" type="rover_xbox" name="rover_xbox"/>
+    <node pkg="rover" type="xbox_joy" name="xbox_joy" output="screen"/>
+</launch>

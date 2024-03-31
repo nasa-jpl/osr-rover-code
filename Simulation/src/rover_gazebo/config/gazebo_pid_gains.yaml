@@ -1,0 +1,58 @@
+gazebo_ros_control:
+  pid_gains:
+    rear_wheel_joint_left:
+      p: 2.0
+      i: 1.0
+      d: 0.0
+    rear_wheel_joint_right:
+      p: 2.0
+      i: 1.0
+      d: 0.0
+    middle_wheel_joint_left:
+      p: 2.0
+      i: 1.0
+      d: 0.0
+    middle_wheel_joint_right:
+      p: 2.0
+      i: 1.0
+      d: 0.0
+    front_wheel_joint_left:
+      p: 2.0
+      i: 1.0
+      d: 0.0
+    front_wheel_joint_right:
+      p: 2.0
+      i: 1.0
+      d: 0.0
+    front_wheel_link_L:
+      p: 2.0
+      i: 1.0
+      d: 0.0
+    front_wheel_link_R:
+      p: 2.0
+      i: 1.0
+      d: 0.0
+    rear_wheel_link_L:
+      p: 2.0
+      i: 1.0
+      d: 0.0
+    rear_wheel_link_R:
+      p: 2.0
+      i: 1.0
+      d: 0.0
+    # front_wheel_joint_R:
+    #   p: 2.0
+    #   i: 1.0
+    #   d: 0.0
+    # front_wheel_joint_L:
+    #   p: 2.0
+    #   i: 1.0
+    #   d: 0.0
+    # rear_wheel_joint_R:
+    #   p: 2.0
+    #   i: 1.0
+    #   d: 0.0
+    # rear_wheel_joint_L:
+    #   p: 2.0
+    #   i: 1.0
+    #   d: 0.0

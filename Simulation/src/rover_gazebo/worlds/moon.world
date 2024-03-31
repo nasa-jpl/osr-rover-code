@@ -1,0 +1,30 @@
+<?xml version="1.0" ?>
+<sdf version="1.4">
+  <world name="moon">
+    <!-- A global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <!-- DEM of moon surface -->
+    <include>
+
+      <uri>model://apollo17_landing_site_1000x1000</uri>
+    </include>
+    <!-- Own physics settings to speed up simulation -->
+    <physics type='ode'>
+      <max_step_size>0.01</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>5</real_time_update_rate>
+      <gravity>0 0 -9.81</gravity> <!-- moon gravity : -1.622 earth gravity: -9.81 -->
+    </physics>
+
+    <scene>
+      <grid>false</grid>
+    </scene>
+    
+    <!-- grid map hide --> 
+    
+  </world>
+</sdf>
+
+

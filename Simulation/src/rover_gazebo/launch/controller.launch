@@ -1,0 +1,20 @@
+<launch>
+        <rosparam file="$(find rover)/config/controllers.yaml" command="load"/>
+
+        <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="true"
+                output="screen" args="joint_state_controller
+                                FR_CON FL_CON RR_CON RL_CON
+                                rover_motor_fr_controller rover_motor_fl_controller
+                                rover_motor_rl_controller rover_motor_rr_controller
+                                rover_motor_ml_controller rover_motor_mr_controller">
+        </node>
+
+        <node pkg="rover" type="motor_controller" name="motor_controller"/>
+
+        <!-- <rosparam file="$(find rover)/config/ackermann_drive_controller.yaml" command="load"/>
+
+        
+        <node pkg="controller_manager" type="spawner" name="curio_controller_spawner"
+                args="joint_state_publisher ackermann_drive_controller" /> -->
+
+</launch>

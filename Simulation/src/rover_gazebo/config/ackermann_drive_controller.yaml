@@ -1,0 +1,86 @@
+# Configuration for the ackermann drive controller
+# 
+joint_state_publisher:
+    type: "joint_state_controller/JointStateController"
+    publish_rate: 50
+    
+ackermann_drive_controller:
+    type: 'ackermann_drive_controller/AckermannDriveController'
+
+    # Odometry related 
+    publish_rate: 50
+    open_loop: false
+
+    # Wheel joints
+    front_left_wheel: 'front_wheel_joint_left'
+    front_right_wheel: 'front_wheel_joint_right'
+    mid_left_wheel: 'middle_wheel_joint_left'
+    mid_right_wheel: 'middle_wheel_joint_right'
+    back_left_wheel: 'rear_wheel_joint_left'
+    back_right_wheel: 'rear_wheel_joint_right'
+
+    # Steering joints
+    front_left_steer: 'front_wheel_joint_L'
+    front_right_steer: 'front_wheel_joint_R'
+    back_left_steer: 'rear_wheel_joint_L'
+    back_right_steer: 'rear_wheel_joint_R'
+
+    # Geometry
+    wheel_radius: 0.060
+    mid_wheel_lat_separation: 0.52
+    front_wheel_lat_separation: 0.47 
+    front_wheel_lon_separation: 0.28
+    back_wheel_lat_separation: 0.47
+    back_wheel_lon_separation: 0.25
+
+    # @TOOD: re-enable 
+    # wheel_radius_multiplier: 1.0        # default: 1.0
+    # wheel_separation_multiplier: 1.0    # default 1.0
+
+    # Odometry covariances for the encoder output of the robot. These values should
+    # be tuned to your robot's sample odometry data, but these values are a good place
+    # to start
+    pose_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
+    twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
+
+    # Top level frame (link) of the robot description
+    base_frame_id: 'base_link'
+
+    # Transform from odom -> base_link: Enable if NOT using ekf_localization. 
+    enable_odom_tf: true
+    odom_frame_id: '/odom'
+
+    # Disable transform from odom -> base_link: Disable if USING ekf_localization. 
+    # 
+    # Also disable if we are using the Intel Realsense T265 tracking camera
+    # which provides a transform from odom to camera_pose_link.
+    # 
+    #   enable_odom_tf: false
+
+    # Set to false if the motor driver provides velocity data. 
+    estimate_velocity_from_position: true
+
+    # Commands
+    publish_cmd: true
+    allow_multiple_cmd_vel_publishers: false
+
+    # Velocity and acceleration limits for the robot
+    linear:
+        x:
+            has_velocity_limits    : true
+            max_velocity           : 0.37   # m/s
+            has_acceleration_limits: true
+            max_acceleration       : 2.0    # m/s^2
+    angular:
+        z:
+            has_velocity_limits    : true
+            max_velocity           : 1.45   # rad/s
+            has_acceleration_limits: true
+            max_acceleration       : 3.0    # rad/s^2
+
+    # Other (undocumented but in source code)
+    # velocity_rolling_window_size: 10
+    # cmd_vel_timeout: 0.5
+
+    # Deprecated...
+    # publish_wheel_joint_controller_state: false
