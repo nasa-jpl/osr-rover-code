@@ -11,7 +11,7 @@ The following ROS packages are included to visualize the rover in rviz and simul
 
 ### Linux
 - Operating System: Ubuntu 20.04.06 LTS
-- ROS Distribution: Noetic
+- ROS Distribution: Foxy
 - Gazebo Version: 11.14.0
 
 ### Required ROS Packages
@@ -23,16 +23,16 @@ To fully utilize the capabilities of the rover simulation, the following ROS pac
 - `gazebo_ros`
 - `robot_state_publisher`
 - `joint_state_publisher`
-- `diagnostic_updater`
 - `ros_control`
 
 example:
 ```bash
-sudo apt-get install ros-noetic-ros-controllers
-sudo apt-get install ros-noetic-diagnostic-updater
-sudo apt-get install ros-noetic-robot-state-publisher
-sudo apt-get install ros-noetic-joint-state-publisher
-sudo apt-get install ros-noetic-gazebo-ros-pkgs ros-noetic-gazebo-ros-control
+sudo apt-get install ros-foxy-controller-manager
+sudo apt-get install ros-foxy-robot-state-publisher
+sudo apt-get install ros-foxy-joint-state-publisher
+sudo apt-get install ros-foxy-gazebo-ros-pkgs
+sudo apt-get install ros-foxy-trajectory-msgs
+sudo apt-get install ros-foxy-velocity-controllers
 ```
 
 ## Installation
@@ -40,24 +40,9 @@ sudo apt-get install ros-noetic-gazebo-ros-pkgs ros-noetic-gazebo-ros-control
 ### Create and configure a workspace
 Source your ROS installation:
 ```bash
-source /opt/ros/noetic/setup.bash
+source /opt/ros/foxy/setup.bash
 ```
-Create a catkin workspace:
-```bash
-mkdir -p ~/rover_ws/src
-cd ~/rover_ws/src
-catkin_init_workspace
-cd ..
-catkin_make
-```
-Clone and build the packages:
-```bash
-cd ~/rover_ws/src
-git clone https://github.com/dongjineee/rover_gazebo.git
-cd ..
-catkin_make
-source devel/setup.bash
-```
+
 ## Visualisation
 
 ### `rover_rviz`
@@ -67,7 +52,7 @@ This package includes launch and rviz configuration files for visualising the ro
 To view the rover in rviz and manually control the joints, execute the following command:
 
 ```bash
-roslaunch rover rover.launch
+ros2 launch osr_gazebo rviz.launch.py
 ```
 ![image](https://github.com/dongjineee/rover_gazebo/assets/150753899/f49548d0-8ecb-4b25-8ce6-bd643bb90b1a)
 
@@ -81,7 +66,7 @@ To launch the simulation along with the capability to manually control the joint
 
 
 ```bash
-roslaunch rover rover_gazebo.launch
+ros2 launch osr_gazebo empty_world.launch.py
 ```
 ![image](https://github.com/dongjineee/rover_gazebo/assets/150753899/481e0aaf-6336-45e5-b138-49ee7df5e509)
 
@@ -89,35 +74,12 @@ roslaunch rover rover_gazebo.launch
 
 To launch the simulation along with the capability to manually control the joints, use the command:
 ```bash
-roslaunch rover controller.launch
+ros2 launch osr_gazebo controller.launch.py
 ```
 Keyboard controller
 ```bash
-roslaunch rover rover_teleop_keyboard.launch
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
 ```
-To execute this package, first clone the repository using the following command:
-
-```bash
-git clone https://github.com/methylDragon/teleop_twist_keyboard_cpp.git
-```
-xbox controller
-```bash
-roslaunch rover rover_teleop_xbox.launch
-```
-
-### `moon_world`
-
-places the rover in a Moon terrain model sourced from https://github.com/MobileRobots/amr-ros-config/tree/master/gazebo
-```bash
-roslaunch rover moon_world.launch
-```
-
-![image](https://github.com/dongjineee/rover_gazebo/assets/150753899/900263f7-dad4-45c1-9c6b-41af9d975a6f)
-
 ## Note
-- When you run the Gazebo and control launch files, you may encounter a message stating `No p gain specified for pid`. This message can safely be ignored. The reason is that the `*_wheel_joint_*` entities are intended to function as servos.
 - The control does not have specified linear and angular velocities. Therefore, it's necessary to add the maximum and minimum values for `cmd_vel` in the `motor_controller.cpp`.
-- There are two types of odometry topics available: `gt_odometry`, which is based on ground truth data, and another that derives from the position of the `wheel_joint`.
-
-## Issue
-- The joint type for rocker_bogie 1&2 has been set to 'revolute' to provide degrees of freedom. However, doing so results in the actual tf relationship not being connected between the box and rocker_bogie2. It's necessary to give freedom to the bogie while not affecting the tf relationship.
+- The ROS1::noetic version of gazebo simulation exists at https://github.com/dongjineee/rover_gazebo.
