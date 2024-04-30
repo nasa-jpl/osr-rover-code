@@ -52,9 +52,14 @@
 
     <joint name="front_wheel_joint_R">
       <command_interface name="position">
-        <param name="min">-70</param>
-        <param name="max">70</param>
+        <param name="min">-5</param>
+        <param name="max">5</param>
       </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-0.1</param>
+        <param name="max">0.1</param>
+      </command_interface>
+
       <state_interface name="position"/>
       <state_interface name="velocity"/>
       <state_interface name="effort"/>
@@ -62,17 +67,25 @@
 
     <joint name="front_wheel_joint_L">
       <command_interface name="position">
-        <param name="min">-70</param>
-        <param name="max">70</param>
+        <param name="min">-5</param>
+        <param name="max">5</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-0.1</param>
+        <param name="max">0.1</param>
       </command_interface>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
       <state_interface name="effort"/>
     </joint>
     <joint name="rear_wheel_joint_R">
-       <command_interface name="position">
-        <param name="min">-70</param>
-        <param name="max">70</param>
+      <command_interface name="position">
+        <param name="min">-5</param>
+        <param name="max">5</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-0.1</param>
+        <param name="max">0.1</param>
       </command_interface>
       <state_interface name="position"/>
       <state_interface name="velocity"/>
@@ -80,8 +93,12 @@
     </joint>
     <joint name="rear_wheel_joint_L">
       <command_interface name="position">
-        <param name="min">-70</param>
-        <param name="max">70</param>
+        <param name="min">-5</param>
+        <param name="max">5</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-0.1</param>
+        <param name="max">0.1</param>
       </command_interface>
       <state_interface name="position"/>
       <state_interface name="velocity"/>

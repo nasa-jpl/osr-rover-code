@@ -21,7 +21,7 @@
     </material>
 
     <xacro:include filename="$(find osr_gazebo)/urdf/gazebo.urdf.xacro"/>
-    <!-- <xacro:include filename="$(find osr_gazebo)/urdf/insert_transmission.urdf.xacro"/>  -->
+    <xacro:include filename="$(find osr_gazebo)/urdf/insert_transmission.urdf.xacro"/>
 
     <link name="base_footprint"/>
     <link name="base_link">
@@ -44,7 +44,7 @@
             <origin rpy="0 0 0" xyz="0 0 0"/>
             <mass value="10"/>
             <inertia  ixx="0.28541666666666665" ixy="0" ixz="0" iyy="0.8666666666666666" 	iyz="0" izz="1.0854166666666665" />
-        </inertial> 
+        </inertial>
 
     </link>
 
@@ -322,8 +322,8 @@
             <child link="middle_wheel_link_${prefix}"/>
 
             <axis xyz="0 1 0"/>
-        </joint>  
-        
+        </joint>
+
         <link name="rear_wheel_link_${prefix}">
             <collision>
                 <origin rpy="0 0 ${-dir*1.57}" xyz="0 0 0.0"/>
@@ -373,7 +373,7 @@
                 <surface>
                     <friction>
                         <ode>
-                            <mu>0.7</mu> 
+                            <mu>0.7</mu>
                             <mu2>0.3</mu2>
                         </ode>
                     </friction>
@@ -401,7 +401,7 @@
             <origin rpy="0 0 0" xyz="0.006231 ${dir*0.019544} -0.169991"/>
             <child link="front_wheel_link_${prefix}"/>
             <axis xyz="0 1 0"/>
-            <velocity>5.0</velocity> 
+            <velocity>5.0</velocity>
         </joint>
 
         <link name="middle_wheel_link_${prefix}">
@@ -413,11 +413,11 @@
                 <surface>
                     <friction>
                         <ode>
-                            <mu>0.7</mu> 
-                            <mu2>0.3</mu2> 
+                            <mu>0.7</mu>
+                            <mu2>0.3</mu2>
                         </ode>
                     </friction>
-                </surface>        
+                </surface>
             </collision>
 
             <visual>
@@ -440,7 +440,7 @@
             <origin rpy="0 0 0" xyz="0.006691 ${dir*0.100382} 0.005425"/>
             <child link="middle_wheel_link_${prefix}"/>
             <axis xyz="0 1 0"/>
-            <velocity>5.0</velocity> 
+            <velocity>5.0</velocity>
         </joint>
 
         <link name="rear_wheel_link_${prefix}">
@@ -452,11 +452,11 @@
                 <surface>
                     <friction>
                         <ode>
-                            <mu>0.7</mu> 
-                            <mu2>0.3</mu2> 
+                            <mu>0.7</mu>
+                            <mu2>0.3</mu2>
                         </ode>
                     </friction>
-                </surface>        
+                </surface>
             </collision>
 
             <visual>
@@ -479,20 +479,23 @@
             <origin rpy="0 0 0" xyz="-0.000203 ${dir*0.008131} -0.160678"/>
             <child link="rear_wheel_link_${prefix}"/>
             <axis xyz="0 1 0"/>
-            <velocity>5.0</velocity>        
+            <velocity>5.0</velocity>
         </joint>
 
     </xacro:macro>
     <xacro:wheel prefix="left" dir="1" origin="0" prefix_1="L"/>
     <xacro:wheel prefix="right" dir="-1" origin="3.14" prefix_1="R"/>
-    
-    <joint name="imu_joint" type="fixed">
-            <parent link="base_link"/>
-            <child link="imu_link"/>
-            <origin xyz="0 0 0" rpy="0 0 0"/>
-        </joint>
 
-    <link name="imu_link"></link>
+    <xacro:insert_velocity_transmission name="rear_wheel_joint_right"/>
+    <xacro:insert_velocity_transmission name="rear_wheel_joint_left"/>
+    <xacro:insert_velocity_transmission name="middle_wheel_joint_right"/>
+    <xacro:insert_velocity_transmission name="middle_wheel_joint_left"/>
+    <xacro:insert_velocity_transmission name="front_wheel_joint_right"/>
+    <xacro:insert_velocity_transmission name="front_wheel_joint_left"/>
 
-  
+    <xacro:insert_position_transmission name="front_wheel_joint_R"/>
+    <xacro:insert_position_transmission name="front_wheel_joint_L"/>
+    <xacro:insert_position_transmission name="rear_wheel_joint_R"/>
+    <xacro:insert_position_transmission name="rear_wheel_joint_L"/>
+
 </robot>
