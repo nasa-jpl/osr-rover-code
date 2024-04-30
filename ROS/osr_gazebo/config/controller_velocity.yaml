@@ -2,141 +2,47 @@ controller_manager:
   ros__parameters:
     update_rate: 100  # Hz
 
-    rover_motor_mr_controller:
+    wheel_controller:
       type: velocity_controllers/JointGroupVelocityController
 
-    rover_motor_ml_controller:
-      type: velocity_controllers/JointGroupVelocityController
-
-    rover_motor_fr_controller:
-      type: velocity_controllers/JointGroupVelocityController
-
-    rover_motor_fl_controller:
-      type: velocity_controllers/JointGroupVelocityController
-
-    rover_motor_rr_controller:
-      type: velocity_controllers/JointGroupVelocityController
-
-    rover_motor_rl_controller:
-      type: velocity_controllers/JointGroupVelocityController
-
-
-    rover_servo_fr_controller:
+    servo_controller:
       type: joint_trajectory_controller/JointTrajectoryController
-
-    rover_servo_fl_controller:
-      type: joint_trajectory_controller/JointTrajectoryController
-
-    rover_servo_rr_controller:
-      type: joint_trajectory_controller/JointTrajectoryController
-
-    rover_servo_rl_controller:
-      type: joint_trajectory_controller/JointTrajectoryController  
-      
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
 #---------------wheel_velocity_controller----------------#
-rover_motor_mr_controller:
+wheel_controller:
   ros__parameters:
+    type: velocity_controllers/JointGroupVelocityController
     joints:
       - middle_wheel_joint_right
-    command_interfaces:
-      - velocity
-    state_interfaces:
-      - position
-      - velocity
-rover_motor_ml_controller:
-  ros__parameters:
-    joints:
       - middle_wheel_joint_left
-    command_interfaces:
-      - velocity
-    state_interfaces:
-      - position
-      - velocity
-
-rover_motor_fr_controller:
-  ros__parameters:
-    joints:
       - front_wheel_joint_right
-    command_interfaces:
-      - velocity
-    state_interfaces:
-      - position
-      - velocity
-rover_motor_fl_controller:
-  ros__parameters:
-    joints:
       - front_wheel_joint_left
-    command_interfaces:
-      - velocity
-    state_interfaces:
-      - position
-      - velocity
-
-rover_motor_rr_controller:
-  ros__parameters:
-    joints:
       - rear_wheel_joint_right
-    command_interfaces:
-      - velocity
-    state_interfaces:
-      - position
-      - velocity
-rover_motor_rl_controller:
-  ros__parameters:
-    joints:
       - rear_wheel_joint_left
     command_interfaces:
       - velocity
     state_interfaces:
       - position
       - velocity
+
+
 #---------------wheel_velocity_controller----------------#
 
-rover_servo_fr_controller:
+servo_controller:
   ros__parameters:
+    type: joint_trajectory_controller/JointTrajectoryController
     joints:
       - front_wheel_joint_R
-    interface_name: position
-    command_interfaces:
-      - position
-    state_interfaces:
-      - position
-      - velocity
-
-rover_servo_fl_controller:
-  ros__parameters:
-    joints:
       - front_wheel_joint_L
-    interface_name: position
-    command_interfaces:
-      - position
-    state_interfaces:
-      - position
-      - velocity
-  
-rover_servo_rr_controller:
-  ros__parameters:
-    joints:
       - rear_wheel_joint_R
-    interface_name: position
-    command_interfaces:
-      - position
-    state_interfaces:
-      - position
-      - velocity
-  
-rover_servo_rl_controller:
-  ros__parameters:
-    joints:
       - rear_wheel_joint_L
     interface_name: position
     command_interfaces:
       - position
+      - velocity
     state_interfaces:
       - position
       - velocity
-

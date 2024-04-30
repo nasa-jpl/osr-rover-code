@@ -34,56 +34,18 @@ def generate_launch_description():
     )
 
     # wheel_velocity_controller
-    load_joint_trajectory_controller_velocity_mr = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'rover_motor_mr_controller'],
-        output='screen'
-    )
-
-    load_joint_trajectory_controller_velocity_ml = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'rover_motor_ml_controller'],
-        output='screen'
-    )
-
-    load_joint_trajectory_controller_velocity_fr = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'rover_motor_fr_controller'],
-        output='screen'
-    )
-
-    load_joint_trajectory_controller_velocity_fl = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'rover_motor_fl_controller'],
-        output='screen'
-    )
-
-    load_joint_trajectory_controller_velocity_rr = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'rover_motor_rr_controller'],
-        output='screen'
-    )
-
-    load_joint_trajectory_controller_velocity_rl = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'rover_motor_rl_controller'],
+    rover_wheel_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'wheel_controller'],
         output='screen'
     )
 
     # servo_controller
-    rover_servo_fr_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'rover_servo_fr_controller'],
+    servo_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'servo_controller'],
         output='screen'
     )
 
-    rover_servo_fl_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'rover_servo_fl_controller'],
-        output='screen'
-    )
 
-    rover_servo_rr_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'rover_servo_rr_controller'],
-        output='screen'
-    )
-
-    rover_servo_rl_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'rover_servo_rl_controller'],
-        output='screen'
-    )
 
     return LaunchDescription([
         RegisterEventHandler(
@@ -91,23 +53,8 @@ def generate_launch_description():
                 target_action=spawn_entity,
                 on_exit=[
                     load_joint_state_controller,
-                    load_joint_trajectory_controller_velocity_mr,
-                    load_joint_trajectory_controller_velocity_ml,
-                    load_joint_trajectory_controller_velocity_fr,
-                    load_joint_trajectory_controller_velocity_fl,
-                    load_joint_trajectory_controller_velocity_rr,
-                    load_joint_trajectory_controller_velocity_rl,
-                ],
-            )
-        ),
-        RegisterEventHandler(
-            event_handler=OnProcessExit(
-                target_action=load_joint_state_controller,
-                on_exit=[
-                    rover_servo_fr_controller,
-                    rover_servo_fl_controller,
-                    rover_servo_rr_controller,
-                    rover_servo_rl_controller,
+                    rover_wheel_controller,
+                    servo_controller,
                 ],
             )
         ),

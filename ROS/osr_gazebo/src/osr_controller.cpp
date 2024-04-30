@@ -16,32 +16,11 @@ using std::placeholders::_1;
 class Controller : public rclcpp::Node {
 
 private:
-    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr Motor_FL_CON_pub;
-    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr Motor_FR_CON_pub;
-    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr Motor_ML_CON_pub;
-    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr Motor_MR_CON_pub;
-    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr Motor_RL_CON_pub;
-    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr Motor_RR_CON_pub;
 
-    rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr Servo_FL_CON_pub;
-    rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr Servo_FR_CON_pub;
-    rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr Servo_RL_CON_pub;
-    rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr Servo_RR_CON_pub;
+    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr motor_wheel_pub;
+    rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr servo_pub;
 
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr sub;
-
-    std_msgs::msg::Float64MultiArray FL_Wheel_Velocity;
-    std_msgs::msg::Float64MultiArray FR_Wheel_Velocity;
-    std_msgs::msg::Float64MultiArray RL_Wheel_Velocity;
-    std_msgs::msg::Float64MultiArray RR_Wheel_Velocity;
-    std_msgs::msg::Float64MultiArray ML_Wheel_Velocity;
-    std_msgs::msg::Float64MultiArray MR_Wheel_Velocity;
-
-    trajectory_msgs::msg::JointTrajectoryPoint servo_fr_point;
-    trajectory_msgs::msg::JointTrajectoryPoint servo_fl_point;
-    trajectory_msgs::msg::JointTrajectoryPoint servo_rr_point;
-    trajectory_msgs::msg::JointTrajectoryPoint servo_rl_point;
-
 
     double angle_data;
 
@@ -65,38 +44,17 @@ private:
 
     geometry_msgs::msg::Twist pri_velocity;
 
+    double FL_data, FR_data, ML_data, MR_data, RL_data, RR_data;
+
+    double FR_servo_data, FL_servo_data, RR_servo_data, RL_servo_data;
+
     bool delay_ = true;
 
 public:
     Controller() : Node("controller") {
-        Motor_FL_CON_pub = this->create_publisher<std_msgs::msg::Float64MultiArray>("/rover_motor_fl_controller/commands", 1);
-        Motor_FR_CON_pub = this->create_publisher<std_msgs::msg::Float64MultiArray>("/rover_motor_fr_controller/commands", 1);
-        Motor_ML_CON_pub = this->create_publisher<std_msgs::msg::Float64MultiArray>("/rover_motor_ml_controller/commands", 1);
-        Motor_MR_CON_pub = this->create_publisher<std_msgs::msg::Float64MultiArray>("/rover_motor_mr_controller/commands", 1);
-        Motor_RL_CON_pub = this->create_publisher<std_msgs::msg::Float64MultiArray>("/rover_motor_rl_controller/commands", 1);
-        Motor_RR_CON_pub = this->create_publisher<std_msgs::msg::Float64MultiArray>("/rover_motor_rr_controller/commands", 1);
+        motor_wheel_pub = this->create_publisher<std_msgs::msg::Float64MultiArray>("/wheel_controller/commands", 1);
+        servo_pub = this->create_publisher<trajectory_msgs::msg::JointTrajectory>("/servo_controller/joint_trajectory", 1);
 
-        Servo_FR_CON_pub = this->create_publisher<trajectory_msgs::msg::JointTrajectory>("/rover_servo_fr_controller/joint_trajectory", 1);
-        Servo_FL_CON_pub = this->create_publisher<trajectory_msgs::msg::JointTrajectory>("/rover_servo_fl_controller/joint_trajectory", 1);
-        Servo_RL_CON_pub = this->create_publisher<trajectory_msgs::msg::JointTrajectory>("/rover_servo_rl_controller/joint_trajectory", 1);
-        Servo_RR_CON_pub = this->create_publisher<trajectory_msgs::msg::JointTrajectory>("/rover_servo_rr_controller/joint_trajectory", 1);
-
-        servo_fr_point = trajectory_msgs::msg::JointTrajectoryPoint();
-        servo_fl_point = trajectory_msgs::msg::JointTrajectoryPoint();
-        servo_rr_point = trajectory_msgs::msg::JointTrajectoryPoint();
-        servo_rl_point = trajectory_msgs::msg::JointTrajectoryPoint();
-
-        servo_fl_point.velocities.push_back(0.0);
-        servo_fl_point.time_from_start = rclcpp::Duration::from_seconds(0.2);
-
-        servo_fr_point.velocities.push_back(0.0);
-        servo_fr_point.time_from_start = rclcpp::Duration::from_seconds(0.2);
-
-        servo_rl_point.velocities.push_back(0.0);
-        servo_rl_point.time_from_start = rclcpp::Duration::from_seconds(0.2);
-
-        servo_rr_point.velocities.push_back(0.0);
-        servo_rr_point.time_from_start = rclcpp::Duration::from_seconds(0.2);
         sub = this->create_subscription<geometry_msgs::msg::Twist>(
             "cmd_vel", 1, std::bind(&Controller::msgCallback, this, std::placeholders::_1));
 
@@ -104,7 +62,7 @@ public:
 
 
     void msgCallback(const geometry_msgs::msg::Twist::SharedPtr msg) {
-        
+
         if((pri_velocity.linear.x == msg->linear.x) && (pri_velocity.angular.z == msg->angular.z)) return;
 
         if(delay_)
@@ -119,18 +77,10 @@ public:
 
             else if((msg->angular.z != 0)&&(msg->linear.x == 0))  // rotate in place
             {
-                servo_fl_point.positions.clear();
-                servo_fr_point.positions.clear();
-                servo_rl_point.positions.clear();
-                servo_rr_point.positions.clear();
-
-                servo_fl_point.positions.push_back(-atan(d3/d1)); // FL
-
-                servo_fr_point.positions.push_back(atan(d3/d1));  // FR
-
-                servo_rl_point.positions.push_back(atan(d2/d1));  // RL
-
-                servo_rr_point.positions.push_back(-atan(d2/d1)); // RR
+                FL_servo_data = -atan(d3/d1);
+                FR_servo_data = atan(d3/d1);
+                RL_servo_data = atan(d2/d1);
+                RR_servo_data = -atan(d2/d1);
 
                 rotate_in_place(msg);
                 publishAngles();                // servo angle pub
@@ -159,7 +109,7 @@ public:
                 publishAngles();
                 publishVelocity();
             }
-            
+
             delay_ = true;
         }
 
@@ -173,27 +123,21 @@ public:
         theta_front_closest = atan2(d3, abs(l) - d1);
         theta_front_farthest = atan2(d3, abs(l) + d1);
 
-        servo_fl_point.positions.clear();
-        servo_fr_point.positions.clear();
-        servo_rl_point.positions.clear();
-        servo_rr_point.positions.clear();
-
-
         if(l > 0)
         {
-            servo_fl_point.positions.push_back(theta_front_closest);
-            servo_fr_point.positions.push_back(theta_front_closest);
-            servo_rl_point.positions.push_back(-theta_front_closest);
-            servo_rr_point.positions.push_back(-theta_front_closest);
+            FL_servo_data = theta_front_closest;
+            FR_servo_data = theta_front_closest;
+            RL_servo_data = -theta_front_closest;
+            RR_servo_data = -theta_front_closest;
         }
         else
         {
-            servo_fl_point.positions.push_back(-theta_front_closest);
-            servo_fr_point.positions.push_back(-theta_front_closest);
-            servo_rl_point.positions.push_back(theta_front_closest);
-            servo_rr_point.positions.push_back(theta_front_closest);
+            FL_servo_data = -theta_front_closest;
+            FR_servo_data = -theta_front_closest;
+            RL_servo_data = theta_front_closest;
+            RR_servo_data = theta_front_closest;
         }
-        
+
     }
 
     void calculate_drive_velocity(float velocity, double l)
@@ -210,98 +154,64 @@ public:
         ang_vel_corner_farthest = vel_corner_farthest / ROVER_WHEEL_RADIUS;
         ang_vel_middle_farthest = vel_middle_farthest / ROVER_WHEEL_RADIUS;
 
-        FL_Wheel_Velocity.data.clear();
-        RL_Wheel_Velocity.data.clear();
-        ML_Wheel_Velocity.data.clear();
-        RR_Wheel_Velocity.data.clear();
-        FR_Wheel_Velocity.data.clear();
-        MR_Wheel_Velocity.data.clear();
-
-
         if (l > 0)  // turning left
         {
-            FL_Wheel_Velocity.data.push_back(float(ang_vel_corner_closest));
-            RL_Wheel_Velocity.data.push_back(float(ang_vel_corner_closest));
-            ML_Wheel_Velocity.data.push_back(float(ang_vel_middle_closest));
-            RR_Wheel_Velocity.data.push_back(float(ang_vel_corner_farthest));
-            FR_Wheel_Velocity.data.push_back(float(ang_vel_corner_farthest));
-            MR_Wheel_Velocity.data.push_back(float(ang_vel_middle_farthest));
+            FL_data = float(ang_vel_corner_closest);
+            RL_data = float(ang_vel_corner_closest);
+
+            ML_data = float(ang_vel_middle_closest);
+            FR_data = float(ang_vel_corner_farthest);
+
+            RR_data = float(ang_vel_corner_farthest);
+            MR_data = float(ang_vel_middle_farthest);
         }
         else        // turning right
         {
-            FL_Wheel_Velocity.data.push_back(float(ang_vel_corner_farthest));
-            RL_Wheel_Velocity.data.push_back(float(ang_vel_corner_farthest));
-            ML_Wheel_Velocity.data.push_back(float(ang_vel_middle_farthest));
-            RR_Wheel_Velocity.data.push_back(float(ang_vel_corner_closest));
-            FR_Wheel_Velocity.data.push_back(float(ang_vel_corner_closest));
-            MR_Wheel_Velocity.data.push_back(float(ang_vel_middle_closest));
+            FL_data = float(ang_vel_corner_farthest);
+            RL_data = float(ang_vel_corner_farthest);
+
+            ML_data = float(ang_vel_middle_farthest);
+            FR_data = float(ang_vel_corner_closest);
+
+            RR_data = float(ang_vel_corner_closest);
+            MR_data = float(ang_vel_middle_closest);
+
         }
 
     }
 
     void stop()
     {
-        FL_Wheel_Velocity.data.clear();
-        RL_Wheel_Velocity.data.clear();
-        ML_Wheel_Velocity.data.clear();
-        RR_Wheel_Velocity.data.clear();
-        FR_Wheel_Velocity.data.clear();
-        MR_Wheel_Velocity.data.clear();
+        FL_data = 0;
+        RL_data = 0;
 
-        FL_Wheel_Velocity.data.push_back(0);
-        RL_Wheel_Velocity.data.push_back(0);
-        ML_Wheel_Velocity.data.push_back(0);
-        RR_Wheel_Velocity.data.push_back(0);
-        FR_Wheel_Velocity.data.push_back(0);
-        MR_Wheel_Velocity.data.push_back(0);
+        ML_data = 0;
+        FR_data = 0;
 
-        servo_fl_point.positions.clear();
-        servo_fr_point.positions.clear();
-        servo_rl_point.positions.clear();
-        servo_rr_point.positions.clear();
+        RR_data = 0;
+        MR_data = 0;
 
-        servo_fl_point.positions.push_back(0); // FL
 
-        servo_fr_point.positions.push_back(0);  // FR
-
-        servo_rl_point.positions.push_back(0);  // RL
-
-        servo_rr_point.positions.push_back(0); // RR
+        FL_servo_data = 0;
+        FR_servo_data = 0;
+        RL_servo_data = 0;
+        RR_servo_data = 0;
     }
 
     void go_straight(const geometry_msgs::msg::Twist::SharedPtr msg) {
         double velocity_data = msg->linear.x / ROVER_WHEEL_RADIUS;
 
-        FL_Wheel_Velocity.data.clear();
-        FL_Wheel_Velocity.data.push_back(velocity_data);
+        FL_data = velocity_data;
+        FR_data = velocity_data;
+        ML_data = velocity_data;
+        MR_data = velocity_data;
+        RL_data = velocity_data;
+        RR_data = velocity_data;
 
-        RL_Wheel_Velocity.data.clear();
-        RL_Wheel_Velocity.data.push_back(velocity_data);
-
-        ML_Wheel_Velocity.data.clear();
-        ML_Wheel_Velocity.data.push_back(velocity_data);
-
-        FR_Wheel_Velocity.data.clear();
-        FR_Wheel_Velocity.data.push_back(velocity_data);
-
-        RR_Wheel_Velocity.data.clear();
-        RR_Wheel_Velocity.data.push_back(velocity_data);
-
-        MR_Wheel_Velocity.data.clear();
-        MR_Wheel_Velocity.data.push_back(velocity_data);
-        
-        servo_fl_point.positions.clear();
-        servo_fr_point.positions.clear();
-        servo_rl_point.positions.clear();
-        servo_rr_point.positions.clear();
-
-        servo_fl_point.positions.push_back(0); // FL
-
-        servo_fr_point.positions.push_back(0);  // FR
-
-        servo_rl_point.positions.push_back(0);  // RL
-
-        servo_rr_point.positions.push_back(0); // RR
+        FL_servo_data = 0;
+        FR_servo_data = 0;
+        RL_servo_data = 0;
+        RR_servo_data = 0;
 
     }
 
@@ -312,55 +222,41 @@ public:
 
     void rotate_in_place(const geometry_msgs::msg::Twist::SharedPtr& msg)
     {
-        FL_Wheel_Velocity.data.clear();
-        FL_Wheel_Velocity.data.push_back(-float(sqrt(d1*d1+d3*d3) * msg->angular.z / ROVER_WHEEL_RADIUS));
+        FL_data = -float(sqrt(d1*d1+d3*d3) * msg->angular.z / ROVER_WHEEL_RADIUS);
+        RL_data = -float(sqrt(d1*d1+d2*d2) * msg->angular.z / ROVER_WHEEL_RADIUS);
 
-        RL_Wheel_Velocity.data.clear();
-        RL_Wheel_Velocity.data.push_back(-float(sqrt(d1*d1+d2*d2) * msg->angular.z / ROVER_WHEEL_RADIUS));
+        ML_data = -float(d4 * msg->angular.z / ROVER_WHEEL_RADIUS);
+        FR_data = float(sqrt(d1*d1+d3*d3) * msg->angular.z / ROVER_WHEEL_RADIUS);
 
-        ML_Wheel_Velocity.data.clear();
-        ML_Wheel_Velocity.data.push_back(-float(d4 * msg->angular.z / ROVER_WHEEL_RADIUS));
-
-        FR_Wheel_Velocity.data.clear();
-        FR_Wheel_Velocity.data.push_back(float(sqrt(d1*d1+d3*d3) * msg->angular.z / ROVER_WHEEL_RADIUS));
-
-        RR_Wheel_Velocity.data.clear();
-        RR_Wheel_Velocity.data.push_back(float(d4 * msg->angular.z / ROVER_WHEEL_RADIUS));
-
-        MR_Wheel_Velocity.data.clear();
-        MR_Wheel_Velocity.data.push_back(float(sqrt(d1*d1+d2*d2) * msg->angular.z / ROVER_WHEEL_RADIUS));
+        RR_data = float(d4 * msg->angular.z / ROVER_WHEEL_RADIUS);
+        MR_data = float(sqrt(d1*d1+d2*d2) * msg->angular.z / ROVER_WHEEL_RADIUS);
     }
 
     void publishVelocity() {
-        Motor_FL_CON_pub->publish(FL_Wheel_Velocity);
-        Motor_FR_CON_pub->publish(FR_Wheel_Velocity);
-        Motor_RL_CON_pub->publish(RL_Wheel_Velocity);
-        Motor_RR_CON_pub->publish(RR_Wheel_Velocity);
-        Motor_ML_CON_pub->publish(ML_Wheel_Velocity);
-        Motor_MR_CON_pub->publish(MR_Wheel_Velocity);
+
+        std_msgs::msg::Float64MultiArray wheel;
+
+        wheel.data = {ML_data, MR_data,
+                        FL_data, FR_data,
+                        RL_data, RR_data};
+
+        motor_wheel_pub->publish(wheel);
     }
 
     void publishAngles()
     {
-        trajectory_msgs::msg::JointTrajectory servo_fr = trajectory_msgs::msg::JointTrajectory();
-        trajectory_msgs::msg::JointTrajectory servo_fl = trajectory_msgs::msg::JointTrajectory();
-        trajectory_msgs::msg::JointTrajectory servo_rr = trajectory_msgs::msg::JointTrajectory();
-        trajectory_msgs::msg::JointTrajectory servo_rl = trajectory_msgs::msg::JointTrajectory();
 
-        servo_fr.joint_names.push_back("front_wheel_joint_R");
-        servo_fl.joint_names.push_back("front_wheel_joint_L");
-        servo_rr.joint_names.push_back("rear_wheel_joint_R");
-        servo_rl.joint_names.push_back("rear_wheel_joint_L");
+        auto servo = trajectory_msgs::msg::JointTrajectory();
+        servo.joint_names = {"front_wheel_joint_R", "front_wheel_joint_L", "rear_wheel_joint_R", "rear_wheel_joint_L"};
 
-        servo_fl.points.push_back(servo_fl_point);
-        servo_fr.points.push_back(servo_fr_point);
-        servo_rl.points.push_back(servo_rl_point);
-        servo_rr.points.push_back(servo_rr_point);
+        auto point = trajectory_msgs::msg::JointTrajectoryPoint();
+        point.positions = {FR_servo_data, FL_servo_data,
+                           RR_servo_data, RL_servo_data};
+        point.velocities = {0.0, 0.0, 0.0, 0.0};
+        point.time_from_start = rclcpp::Duration::from_seconds(0.5);
 
-        Servo_FL_CON_pub->publish(servo_fl);
-        Servo_FR_CON_pub->publish(servo_fr);
-        Servo_RL_CON_pub->publish(servo_rl);
-        Servo_RR_CON_pub->publish(servo_rr);
+        servo.points.push_back(point);
+        servo_pub->publish(servo);
     }
 };
 
@@ -369,11 +265,11 @@ int main(int argc, char* argv[]) {
     auto node = std::make_shared<Controller>();
 
     // Using std::chrono to create a rate object
-    auto rate = std::chrono::milliseconds(100); // 200 Hz = 5ms per loop
+    auto rate = std::chrono::milliseconds(600); // 200 Hz = 5ms per loop
 
     while (rclcpp::ok()) {
         rclcpp::spin_some(node);
-        
+
         // Manually sleep to maintain the loop rate
         std::this_thread::sleep_for(rate);
     }
