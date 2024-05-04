@@ -1,0 +1,501 @@
+<?xml version="1.0" ?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="rover">
+    <material name="black">
+        <color rgba="0.1 0.1 0.1 1.0"/>
+    </material>
+
+    <material name="blue">
+        <color rgba="0 0 1 0.5"/>
+    </material>
+
+    <material name="sky_blue">
+        <color rgba="0.5294 0.8078 0.9804 1"/>
+    </material>
+
+    <material name="silver">
+        <color rgba="0.75 0.75 0.75 1"/>
+    </material>
+
+    <material name="brown">
+      <color rgba="0.5451 0.2706 0.0745 1"/>
+    </material>
+
+    <xacro:include filename="$(find osr_gazebo)/urdf/gazebo.urdf.xacro"/>
+    <xacro:include filename="$(find osr_gazebo)/urdf/insert_transmission.urdf.xacro"/>
+
+    <link name="base_footprint"/>
+    <link name="base_link">
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0.0"/>
+            <geometry>
+                <mesh filename="file://$(find osr_gazebo)/meshes/body.stl"/>
+            </geometry>
+        </collision>
+
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 0.0"/>
+            <geometry>
+                <mesh filename="file://$(find osr_gazebo)/meshes/body.stl"/>
+            </geometry>
+            <material name="brown"/>
+        </visual>
+
+	    <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <mass value="10"/>
+            <inertia  ixx="0.28541666666666665" ixy="0" ixz="0" iyy="0.8666666666666666" 	iyz="0" izz="1.0854166666666665" />
+        </inertial>
+
+    </link>
+
+    <joint name="base_joint" type="fixed">
+        <parent link="base_footprint"/>
+        <origin rpy="0 0 0" xyz="0 0 0.273745"/>
+        <child link="base_link"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+
+    <link name="box_rotate">
+        <collision>
+            <origin rpy="0 0 -3.14" xyz="0 0 0.0"/>
+            <geometry>
+                <mesh filename="file://$(find osr_gazebo)/meshes/box_link.stl"/>
+            </geometry>
+        </collision>
+
+        <visual>
+            <origin rpy="0 0 -3.14" xyz="0 0 0"/>
+            <geometry>
+                <mesh filename="file://$(find osr_gazebo)/meshes/box_link.stl"/>
+            </geometry>
+            <material name="silver"/>
+        </visual>
+
+        <inertial>
+            <origin rpy="0 0 -3.14" xyz="0 0 0"/>
+            <mass value="0.2"/>
+            <inertia  ixx="0.0017960061392112761" ixy="0" ixz="0" iyy="5.164887871181532e-06" iyz="0" izz="0.001795990912371075" />
+        </inertial>
+    </link>
+
+    <joint name="body_joint" type="fixed">
+        <parent link="base_link"/>
+        <origin rpy="0 0 0" xyz="-0.071275 0 0.080475"/>
+        <child link="box_rotate"/>
+        <axis xyz="0 0 1"/>
+    </joint>
+
+    <xacro:macro name="arm_rotate" params="prefix dir">
+        <link name="arm_rotate_${prefix}">
+            <collision>
+                <origin rpy="0 0.2 0" xyz="0 0 0"/>
+                <geometry>
+                    <mesh filename="file://$(find osr_gazebo)/meshes/arm.stl"/>
+                </geometry>
+            </collision>
+
+            <visual>
+                <origin rpy="0 0.2 0" xyz="0 0 0"/>
+                <geometry>
+                    <mesh filename="file://$(find osr_gazebo)/meshes/arm.stl"/>
+                </geometry>
+                <material name="silver"/>
+            </visual>
+
+            <inertial>
+                <origin rpy="0 0.2 0" xyz="0 0 0"/>
+                <mass value="0.1"/>
+                <inertia  ixx="3.1492026961385533e-06" ixy="0" ixz="0" iyy="6.396050780815705e-05" iyz="0" izz="6.393627133943758e-05" />
+
+            </inertial>
+        </link>
+
+        <joint name="arm_rotate_join_${prefix}" type="fixed">
+            <parent link="box_rotate"/>
+            <origin rpy="0 0.0 0" xyz="0 ${dir*0.153} 0"/>
+            <child link="arm_rotate_${prefix}"/>
+            <axis xyz="0 1 0"/>
+        </joint>
+    </xacro:macro>
+    <xacro:arm_rotate prefix="L" dir="1"/>
+    <xacro:arm_rotate prefix="R" dir="-1"/>
+
+    <xacro:macro name="turn_bukles" params="prefix dir origin">
+        <link name="turn_bukles_link_${prefix}">
+            <collision>
+                <origin rpy="0 0 ${origin}" xyz="0 0 0.0"/>
+                <geometry>
+                    <mesh filename="file://$(find osr_gazebo)/meshes/turn_${prefix}.stl"/>
+                </geometry>
+            </collision>
+
+            <visual>
+                <origin rpy="0 0 ${origin}" xyz="0 0 0.0"/>
+                <geometry>
+                    <mesh filename="file://$(find osr_gazebo)/meshes/turn_${prefix}.stl"/>
+                </geometry>
+                <material name="silver"/>
+            </visual>
+            <inertial>
+                <origin rpy="0 0 0" xyz="0 0 0.0"/>
+                <mass value="1"/>
+                <inertia  ixx="0.0016688655832571472" ixy="0" ixz="0" iyy="0.0020448255700570341" iyz="0" izz="0.00116395044451649" />
+            </inertial>
+
+        </link>
+
+        <joint name="turn_bukles_joint_${prefix}" type="fixed">
+            <parent link="arm_rotate_${prefix}"/>
+            <origin rpy="0 0 0" xyz="0.071558 ${dir*0.017545} -0.084292"/>
+            <child link="turn_bukles_link_${prefix}"/>
+            <axis xyz="0 1 0"/>
+        </joint>
+
+    </xacro:macro>
+    <xacro:turn_bukles prefix="L" dir="1" origin="0"/>
+    <xacro:turn_bukles prefix="R" dir="-1" origin ="-1.57"/>
+
+    <xacro:macro name="body_axis_link" params="prefix dir">
+        <link name="body_axis_link_${prefix}">
+            <collision>
+                <origin rpy="0 0 1.57" xyz="0 0 0.0"/>
+                <geometry>
+                    <mesh filename="file://$(find osr_gazebo)/meshes/body_axis.stl"/>
+                </geometry>
+            </collision>
+            <visual>
+                <origin rpy="0 0 1.57" xyz="0 0 0.0"/>
+                <geometry>
+                    <mesh filename="file://$(find osr_gazebo)/meshes/body_axis.stl"/>
+                </geometry>
+                <material name="silver"/>
+            </visual>
+            <inertial>
+                <origin rpy="0 0 1.57" xyz="0 0 0.0"/>
+                <mass value="0.5"/>
+                <inertia  ixx="0.0002647325735077617" ixy="0" ixz="0" iyy="0.0006894427883912008" iyz="0" izz="0.0007752858571736844" />
+            </inertial>
+        </link>
+
+        <joint name="body_axis_joint_${prefix}" type="fixed">
+            <parent link="turn_bukles_link_${prefix}"/>
+            <origin rpy="0 0 0" xyz="0 ${dir*-0.060920} -0.001245"/>
+            <child link="body_axis_link_${prefix}"/>
+            <axis xyz="0 1 0"/>
+        </joint>
+
+    </xacro:macro>
+    <xacro:body_axis_link prefix="L" dir="1"/>
+    <xacro:body_axis_link prefix="R" dir="-1"/>
+
+    <xacro:macro name="rocker_bogie_link" params="prefix dir">
+        <link name="rocker_bogie_link_${prefix}_1">
+            <collision>
+                <origin rpy="0 0 0" xyz="0 0 0.0"/>
+                <geometry>
+                    <mesh filename="file://$(find osr_gazebo)/meshes/rockerbogie_middle_1.stl"/>
+                </geometry>
+            </collision>
+
+            <visual>
+                <origin rpy="0 0 0" xyz="0 0 0.0"/>
+                <geometry>
+                    <mesh filename="file://$(find osr_gazebo)/meshes/rockerbogie_middle_1.stl"/>
+                </geometry>
+                <material name="silver"/>
+            </visual>
+
+            <inertial>
+                <origin rpy="0 0 0" xyz="0 0 0.0"/>
+                <mass value="7"/>
+                <inertia  ixx="0.24701126860819052" ixy="0" ixz="0" iyy="3.544526366681435" iyz="0" izz="3.335915098740816" /> 
+            </inertial>
+
+        </link>
+
+        <joint name="rocker_bogie_joint_${prefix}_1" type="fixed">
+            <parent link="body_axis_link_${prefix}"/>
+            <origin rpy="0 0 0" xyz="0.016004 ${dir*0.071485} 0.001353"/>
+            <child link="rocker_bogie_link_${prefix}_1"/>
+            <limit effort="10000.0" velocity="0.5" lower="-0.5" upper="0.5"/>
+            <axis xyz="0 1 0"/>
+        </joint>
+
+        <link name="rocker_bogie_link_${prefix}_2">
+            <collision>
+                <origin rpy="0 0 0" xyz="0 0 0.0"/>
+                <geometry>
+                    <mesh filename="file://$(find osr_gazebo)/meshes/rockerbogie_front_1.stl"/>
+                </geometry>
+            </collision>
+
+            <visual>
+                <origin rpy="0 0 0" xyz="0 0 0.0"/>
+                <geometry>
+                    <mesh filename="file://$(find osr_gazebo)/meshes/rockerbogie_front_1.stl"/>
+                </geometry>
+                <material name="silver"/>
+            </visual>
+
+            <inertial>
+                <origin rpy="0 0 0" xyz="0 0 0.0"/>
+                <mass value="3"/>
+                <inertia  ixx="0.51733003028693055" ixy="0" ixz="0" iyy="1.1690895987181758" iyz="0" izz="0.6934262363396754" />
+            </inertial>
+
+        </link>
+
+        <joint name="rocker_bogie_joint_${prefix}_2" type="revolute">
+            <parent link="rocker_bogie_link_${prefix}_1"/>
+            <origin rpy="0 0 0" xyz="0.099618 0 -0.091275"/>
+            <child link="rocker_bogie_link_${prefix}_2"/>
+            <limit effort="10000.0" velocity="1.0" lower="-0.5" upper="0.5"/>
+            <axis xyz="0 1 0"/>
+        </joint>
+
+    </xacro:macro>
+    
+    <xacro:rocker_bogie_link prefix="L" dir="1"/>
+    <xacro:rocker_bogie_link prefix="R" dir="-1"/>
+
+    <xacro:macro name="wheel_link" params="prefix dir origin">
+        <link name="front_wheel_link_${prefix}">
+            <collision>
+                <origin rpy="0 0 ${dir*-1.57}" xyz="0 0 0.0"/>
+                <geometry>
+                    <mesh filename="file://$(find osr_gazebo)/meshes/wheel_link_left_2.stl"/>
+                </geometry>
+            </collision>
+
+            <visual>
+                <origin rpy="0 0 ${dir*-1.57}" xyz="0 0 0.0"/>
+                <geometry>
+                    <mesh filename="file://$(find osr_gazebo)/meshes/wheel_link_left_2.stl"/>
+                </geometry>
+                <material name="silver"/>
+            </visual>
+
+            <inertial>
+                <origin rpy="0 0 ${dir*-1.57}" xyz="0 0 0.0"/>
+                <mass value="0.8"/>
+                <inertia  ixx="0.002865290876023045" ixy="0" ixz="0" iyy="0.004329299643338258" iyz="0" izz="0.0018192303726865125" />
+            </inertial>
+        </link>
+
+        <joint name="front_wheel_joint_${prefix}" type="revolute"> 
+        <!-- revolute continuous -->
+            <parent link="rocker_bogie_link_${prefix}_2"/>
+            <origin rpy="0 0 0" xyz="0.170113 -0.000335 0.076721"/>
+            <child link="front_wheel_link_${prefix}"/>
+            <limit effort="100000.0" velocity="10" lower="-0.523599" upper="0.523599"/>
+            <axis xyz="0 0 1"/>
+        </joint>
+
+        <link name="middle_wheel_link_${prefix}">
+            <collision>
+                <origin rpy="${origin} 0 ${-dir*1.57}" xyz="0 0 0.0"/>
+                <geometry>
+                    <mesh filename="file://$(find osr_gazebo)/meshes/wheel_middle_left.stl"/>
+                </geometry>
+            </collision>
+
+            <visual>
+                <origin rpy="${origin} 0 ${-dir*1.57}" xyz="0 0 0.0"/>
+                <geometry>
+                    <mesh filename="file://$(find osr_gazebo)/meshes/wheel_middle_left.stl"/>
+                </geometry>
+                <material name="silver"/>
+            </visual>
+
+            <inertial>
+                <origin rpy="${origin} 0 ${-dir*1.57}" xyz="0 0 0.0"/>
+                <mass value="0.3"/>
+                <inertia  ixx="0.00023039825512741194" ixy="0" ixz="0" iyy="0.0004706118439697759" iyz="0" izz="0.0004706117933937492" />
+            </inertial>
+
+        </link>
+
+        <joint name="middle_wheel_joint_${prefix}" type="fixed">
+            <parent link="rocker_bogie_link_${prefix}_2"/>
+            <origin rpy="0 0 0" xyz="-0.101456 ${dir*0.000053} -0.100276"/>
+            <child link="middle_wheel_link_${prefix}"/>
+
+            <axis xyz="0 1 0"/>
+        </joint>
+
+        <link name="rear_wheel_link_${prefix}">
+            <collision>
+                <origin rpy="0 0 ${-dir*1.57}" xyz="0 0 0.0"/>
+                <geometry>
+                    <mesh filename="file://$(find osr_gazebo)/meshes/wheel_link_left_2.stl"/>
+                </geometry>
+            </collision>
+
+            <visual>
+                <origin rpy="0 0 ${-dir*1.57}" xyz="0 0 0.0"/>
+                <geometry>
+                    <mesh filename="file://$(find osr_gazebo)/meshes/wheel_link_left_2.stl"/>
+                </geometry>
+                <material name="silver"/>
+            </visual>
+
+            <inertial>
+                <origin rpy="0 0 ${-dir*1.57}" xyz="0 0 0.0"/>
+                <mass value="0.8"/>
+                <inertia  ixx="0.002865290876023045" ixy="0" ixz="0" iyy="0.004329299643338258" iyz="0" izz="0.0018192303726865125" />
+
+            </inertial>
+
+        </link>
+
+        <joint name="rear_wheel_joint_${prefix}" type="revolute">
+        <!-- revolute continuous -->
+            <parent link="rocker_bogie_link_${prefix}_1"/>
+            <origin rpy="0 0 0" xyz="-0.311763 0 -0.030379"/>
+            <child link="rear_wheel_link_${prefix}"/>
+            <limit effort="100000.0" velocity="3" lower="-0.523599" upper="0.523599"/>
+            <axis xyz="0 0 1"/>
+        </joint>
+
+    </xacro:macro>
+
+    <xacro:wheel_link prefix="L" dir="1" origin="1.57"/>
+    <xacro:wheel_link prefix="R" dir="-1" origin="-3.14"/>
+
+    <xacro:macro name="wheel" params="prefix dir origin prefix_1">
+        <link name="front_wheel_link_${prefix}">
+            <collision>
+                <origin rpy="-1.57 0 ${origin}" xyz="0 0 0.0"/>
+                <geometry>
+                    <mesh filename="file://$(find osr_gazebo)/meshes/wheel.stl"/>
+                </geometry>
+                <surface>
+                    <friction>
+                        <ode>
+                            <mu>0.7</mu>
+                            <mu2>0.3</mu2>
+                        </ode>
+                    </friction>
+                </surface>
+            </collision>
+
+            <visual>
+                <origin rpy="-1.57 0 ${origin}" xyz="0 0 0.0"/>
+                <geometry>
+                    <mesh filename="file://$(find osr_gazebo)/meshes/wheel.stl"/>
+                </geometry>
+                <material name="black"/>
+            </visual>
+
+            <inertial>
+                <origin rpy="-1.57 0 ${origin}" xyz="0 0 0.0"/>
+                <mass value="0.8"/>
+                <inertia  ixx="0.0024621497157168697" ixy="0" ixz="0" iyy="0.002462972407314915" iyz="0" izz="0.0035658885464652456" />
+            </inertial>
+
+        </link>
+
+        <joint name="front_wheel_joint_${prefix}" type="continuous">
+            <parent link="front_wheel_link_${prefix_1}"/>
+            <origin rpy="0 0 0" xyz="0.006231 ${dir*0.019544} -0.169991"/>
+            <child link="front_wheel_link_${prefix}"/>
+            <axis xyz="0 1 0"/>
+            <velocity>5.0</velocity>
+        </joint>
+
+        <link name="middle_wheel_link_${prefix}">
+            <collision>
+                <origin rpy="-1.57 0 ${origin}" xyz="0 0 0.0"/>
+                <geometry>
+                    <mesh filename="file://$(find osr_gazebo)/meshes/wheel.stl"/>
+                </geometry>
+                <surface>
+                    <friction>
+                        <ode>
+                            <mu>0.7</mu>
+                            <mu2>0.3</mu2>
+                        </ode>
+                    </friction>
+                </surface>
+            </collision>
+
+            <visual>
+                <origin rpy="-1.57 0 ${origin}" xyz="0 0 0.0"/>
+                <geometry>
+                    <mesh filename="file://$(find osr_gazebo)/meshes/wheel.stl"/>
+                </geometry>
+                <material name="black"/>
+            </visual>
+
+            <inertial>
+                <origin rpy="-1.57 0 ${origin}" xyz="0 0 0.0"/>
+                <mass value="0.8"/>
+                <inertia  ixx="0.0024621497157168697" ixy="0" ixz="0" iyy="0.002462972407314915" iyz="0" izz="0.0035658885464652456" />
+            </inertial>
+        </link>
+
+        <joint name="middle_wheel_joint_${prefix}" type="continuous">
+            <parent link="middle_wheel_link_${prefix_1}"/>
+            <origin rpy="0 0 0" xyz="0.006691 ${dir*0.100382} 0.005425"/>
+            <child link="middle_wheel_link_${prefix}"/>
+            <axis xyz="0 1 0"/>
+            <velocity>5.0</velocity>
+        </joint>
+
+        <link name="rear_wheel_link_${prefix}">
+            <collision>
+                <origin rpy="-1.57 0 ${origin}" xyz="0 0 0.0"/>
+                <geometry>
+                    <mesh filename="file://$(find osr_gazebo)/meshes/wheel.stl"/>
+                </geometry>
+                <surface>
+                    <friction>
+                        <ode>
+                            <mu>0.7</mu>
+                            <mu2>0.3</mu2>
+                        </ode>
+                    </friction>
+                </surface>
+            </collision>
+
+            <visual>
+                <origin rpy="-1.57 0 ${origin}" xyz="0 0 0.0"/>
+                <geometry>
+                    <mesh filename="file://$(find osr_gazebo)/meshes/wheel.stl"/>
+                </geometry>
+                <material name="black"/>
+            </visual>
+
+            <inertial>
+                <origin rpy="-1.57 0 ${origin}" xyz="0 0 0.0"/>
+                <mass value="0.8"/>
+                <inertia  ixx="0.0024621497157168697" ixy="0" ixz="0" iyy="0.002462972407314915" iyz="0" izz="0.0035658885464652456" />
+            </inertial>
+        </link>
+
+        <joint name="rear_wheel_joint_${prefix}" type="continuous">
+            <parent link="rear_wheel_link_${prefix_1}"/>
+            <origin rpy="0 0 0" xyz="-0.000203 ${dir*0.008131} -0.160678"/>
+            <child link="rear_wheel_link_${prefix}"/>
+            <axis xyz="0 1 0"/>
+            <velocity>5.0</velocity>
+        </joint>
+
+    </xacro:macro>
+    <xacro:wheel prefix="left" dir="1" origin="0" prefix_1="L"/>
+    <xacro:wheel prefix="right" dir="-1" origin="3.14" prefix_1="R"/>
+
+    <xacro:insert_velocity_transmission name="rear_wheel_joint_right"/>
+    <xacro:insert_velocity_transmission name="rear_wheel_joint_left"/>
+    <xacro:insert_velocity_transmission name="middle_wheel_joint_right"/>
+    <xacro:insert_velocity_transmission name="middle_wheel_joint_left"/>
+    <xacro:insert_velocity_transmission name="front_wheel_joint_right"/>
+    <xacro:insert_velocity_transmission name="front_wheel_joint_left"/>
+
+    <xacro:insert_position_transmission name="front_wheel_joint_R"/>
+    <xacro:insert_position_transmission name="front_wheel_joint_L"/>
+    <xacro:insert_position_transmission name="rear_wheel_joint_R"/>
+    <xacro:insert_position_transmission name="rear_wheel_joint_L"/>
+
+</robot>
