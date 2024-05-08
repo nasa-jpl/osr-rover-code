@@ -24,12 +24,13 @@ wheel_controller:
       - rear_wheel_joint_left
     command_interfaces:
       - velocity
+      - position
     state_interfaces:
       - position
       - velocity
 
 
-#---------------wheel_velocity_controller----------------#
+#---------------servo_velocity_controller----------------#
 
 servo_controller:
   ros__parameters:

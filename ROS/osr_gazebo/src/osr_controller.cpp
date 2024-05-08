@@ -7,9 +7,14 @@
 #include "geometry_msgs/msg/twist.hpp"
 
 #include "sensor_msgs/msg/imu.hpp"
+
 #include "sensor_msgs/msg/joint_state.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
+
+#include "tf2/LinearMath/Quaternion.h"
+#include "tf2_ros/transform_listener.h"
+#include "tf2_ros/transform_broadcaster.h"
 
 using std::placeholders::_1;
 
@@ -19,8 +24,12 @@ private:
 
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr motor_wheel_pub;
     rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr servo_pub;
+    rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub;
+
 
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr sub;
+    rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr joint_sub;
+    rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub;
 
     double angle_data;
 
@@ -37,18 +46,29 @@ private:
 
     double theta_front_closest;
     double theta_front_farthest;
-
+    rclcpp::Time last_time;
+    // rclcpp::Time current_time;
     double angular_velocity_center, vel_middle_closest, vel_corner_closest, vel_corner_farthest, vel_middle_farthest;
     double ang_vel_middle_closest, ang_vel_corner_closest, ang_vel_corner_farthest, ang_vel_middle_farthest;
     double start_time, time, pre_time;
 
     geometry_msgs::msg::Twist pri_velocity;
 
+
+    double fl_vel, fr_vel, ml_vel, mr_vel, rl_vel, rr_vel;
+    double current_dl, dl, pre_dl;
+    double x_postion, y_postion;
+
     double FL_data, FR_data, ML_data, MR_data, RL_data, RR_data;
 
     double FR_servo_data, FL_servo_data, RR_servo_data, RL_servo_data;
 
     bool delay_ = true;
+
+    double dt;
+    double test1;
+    double test = 0;
+    nav_msgs::msg::Odometry odom_msg;
 
 public:
     Controller() : Node("controller") {
@@ -58,8 +78,84 @@ public:
         sub = this->create_subscription<geometry_msgs::msg::Twist>(
             "cmd_vel", 1, std::bind(&Controller::msgCallback, this, std::placeholders::_1));
 
+        joint_sub = this->create_subscription<sensor_msgs::msg::JointState>(
+            "joint_states", 1, std::bind(&Controller::jointStateCallback, this, std::placeholders::_1));
+
+        imu_sub = this->create_subscription<sensor_msgs::msg::Imu>(
+            "imu_plugin/out", 1, std::bind(&Controller::imuCallback, this, std::placeholders::_1));
+
+        odom_pub = this->create_publisher<nav_msgs::msg::Odometry>("osr/odom", 10);
+
     }
 
+    void jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr msg) {
+
+        fl_vel = msg->position[5];
+        fr_vel = msg->position[7];
+        ml_vel = msg->position[2];
+        mr_vel = msg->position[3];
+        rl_vel = msg->position[8];
+        rr_vel = msg->position[9];
+
+        Odometry(theta);
+
+    }
+
+    void Odometry(double angle)
+    {
+        current_dl = (fl_vel + fr_vel + ml_vel + mr_vel + rl_vel + rr_vel) * ROVER_WHEEL_RADIUS / 6;
+        dl = current_dl - pre_dl;
+
+        pre_dl = current_dl;
+
+        x_postion += dl * cos(theta);
+        y_postion += dl * sin(theta);
+        // RCLCPP_INFO(this->get_logger(), "x_position: %f, y_position: %f", x_postion, y_postion);
+
+        odom_msg.header.stamp = this->get_clock()->now();
+        odom_msg.header.frame_id = "odom";
+
+        odom_msg.pose.pose.position.x = x_postion;
+        odom_msg.pose.pose.position.y = y_postion;
+
+        tf2::Quaternion quaternion;
+        quaternion.setRPY(0, 0, angle);
+
+        odom_msg.pose.pose.orientation.x = quaternion.x();
+        odom_msg.pose.pose.orientation.y = quaternion.y();
+        odom_msg.pose.pose.orientation.z = quaternion.z();
+        odom_msg.pose.pose.orientation.w = quaternion.w();
+
+        static tf2_ros::TransformBroadcaster br(this);
+        geometry_msgs::msg::TransformStamped transformStamped;
+
+        transformStamped.header.stamp = this->get_clock()->now();
+        transformStamped.header.frame_id = "odom";
+        transformStamped.child_frame_id = "base_footprint";
+
+        transformStamped.transform.translation.x = x_postion;
+        transformStamped.transform.translation.y = y_postion;
+        transformStamped.transform.translation.z = 0.0;
+
+        transformStamped.transform.rotation = odom_msg.pose.pose.orientation;
+        br.sendTransform(transformStamped);
+
+        odom_pub->publish(odom_msg);
+
+       // printf("x_pos : %f\ty_pos : %f\n", x_postion,y_postion);
+    }
+
+    void imuCallback(const sensor_msgs::msg::Imu::SharedPtr msg) {
+        tf2::Quaternion quaternion;
+        tf2::fromMsg(msg->orientation, quaternion);
+
+        // Convert quaternion to roll, pitch, yaw
+        double roll, pitch, yaw;
+        tf2::Matrix3x3 m(quaternion);
+        m.getRPY(roll, pitch, yaw);
+        theta = yaw;
+
+    }
 
     void msgCallback(const geometry_msgs::msg::Twist::SharedPtr msg) {
 

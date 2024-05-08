@@ -486,6 +486,14 @@
     <xacro:wheel prefix="left" dir="1" origin="0" prefix_1="L"/>
     <xacro:wheel prefix="right" dir="-1" origin="3.14" prefix_1="R"/>
 
+    <joint name="imu_joint" type="fixed">
+            <parent link="base_link"/>
+            <child link="imu_link"/>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </joint>
+
+    <link name="imu_link"></link>
+
     <xacro:insert_velocity_transmission name="rear_wheel_joint_right"/>
     <xacro:insert_velocity_transmission name="rear_wheel_joint_left"/>
     <xacro:insert_velocity_transmission name="middle_wheel_joint_right"/>
