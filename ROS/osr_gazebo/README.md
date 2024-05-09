@@ -42,7 +42,13 @@ Source your ROS installation:
 ```bash
 source /opt/ros/foxy/setup.bash
 ```
-
+build the osr-gazebo packages:
+```bash
+cd ~/osr-rover-code/ROS/osr_gazebo
+colcon build
+source ~/osr-rover-code/ROS/osr_gazebo/install/setup.bash
+source devel/setup.bash
+```
 ## Visualisation
 
 ### `rover_rviz`
