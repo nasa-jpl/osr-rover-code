@@ -47,7 +47,6 @@ build the osr-gazebo packages:
 cd ~/osr-rover-code/ROS/osr_gazebo
 colcon build
 source ~/osr-rover-code/ROS/osr_gazebo/install/setup.bash
-source devel/setup.bash
 ```
 ## Visualisation
 
