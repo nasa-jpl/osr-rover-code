@@ -10,32 +10,71 @@ The following ROS packages are included to visualize the rover in rviz and simul
 ## Dependencies
 
 ### Linux
-- Operating System: Ubuntu 20.04.06 LTS
-- ROS Distribution: Foxy
+- Operating System: Ubuntu 20.04.06 LTS &&  Ubuntu 22.04.06 LTS
+- ROS Distribution: foxy && iron && humble
 - Gazebo Version: 11.14.0
 
 ### Required ROS Packages
 To fully utilize the capabilities of the rover simulation, the following ROS packages are necessary:
 
-- `rviz`
-- `urdf`
-- `xacro`
-- `gazebo_ros`
-- `robot_state_publisher`
-- `joint_state_publisher`
-- `ros_control`
-
-example:
 ```bash
-sudo apt-get install ros-foxy-controller-manager
-sudo apt-get install ros-foxy-robot-state-publisher
-sudo apt-get install ros-foxy-joint-state-publisher
-sudo apt-get install ros-foxy-gazebo-ros-pkgs
-sudo apt-get install ros-foxy-trajectory-msgs
-sudo apt-get install ros-foxy-velocity-controllers
+sudo apt install python3-colcon-common-extensions
+sudo apt-get install ros-${ros-distro}-rviz2
+sudo apt-get install ros-${ros-distro}-controller-manager
+sudo apt-get install ros-${ros-distro}-robot-state-publisher
+sudo apt-get install ros-${ros-distro}-joint-state-publisher
+sudo apt-get install ros-${ros-distro}-joint-state-publisher-gui 
+sudo apt-get install ros-${ros-distro}-gazebo-ros-pkgs
+sudo apt-get install ros-${ros-distro}-trajectory-msgs
+sudo apt-get install ros-${ros-distro}-velocity-controllers
+sudo apt-get install ros-${ros-distro}-joint-trajectory-controller
+sudo apt-get install ros-${ros-distro}-gazebo-ros2-control-demos
 ```
 
 ## Installation
+
+### 버전 차이 주의 
+
+## foxy 버전
+```bash
+    load_joint_state_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'joint_state_broadcaster'],
+        output='screen'
+    )
+
+    # wheel_velocity_controller
+    rover_wheel_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'wheel_controller'],
+        output='screen'
+    )
+
+    # servo_controller
+    servo_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'servo_controller'],
+        output='screen'
+    )
+```
+
+## iron && humble 버전
+```bash
+    load_joint_state_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active', 'joint_state_broadcaster'],
+        output='screen'
+    )
+
+    # wheel_velocity_controller
+    rover_wheel_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active', 'wheel_controller'],
+        output='screen'
+    )
+
+    # servo_controller
+    servo_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active', 'servo_controller'],
+        output='screen'
+    )
+```
+
 
 ### Create and configure a workspace
 Source your ROS installation:
