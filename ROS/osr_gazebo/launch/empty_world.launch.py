@@ -37,13 +37,49 @@ def generate_launch_description():
         parameters=[params]
     )
 
+    controller_spawn = Node(
+        package='osr_gazebo',
+        executable='osr_controller',
+        output='screen'
+    )
+    
     spawn_entity = Node(package='gazebo_ros', executable='spawn_entity.py',
                         arguments=['-topic', 'robot_description',
-                                   '-entity', 'cartpole'],
+                                   '-entity', 'rover'],
                         output='screen')
 
 
+    # joint_state_controller
+    load_joint_state_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active', 'joint_state_broadcaster'],
+        output='screen'
+    )
+
+    # wheel_velocity_controller
+    rover_wheel_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active', 'wheel_controller'],
+        output='screen'
+    )
+
+    # servo_controller
+    servo_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active', 'servo_controller'],
+        output='screen'
+    )
+    
     return LaunchDescription([
+    	controller_spawn,
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=spawn_entity,
+                on_exit=[
+                    load_joint_state_controller,
+                    rover_wheel_controller,
+                    servo_controller,
+                ],
+            )
+        ),
+   
         gazebo,
         node_robot_state_publisher,
         spawn_entity,
