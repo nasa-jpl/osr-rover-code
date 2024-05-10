@@ -5,42 +5,64 @@ The following ROS packages are included to visualize the rover in rviz and simul
 
 - `rviz.launch`: Launches a package for observing the rover in rviz, providing real-time visualization of its movements and sensor data.
 - `empty_world.launch`: Deploys the rover within the Gazebo simulation environment, creating a virtual testing ground for rover operations.
-- `controller.launch`: Initializes the control system for the rover, setting the stage for user interaction through various input devices.
 
 ## Dependencies
 
 ### Linux
-- Operating System: Ubuntu 20.04.06 LTS
-- ROS Distribution: Foxy
-- Gazebo Version: 11.14.0
+- **Operating System**: Ubuntu 20.04.06 LTS or Ubuntu 22.04.06 LTS
+- **ROS Distributions**: Foxy, Iron, Humble
+- **Gazebo Version**: 11.14.0
 
-### Required ROS Packages
-To fully utilize the capabilities of the rover simulation, the following ROS packages are necessary:
+## ROS Package Installation
+Before installing the required packages, replace `${ros-distro}` in the commands below with the appropriate ROS distribution name (`foxy`, `iron`, `humble`).
 
-- `rviz`
-- `urdf`
-- `xacro`
-- `gazebo_ros`
-- `robot_state_publisher`
-- `joint_state_publisher`
-- `ros_control`
-
-example:
 ```bash
-sudo apt-get install ros-foxy-controller-manager
-sudo apt-get install ros-foxy-robot-state-publisher
-sudo apt-get install ros-foxy-joint-state-publisher
-sudo apt-get install ros-foxy-gazebo-ros-pkgs
-sudo apt-get install ros-foxy-trajectory-msgs
-sudo apt-get install ros-foxy-velocity-controllers
+sudo apt install python3-colcon-common-extensions
+sudo apt-get install ros-${ros-distro}-rviz2
+sudo apt-get install ros-${ros-distro}-controller-manager
+sudo apt-get install ros-${ros-distro}-robot-state-publisher
+sudo apt-get install ros-${ros-distro}-joint-state-publisher
+sudo apt-get install ros-${ros-distro}-joint-state-publisher-gui 
+sudo apt-get install ros-${ros-distro}-gazebo-ros-pkgs
+sudo apt-get install ros-${ros-distro}-trajectory-msgs
+sudo apt-get install ros-${ros-distro}-velocity-controllers
+sudo apt-get install ros-${ros-distro}-joint-trajectory-controller
+sudo apt-get install ros-${ros-distro}-gazebo-ros2-control-demos
 ```
 
 ## Installation
 
+### Attention to Version Differences
+
+For launching the **empty_world.launch.py** script, please note that command variations may exist between different ROS distributions. Below, we provide guidance tailored to your specific ROS version.<br/>
+<br/>
+Please modify the **< load_joint_state_controller, rover_wheel_controller, and servo_controller >** as follows, 
+<br/>to match your specific ROS version.
+
+#### For ROS Foxy
+In ROS Foxy, controllers are started with the state **'start'**.
+
+```bash
+rover_wheel_controller = ExecuteProcess(
+    cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'wheel_controller'],
+    output='screen'
+)
+# Continue with other controllers...
+```
+#### For ROS Iron & Humble
+In ROS Iron & Humble, controllers are started with the state **'active'**.
+
+```bash
+load_joint_state_controller = ExecuteProcess(
+    cmd=['ros2', 'control', 'load_controller', '--set-state', 'active', 'joint_state_broadcaster'],
+    output='screen'
+)
+# Continue with other controllers...
+```
 ### Create and configure a workspace
 Source your ROS installation:
 ```bash
-source /opt/ros/foxy/setup.bash
+source /opt/ros/${ros-distro}/setup.bash
 ```
 build the osr-gazebo packages:
 ```bash
@@ -69,18 +91,11 @@ This package provides essential launch needed for the visualization of the rover
 
 To launch the simulation along with the capability to manually control the joints, use the command:
 
-
 ```bash
 ros2 launch osr_gazebo empty_world.launch.py
 ```
 ![image](https://github.com/dongjineee/rover_gazebo/assets/150753899/481e0aaf-6336-45e5-b138-49ee7df5e509)
 
-### `rover_control`
-
-To launch the simulation along with the capability to manually control the joints, use the command:
-```bash
-ros2 launch osr_gazebo controller.launch.py
-```
 Keyboard controller
 ```bash
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
@@ -88,4 +103,3 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard
 ## Note
 - The control does not have specified linear and angular velocities. Therefore, it's necessary to add the maximum and minimum values for `cmd_vel` in the `motor_controller.cpp`.
 - The ROS1::noetic version of gazebo simulation exists at https://github.com/dongjineee/rover_gazebo.
-
