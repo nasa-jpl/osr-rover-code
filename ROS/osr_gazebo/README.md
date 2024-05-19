@@ -9,12 +9,12 @@ The following ROS packages are included to visualize the rover in rviz and simul
 ## Dependencies
 
 ### Linux
-- **Operating System**: Ubuntu 20.04.06 LTS or Ubuntu 22.04.06 LTS
-- **ROS Distributions**: Foxy, Iron, Humble
+- **Operating System**: Ubuntu 22.04.06 LTS
+- **ROS Distributions**: Iron, Humble
 - **Gazebo Version**: 11.14.0
 
 ## ROS Package Installation
-Before installing the required packages, replace `${ros-distro}` in the commands below with the appropriate ROS distribution name (`foxy`, `iron`, `humble`).
+Before installing the required packages, replace `${ros-distro}` in the commands below with the appropriate ROS distribution name (`iron`, `humble`).
 
 ```bash
 sudo apt install python3-colcon-common-extensions
@@ -32,60 +32,6 @@ sudo apt-get install ros-${ros-distro}-gazebo-ros2-control-demos
 
 ## Installation
 
-### Attention to Version Differences
-
-For launching the **empty_world.launch.py** script, please note that command variations may exist between different ROS distributions. Below, we provide guidance tailored to your specific ROS version.<br/>
-<br/>
-Please modify the **< load_joint_state_controller, rover_wheel_controller, and servo_controller >** as follows, 
-<br/>to match your specific ROS version.
-
-#### For ROS Foxy
-In ROS Foxy, controllers are started with the state **'start'**.
-
-```bash
-    # joint_state_controller
-    load_joint_state_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'joint_state_broadcaster'],
-        output='screen'
-    )
-
-    # wheel_velocity_controller
-    rover_wheel_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'wheel_controller'],
-        output='screen'
-    )
-
-    # servo_controller
-    servo_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'servo_controller'],
-        output='screen'
-    )
-
-
-```
-#### For ROS Iron & Humble
-In ROS Iron & Humble, controllers are started with the state **'active'**.
-
-```bash
-    # joint_state_controller
-    load_joint_state_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active', 'joint_state_broadcaster'],
-        output='screen'
-    )
-
-    # wheel_velocity_controller
-    rover_wheel_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active', 'wheel_controller'],
-        output='screen'
-    )
-
-    # servo_controller
-    servo_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active', 'servo_controller'],
-        output='screen'
-    )
-
-```
 ### Create and configure a workspace
 Source your ROS installation:
 ```bash
