@@ -61,7 +61,7 @@ In ROS Foxy, controllers are started with the state **'start'**.
         output='screen'
     )
 
-# Continue with other controllers...
+
 ```
 #### For ROS Iron & Humble
 In ROS Iron & Humble, controllers are started with the state **'active'**.
@@ -84,7 +84,7 @@ In ROS Iron & Humble, controllers are started with the state **'active'**.
         cmd=['ros2', 'control', 'load_controller', '--set-state', 'active', 'servo_controller'],
         output='screen'
     )
-# Continue with other controllers...
+
 ```
 ### Create and configure a workspace
 Source your ROS installation:
