@@ -77,3 +77,11 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard
 - The control does not have specified linear and angular velocities. Therefore, it's necessary to add the maximum and minimum values for `cmd_vel` in the `motor_controller.cpp`.
 - The ROS1::noetic version of gazebo simulation exists at https://github.com/dongjineee/rover_gazebo.
 
+## The method to convert from Onshape to URDF
+
+- The object file for the rover is available within Onshape.
+- This object file can be disassembled into its individual components, such as rocker bogie1,2,3, and box, etc..
+- However, directly using it as a URDF after converting it to an STL will result in significant CPU and GPU usage in RViz or Gazebo due to the file size issue. 
+-  Therefore, the process of reducing the file size of the STL using MeshLab was carried out. 
+- The package provided at https://github.com/gstavrinos/calc-inertia was then used to define the inertial properties. 
+- However, this method is not perfect and the file size is still large. Therefore, it is necessary to create new modeling while reducing the file size.
