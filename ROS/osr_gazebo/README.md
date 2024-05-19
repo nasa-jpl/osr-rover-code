@@ -43,20 +43,47 @@ Please modify the **< load_joint_state_controller, rover_wheel_controller, and s
 In ROS Foxy, controllers are started with the state **'start'**.
 
 ```bash
-rover_wheel_controller = ExecuteProcess(
-    cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'wheel_controller'],
-    output='screen'
-)
+    # joint_state_controller
+    load_joint_state_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'joint_state_broadcaster'],
+        output='screen'
+    )
+
+    # wheel_velocity_controller
+    rover_wheel_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'wheel_controller'],
+        output='screen'
+    )
+
+    # servo_controller
+    servo_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'start', 'servo_controller'],
+        output='screen'
+    )
+
 # Continue with other controllers...
 ```
 #### For ROS Iron & Humble
 In ROS Iron & Humble, controllers are started with the state **'active'**.
 
 ```bash
-load_joint_state_controller = ExecuteProcess(
-    cmd=['ros2', 'control', 'load_controller', '--set-state', 'active', 'joint_state_broadcaster'],
-    output='screen'
-)
+    # joint_state_controller
+    load_joint_state_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active', 'joint_state_broadcaster'],
+        output='screen'
+    )
+
+    # wheel_velocity_controller
+    rover_wheel_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active', 'wheel_controller'],
+        output='screen'
+    )
+
+    # servo_controller
+    servo_controller = ExecuteProcess(
+        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active', 'servo_controller'],
+        output='screen'
+    )
 # Continue with other controllers...
 ```
 ### Create and configure a workspace
