@@ -120,9 +120,31 @@ You can always come back to this and change these later. In the window where the
 * do the same for the axis you'd like to use for turning and for rotating in place, using `axis_angular.yaw` for turning and `axis_angular.pitch` for rotating in place.
 * do the same for the button you'd like to use for enabling any movement in the first place. The button number (again count starting from 0) should go with `enable_button`.
 
-Now you're all set up to launch the full rover software stack!
+## Confirming connection to the INA260
+
+If you installed the INA260 voltage, current, and power monitor on the PCB, let's check if we're able to connec to it by running the test script:
+
+```bash
+cd ~/osr_ws/src/osr-rover-code/scripts
+python3 test_ina260.py
+```
+
+This should show something similar to:
+
+```
+Attempting to connect INA260 at address 0x45...
+
+Successfully read values. They should be nonzero:
+Current: 0.198 A
+Voltage: 15.006 V
+Power: 2.87 W
+```
+
+If your INA260 is not at 0x45 but some other address (just make sure it doesn't conflict with the servo controller!), you can connect to it there through `python3 test_ina260.py 0x43` for address `0x43`.
 
 ## Manual rover bringup
+
+Now you're all set up to launch the full rover software stack!
 
 In a sourced terminal (`source /opt/ros/foxy/setup.bash && source ~/osr_ws/install/setup.bash`, unless you added these to your `~/.bashrc` file) already before, run
 

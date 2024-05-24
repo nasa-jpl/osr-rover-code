@@ -73,8 +73,8 @@ sudo apt install python3-rosdep
 cd ..
 sudo rosdep init
 rosdep update
-rosdep install --from-paths src --ignore-src --rosdistro=$ROS_DISTRO
-pip3 install adafruit-circuitpython-servokit
+rosdep install --from-paths src --ignore-src --rosdistro=$ROS_DISTRO -y
+pip3 install adafruit-circuitpython-servokit smbus ina260
 # build the ROS packages
 colcon build --symlink-install
 ```
