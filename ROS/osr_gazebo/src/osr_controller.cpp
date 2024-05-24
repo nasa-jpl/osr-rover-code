@@ -349,7 +349,7 @@ public:
         point.positions = {FR_servo_data, FL_servo_data,
                            RR_servo_data, RL_servo_data};
         point.velocities = {0.0, 0.0, 0.0, 0.0};
-        point.time_from_start = rclcpp::Duration::from_seconds(0.5);
+        point.time_from_start = rclcpp::Duration::from_seconds(0.2);
 
         servo.points.push_back(point);
         servo_pub->publish(servo);
@@ -361,7 +361,7 @@ int main(int argc, char* argv[]) {
     auto node = std::make_shared<Controller>();
 
     // Using std::chrono to create a rate object
-    auto rate = std::chrono::milliseconds(600); // 200 Hz = 5ms per loop
+    auto rate = std::chrono::milliseconds(300); // 200 Hz = 5ms per loop
 
     while (rclcpp::ok()) {
         rclcpp::spin_some(node);
