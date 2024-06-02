@@ -84,4 +84,3 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard
 - However, directly using it as a URDF after converting it to an STL will result in significant CPU and GPU usage in RViz or Gazebo due to the file size issue. 
 -  Therefore, the process of reducing the file size of the STL using MeshLab was carried out. 
 - The package provided at https://github.com/gstavrinos/calc-inertia was then used to define the inertial properties. 
-- However, this method is not perfect and the file size is still large. Therefore, it is necessary to create new modeling while reducing the file size.
