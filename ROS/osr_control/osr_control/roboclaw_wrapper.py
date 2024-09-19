@@ -528,16 +528,94 @@ class RoboclawWrapper(Node):
             self.rc.ForwardM2(self.address[i], 0)
 
     def read_errors(self):
-        """Checks error status of each motor controller, returns 0 if no errors reported"""
-        err = [0] * 5
+    """Checks error status of each motor controller, returns 0 if no errors reported"""
+        err = ['0'] * 3
         for i in range(len(self.address)):
             err_int = self.rc.ReadError(self.address[i])[1]
-            # convert to hexadecimal and then to string for easy decoding
-            err[i] = str(hex(err_int))
-            if err[i] != 0:
-                self.get_logger().error("Motor controller '{}' reported error code {}".format(self.address[i], err[i]))
-        
+    
+            if err_int != 0:
+                # convert to hexadecimal and then to string for easy decoding
+                err[i] = str(hex(err_int))
+    
+                err_string, has_error = self.decode_error(err_int)
+    
+                if(has_error):
+                    self.log.error(f"Motor controller {self.address[i]} reported error code {err[i]} (hex: {hex(err_int)}),{err_string}")
+                else:
+                    self.log.warn(f"Motor controller {self.address[i]} reported warning code {err[i]} (hex: {hex(err_int)}), {err_string}")
+    
         return err
+
+    def decode_error(self, err_int):
+        """ Decodes error codes according to RoboClaw user manual, pg. 73 """
+
+        err_string = ""
+        is_error = False
+
+        if(err_int & 0x000001):
+            err_string += "\nE-stop"
+        if(err_int & 0x000002):
+            err_string += "\nTemperature Error"
+            is_error = True
+        if(err_int & 0x000004):
+            err_string += "\nTemperature 2 error"
+            is_error = True
+        if(err_int & 0x000008):
+            err_string += "\nMain voltage High Error"
+            is_error = True
+        if(err_int & 0x000010):
+            err_string += "\nLogic voltage High Error"
+            is_error = True
+        if(err_int & 0x000020):
+            err_string += "\nLogic voltage Low Error"
+            is_error = True
+        if(err_int & 0x000040):
+            err_string += "\nM1 Driver Fault"
+            is_error = True
+        if(err_int & 0x000080):
+            err_string += "\nM2 Driver Fault"
+            is_error = True
+        if(err_int & 0x000100):
+            err_string += "\nM1 Speed Error"
+            is_error = True
+        if(err_int & 0x000200):
+            err_string += "\nM2 Speed Error"
+            is_error = True
+        if(err_int & 0x000400):
+            err_string += "\nM1 Position Error"
+            is_error = True
+        if(err_int & 0x000800):
+            err_string += "\nM2 Position Error"
+            is_error = True
+        if(err_int & 0x001000):
+            err_string += "\nM1 Current Error"
+            is_error = True
+        if(err_int & 0x002000):
+            err_string += "\nM2 Current Error"
+            is_error = True
+
+        if(err_int & 0x010000):
+            err_string += "\nM1 Over-Current Warning"
+        if(err_int & 0x020000):
+            err_string += "\nM2 Over-Current Warning"
+        if(err_int & 0x040000):
+            err_string += "\nMain Voltage High Warning"
+        if(err_int & 0x080000):
+            err_string += "\nMain Voltage Low Warning" 
+        if(err_int & 0x100000):
+            err_string += "\nTemperature Warning"
+        if(err_int & 0x200000):
+            err_string += "\nTemperature 2 Warning"
+        if(err_int & 0x400000):
+            err_string += "\nS4 Signal Triggered"
+        if(err_int & 0x800000):
+            err_string += "\nS5 Signal Triggered"
+        if(err_int & 0x01000000):
+            err_string += "\nSpeed Error Limit Warning"
+        if(err_int & 0x02000000):
+            err_string += "\nPosition Error Limit Warning"
+
+        return err_string, is_error
 
 
 def main(args=None):
