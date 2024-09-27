@@ -528,7 +528,7 @@ class RoboclawWrapper(Node):
             self.rc.ForwardM2(self.address[i], 0)
 
     def read_errors(self):
-    """Checks error status of each motor controller, returns 0 if no errors reported"""
+        """Checks error status of each motor controller, returns 0 if no errors reported"""
         err = ['0'] * 3
         for i in range(len(self.address)):
             err_int = self.rc.ReadError(self.address[i])[1]
