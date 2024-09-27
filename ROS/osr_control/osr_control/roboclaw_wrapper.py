@@ -227,7 +227,8 @@ class RoboclawWrapper(Node):
         serial_port = self.get_parameter('device').get_parameter_value().string_value
         baud_rate = self.get_parameter('baud_rate').get_parameter_value().integer_value
         self.rc = Roboclaw(serial_port, baud_rate)
-        self.rc.Open()
+        if self.rc.Open() == 0:
+            raise Exception("Unable to open serial ports: {}".format(self.rc.error))
         self.address = self.get_parameter('addresses').get_parameter_value().integer_array_value
 
         # initialize connection status to successful
