@@ -1,0 +1,82 @@
+# Use Ubuntu 20.04 as the base image (Foxy is designed for 20.04)
+FROM ubuntu:20.04
+
+# Avoid prompts from apt
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install necessary packages
+RUN apt-get update && apt-get install -y \
+    curl \
+    gnupg2 \
+    lsb-release \
+    git \
+    python3-pip \
+    python3-venv \
+    python3-numpy \
+    udev \
+    socat \
+    python3-serial \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up the ROS 2 Foxy repository
+RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
+
+# Install ROS 2 Foxy
+RUN apt-get update && apt-get install -y \
+    ros-foxy-desktop \
+    python3-colcon-common-extensions \
+    python3-rosdep \
+    python3-vcstool \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up ROS environment
+ENV ROS_DISTRO foxy
+ENV AMENT_PREFIX_PATH /opt/ros/foxy
+ENV PATH /opt/ros/foxy/bin:$PATH
+ENV PYTHONPATH /opt/ros/foxy/lib/python3.8/site-packages
+
+# Create ROS workspace
+RUN mkdir -p /root/osr_ws/src
+WORKDIR /root/osr_ws
+
+# Clone the UNT Robotics rover-code repository (foxy-devel branch)
+RUN git clone -b foxy-devel https://github.com/untrobotics/rover-code.git src/osr-rover-code
+
+# Copy the mock RoboClaw library
+COPY roboclaw.py /usr/local/lib/python3.8/dist-packages/roboclaw.py
+
+# Copy the RoboClaw emulator
+COPY roboclaw_emulator.py /root/roboclaw_emulator.py
+
+# Copy the new roboclaw_wrapper.py
+COPY roboclaw_wrapper.py /root/osr_ws/src/osr-rover-code/ROS/osr_control/osr_control/roboclaw_wrapper.py
+
+# Initialize rosdep
+RUN rosdep init && rosdep update
+
+# Install dependencies
+RUN apt-get update && rosdep install --from-paths src --ignore-src --rosdistro=foxy -y && rm -rf /var/lib/apt/lists/*
+
+# Source ROS setup
+RUN echo "source /opt/ros/foxy/setup.bash" >> /root/.bashrc
+
+# Build the ROS packages
+RUN /bin/bash -c 'source /opt/ros/foxy/setup.bash && colcon build --symlink-install'
+
+# Create a startup script that sets up virtual serial ports, starts the emulators, and starts the shell
+RUN echo '#!/bin/bash\n\
+    socat -d -d pty,raw,echo=0,link=/dev/ttyV0 pty,raw,echo=0,link=/dev/ttyV1 &\n\
+    socat -d -d pty,raw,echo=0,link=/dev/ttyV2 pty,raw,echo=0,link=/dev/ttyV3 &\n\
+    socat -d -d pty,raw,echo=0,link=/dev/ttyV4 pty,raw,echo=0,link=/dev/ttyV5 &\n\
+    python3 /root/roboclaw_emulator.py /dev/ttyV1 &\n\
+    python3 /root/roboclaw_emulator.py /dev/ttyV3 &\n\
+    python3 /root/roboclaw_emulator.py /dev/ttyV5 &\n\
+    echo "Emulators started. Logs in /tmp/emulator*.log"\n\
+    source /opt/ros/foxy/setup.bash\n\
+    source /root/osr_ws/install/setup.bash\n\
+    exec "$@"' > /start.sh && chmod +x /start.sh
+
+# Set the default command
+ENTRYPOINT ["/start.sh"]
+CMD ["/bin/bash"]
