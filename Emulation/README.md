@@ -14,7 +14,7 @@ Sensor emulation
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/rover_emulation.git
+git clone https://github.com/untrobotics/rover_emulation
 cd rover_emulation
 ```
 
