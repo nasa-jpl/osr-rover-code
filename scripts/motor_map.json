@@ -1,0 +1,22 @@
+{
+  "128": {
+    "M1": "left_front_drive",
+    "M2": "left_middle_drive"
+  },
+  "129": {
+    "M1": "left_rear_drive",
+    "M2": "right_rear_drive"
+  },
+  "130": {
+    "M1": "right_middle_drive",
+    "M2": "right_front_drive"
+  },
+  "131": {
+    "M1": "left_front_rotate",
+    "M2": "left_rear_rotate"
+  },
+  "132": {
+    "M1": "right_rear_rotate",
+    "M2": "right_front_rotate"
+  }
+}

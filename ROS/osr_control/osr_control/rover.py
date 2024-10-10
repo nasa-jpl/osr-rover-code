@@ -66,9 +66,9 @@ class Rover(Node):
         if self.should_calculate_odom:
             self.odometry_pub = self.create_publisher(Odometry, "/odom", 2)
             self.tf_pub = tf2_ros.TransformBroadcaster(self)
-
         self.corner_cmd_pub = self.create_publisher(CommandCorner, "/cmd_corner", 1)
         self.drive_cmd_pub = self.create_publisher(CommandDrive, "/cmd_drive", 1)
+        self.get_logger().info("Rover initialized")
 
     def cmd_cb(self, twist_msg, intuitive=False):
         """

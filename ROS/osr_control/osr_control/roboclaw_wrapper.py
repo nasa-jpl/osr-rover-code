@@ -248,6 +248,7 @@ class RoboclawWrapper(Node):
 
     def setup_encoders(self):
         """Set up the encoders"""
+        self.get_logger().info("Setting up encoders")
         for motor_name, properties in self.roboclaw_mapping.items():
             if "corner" in motor_name:
                 enc_min, enc_max = self.read_encoder_limits(properties["address"], properties["channel"])
@@ -255,6 +256,7 @@ class RoboclawWrapper(Node):
             else:
                 self.encoder_limits[motor_name] = (None, None)
                 self.rc.ResetEncoders(properties["address"])
+        self.get_logger().info("Encoder set up complete")
 
     def read_encoder_values(self):
         """Query roboclaws and update current motors status in encoder ticks"""
@@ -276,7 +278,7 @@ class RoboclawWrapper(Node):
             enc_msg.effort.append(current)
 
         self.current_enc_vals = enc_msg
-        
+
     def corner_cmd_cb(self, cmd):
         """
         Takes the corner command and stores it in the buffer to be sent
@@ -534,10 +536,87 @@ class RoboclawWrapper(Node):
             err_int = self.rc.ReadError(self.address[i])[1]
             # convert to hexadecimal and then to string for easy decoding
             err[i] = str(hex(err_int))
-            if err[i] != 0:
-                self.get_logger().error("Motor controller '{}' reported error code {}".format(self.address[i], err[i]))
+            errstr, haserr = self.decode_error(err_int)
+            if err[i] != '0x0':
+                self.get_logger().error("Motor controller '{}' reported error code {}. Error is {}".format(self.address[i], err[i], errstr))
         
         return err
+    def decode_error(self, err_int):
+        err_string = ""
+        is_error = False
+        if(err_int==0x0):
+            return "", False
+        if(err_int&0x000001):
+            err_string += "\nE-stop"
+        if (err_int & 0x000002):
+            err_string += "\nTemperature Error"
+            is_error = True
+        if (err_int & 0x000004):
+            err_string += "\nTemperature 2 error"
+            is_error = True
+        if (err_int & 0x000008):
+            err_string += "\nMain voltage High Error"
+            is_error = True
+        if (err_int & 0x000010):
+            err_string += "\nLogic voltage High Error"
+            is_error = True
+        if (err_int & 0x000020):
+            err_string += "\nLogic voltage Low Error"
+            is_error = True
+        if (err_int & 0x000040):
+            err_string += "\nM1 Driver Fault"
+            is_error = True
+        if (err_int & 0x000080):
+            err_string += "\nM2 Driver Fault"
+            is_error = True
+        if (err_int & 0x000100):
+            err_string += "\nM1 Speed Error"
+            is_error = True
+        if (err_int & 0x000200):
+            err_string += "\nM2 Speed Error"
+            is_error = True
+        if (err_int & 0x000400):
+            err_string += "\nM1 Position Error"
+            is_error = True
+        if (err_int & 0x000800):
+            err_string += "\nM2 Position Error"
+            is_error = True
+        if (err_int & 0x001000):
+            err_string += "\nM1 Current Error"
+            is_error = True
+        if (err_int & 0x002000):
+            err_string += "\nM2 Current Error"
+            is_error = True
+
+        if (err_int & 0x010000):
+            err_string += "\nM1 Over-Current Warning"
+        if (err_int & 0x020000):
+            err_string += "\nM2 Over-Current Warning"
+        if (err_int & 0x040000):
+            err_string += "\nMain Voltage High Warning"
+        if (err_int & 0x080000):
+            err_string += "\nMain Voltage Low Warning"
+        if (err_int & 0x100000):
+            err_string += "\nTemperature Warning"
+        if (err_int & 0x200000):
+            err_string += "\nTemperature 2 Warning"
+        if (err_int & 0x400000):
+            err_string += "\nS4 Signal Triggered"
+        if (err_int & 0x800000):
+            err_string += "\nS5 Signal Triggered"
+        if (err_int & 0x01000000):
+            err_string += "\nSpeed Error Limit Warning"
+        if (err_int & 0x02000000):
+            err_string += "\nPosition Error Limit Warning"
+
+        return err_string, is_error
+        
+        
+        
+        
+        
+        
+
 
 
 def main(args=None):

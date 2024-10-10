@@ -1,0 +1,107 @@
+[INFO] [launch]: All log files can be found below /home/ubuntu/.ros/log/2023-12-02-00-00-52-540088-ubuntu-42727
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [roboclaw_wrapper-1]: process started with pid [42794]
+[INFO] [rover-2]: process started with pid [42796]
+[INFO] [teleop_node-3]: process started with pid [42798]
+[INFO] [joy_node-4]: process started with pid [42800]
+[teleop_node-3] [0m[INFO] [1701475253.980092343] [TeleopTwistJoy]: Teleop enable button 4.[0m
+[teleop_node-3] [0m[INFO] [1701475253.980678425] [TeleopTwistJoy]: Turbo on button 5.[0m
+[teleop_node-3] [0m[INFO] [1701475253.980827616] [TeleopTwistJoy]: Linear axis x on 1 at scale 0.800000.[0m
+[teleop_node-3] [0m[INFO] [1701475253.980941881] [TeleopTwistJoy]: Turbo for linear axis x is scale 1.780000.[0m
+[teleop_node-3] [0m[INFO] [1701475253.981043404] [TeleopTwistJoy]: Angular axis yaw on 3 at scale 1.750000.[0m
+[teleop_node-3] [0m[INFO] [1701475253.981130093] [TeleopTwistJoy]: Turbo for angular axis yaw is scale 3.950000.[0m
+[joy_node-4] [0m[INFO] [1701475254.852154423] [joy]: Opened joystick: PDP Xbox One Controller.  deadzone: 0.050000[0m
+[roboclaw_wrapper-1] [0m[INFO] [1701475258.985675748] [roboclaw_wrapper]: Initializing motor controllers[0m
+[roboclaw_wrapper-1] [0m[INFO] [1701475259.154346499] [roboclaw_wrapper]: Sucessfully connected to RoboClaw motor controllers[0m
+[rover-2] [0m[INFO] [1701475259.927536812] [rover]: Initializing Rover[0m
+[roboclaw_wrapper-1] [31m[ERROR] [1701475264.855635936] [roboclaw_wrapper]: Motor controller '128' reported error code 0x80058000. Error is 
+[roboclaw_wrapper-1] M1 Over-Current Warning
+[roboclaw_wrapper-1] Main Voltage High Warning[0m
+[roboclaw_wrapper-1] [31m[ERROR] [1701475264.863686922] [roboclaw_wrapper]: Motor controller '129' reported error code 0x800c8000. Error is 
+[roboclaw_wrapper-1] Main Voltage High Warning
+[roboclaw_wrapper-1] Main Voltage Low Warning[0m
+[roboclaw_wrapper-1] [31m[ERROR] [1701475264.871671812] [roboclaw_wrapper]: Motor controller '130' reported error code 0x80058000. Error is 
+[roboclaw_wrapper-1] M1 Over-Current Warning
+[roboclaw_wrapper-1] Main Voltage High Warning[0m
+[roboclaw_wrapper-1] [31m[ERROR] [1701475264.879675055] [roboclaw_wrapper]: Motor controller '131' reported error code 0xf8000. Error is 
+[roboclaw_wrapper-1] M1 Over-Current Warning
+[roboclaw_wrapper-1] M2 Over-Current Warning
+[roboclaw_wrapper-1] Main Voltage High Warning
+[roboclaw_wrapper-1] Main Voltage Low Warning[0m
+[roboclaw_wrapper-1] [31m[ERROR] [1701475264.887612110] [roboclaw_wrapper]: Motor controller '132' reported error code 0xc0048000. Error is 
+[roboclaw_wrapper-1] Main Voltage High Warning[0m
+[roboclaw_wrapper-1] [31m[ERROR] [1701475267.890110852] [roboclaw_wrapper]: Motor controller '128' reported error code 0x0. Error is [0m
+[roboclaw_wrapper-1] [31m[ERROR] [1701475267.901285715] [roboclaw_wrapper]: Motor controller '129' reported error code 0x80000. Error is 
+[roboclaw_wrapper-1] Main Voltage Low Warning[0m
+[roboclaw_wrapper-1] [31m[ERROR] [1701475267.911457201] [roboclaw_wrapper]: Motor controller '130' reported error code 0x0. Error is [0m
+[roboclaw_wrapper-1] [31m[ERROR] [1701475267.923824117] [roboclaw_wrapper]: Motor controller '131' reported error code 0x80000. Error is 
+[roboclaw_wrapper-1] Main Voltage Low Warning[0m
+[roboclaw_wrapper-1] [31m[ERROR] [1701475267.933129175] [roboclaw_wrapper]: Motor controller '132' reported error code 0x0. Error is [0m
+[roboclaw_wrapper-1] [31m[ERROR] [1701475270.890425051] [roboclaw_wrapper]: Motor controller '128' reported error code 0x0. Error is [0m
+[roboclaw_wrapper-1] [31m[ERROR] [1701475270.900161553] [roboclaw_wrapper]: Motor controller '129' reported error code 0x80000. Error is 
+[roboclaw_wrapper-1] Main Voltage Low Warning[0m
+[roboclaw_wrapper-1] [31m[ERROR] [1701475270.912698011] [roboclaw_wrapper]: Motor controller '130' reported error code 0x0. Error is [0m
+[roboclaw_wrapper-1] [31m[ERROR] [1701475270.927052587] [roboclaw_wrapper]: Motor controller '131' reported error code 0x80000. Error is 
+[roboclaw_wrapper-1] Main Voltage Low Warning[0m
+[roboclaw_wrapper-1] [31m[ERROR] [1701475270.938553407] [roboclaw_wrapper]: Motor controller '132' reported error code 0x0. Error is [0m
+[roboclaw_wrapper-1] [31m[ERROR] [1701475273.854990525] [roboclaw_wrapper]: Motor controller '128' reported error code 0x0. Error is [0m
+[roboclaw_wrapper-1] [31m[ERROR] [1701475273.862843240] [roboclaw_wrapper]: Motor controller '129' reported error code 0x80000. Error is 
+[roboclaw_wrapper-1] Main Voltage Low Warning[0m
+[roboclaw_wrapper-1] [31m[ERROR] [1701475273.870797200] [roboclaw_wrapper]: Motor controller '130' reported error code 0x0. Error is [0m
+[roboclaw_wrapper-1] [31m[ERROR] [1701475273.879043357] [roboclaw_wrapper]: Motor controller '131' reported error code 0x80000. Error is 
+[roboclaw_wrapper-1] Main Voltage Low Warning[0m
+[roboclaw_wrapper-1] [31m[ERROR] [1701475273.887125008] [roboclaw_wrapper]: Motor controller '132' reported error code 0x0. Error is [0m
+[WARNING] [launch]: user interrupted with ctrl-c (SIGINT)
+[joy_node-4] [0m[INFO] [1701475275.690284633] [rclcpp]: signal_handler(signal_value=2)[0m
+[roboclaw_wrapper-1] Traceback (most recent call last):
+[roboclaw_wrapper-1]   File "/home/ubuntu/osr_ws/install/osr_control/lib/osr_control/roboclaw_wrapper", line 11, in <module>
+[roboclaw_wrapper-1]     load_entry_point('osr-control', 'console_scripts', 'roboclaw_wrapper')()
+[roboclaw_wrapper-1]   File "/home/ubuntu/osr_ws/build/osr_control/osr_control/roboclaw_wrapper.py", line 623, in main
+[roboclaw_wrapper-1]     rclpy.spin(wrapper)
+[roboclaw_wrapper-1]   File "/opt/ros/foxy/lib/python3.8/site-packages/rclpy/__init__.py", line 191, in spin
+[rover-2] Traceback (most recent call last):
+[rover-2]   File "/home/ubuntu/osr_ws/install/osr_control/lib/osr_control/rover", line 11, in <module>
+[rover-2]     load_entry_point('osr-control', 'console_scripts', 'rover')()
+[rover-2]   File "/home/ubuntu/osr_ws/build/osr_control/osr_control/rover.py", line 363, in main
+[teleop_node-3] [0m[INFO] [1701475275.692834004] [rclcpp]: signal_handler(signal_value=2)[0m
+[roboclaw_wrapper-1]     executor.spin_once()
+[roboclaw_wrapper-1]   File "/opt/ros/foxy/lib/python3.8/site-packages/rclpy/executors.py", line 717, in spin_once
+[roboclaw_wrapper-1]     handler()
+[roboclaw_wrapper-1]   File "/opt/ros/foxy/lib/python3.8/site-packages/rclpy/task.py", line 239, in __call__
+[roboclaw_wrapper-1]     self._handler.send(None)
+[roboclaw_wrapper-1]   File "/opt/ros/foxy/lib/python3.8/site-packages/rclpy/executors.py", line 429, in handler
+[roboclaw_wrapper-1]     await call_coroutine(entity, arg)
+[roboclaw_wrapper-1]   File "/opt/ros/foxy/lib/python3.8/site-packages/rclpy/executors.py", line 343, in _execute_timer
+[roboclaw_wrapper-1]     await await_or_execute(tmr.callback)
+[roboclaw_wrapper-1]   File "/opt/ros/foxy/lib/python3.8/site-packages/rclpy/executors.py", line 118, in await_or_execute
+[roboclaw_wrapper-1]     return callback(*args)
+[roboclaw_wrapper-1]   File "/home/ubuntu/osr_ws/build/osr_control/osr_control/roboclaw_wrapper.py", line 190, in fast_update
+[roboclaw_wrapper-1]     self.read_encoder_values()
+[roboclaw_wrapper-1]   File "/home/ubuntu/osr_ws/build/osr_control/osr_control/roboclaw_wrapper.py", line 273, in read_encoder_values
+[roboclaw_wrapper-1]     enc_msg.velocity.append(self.qpps2velocity(velocity,
+[roboclaw_wrapper-1]   File "/home/ubuntu/osr_ws/build/osr_control/osr_control/roboclaw_wrapper.py", line 479, in qpps2velocity
+[roboclaw_wrapper-1]     def qpps2velocity(self, qpps, ticks_per_rev, gear_ratio):
+[roboclaw_wrapper-1] KeyboardInterrupt
+[rover-2]     rclpy.spin(rover)
+[rover-2]   File "/opt/ros/foxy/lib/python3.8/site-packages/rclpy/__init__.py", line 191, in spin
+[rover-2]     executor.spin_once()
+[rover-2]   File "/opt/ros/foxy/lib/python3.8/site-packages/rclpy/executors.py", line 711, in spin_once
+[rover-2]     handler, entity, node = self.wait_for_ready_callbacks(timeout_sec=timeout_sec)
+[rover-2]   File "/opt/ros/foxy/lib/python3.8/site-packages/rclpy/executors.py", line 697, in wait_for_ready_callbacks
+[rover-2]     return next(self._cb_iter)
+[rover-2]   File "/opt/ros/foxy/lib/python3.8/site-packages/rclpy/executors.py", line 593, in _wait_for_ready_callbacks
+[rover-2]     _rclpy.rclpy_wait(wait_set, timeout_nsec)
+[INFO] [teleop_node-3]: process has finished cleanly [pid 42798]
+[rover-2] KeyboardInterrupt
+[INFO] [joy_node-4]: process has finished cleanly [pid 42800]
+[rover-2] Exception ignored in: <function Executor.__del__ at 0xffff8d093a60>
+[rover-2] Traceback (most recent call last):
+[rover-2]   File "/opt/ros/foxy/lib/python3.8/site-packages/rclpy/executors.py", line 240, in __del__
+[rover-2]   File "/opt/ros/foxy/lib/python3.8/site-packages/rclpy/signals.py", line 39, in destroy
+[rover-2] AttributeError: 'NoneType' object has no attribute 'rclpy_unregister_sigint_guard_condition'
+[rover-2] Exception ignored in: <function SignalHandlerGuardCondition.__del__ at 0xffff8c5cf550>
+[rover-2] Traceback (most recent call last):
+[rover-2]   File "/opt/ros/foxy/lib/python3.8/site-packages/rclpy/signals.py", line 30, in __del__
+[rover-2] TypeError: catching classes that do not inherit from BaseException is not allowed
+[ERROR] [roboclaw_wrapper-1]: process has died [pid 42794, exit code -2, cmd '/home/ubuntu/osr_ws/install/osr_control/lib/osr_control/roboclaw_wrapper --ros-args -r __node:=roboclaw_wrapper --params-file /home/ubuntu/osr_ws/install/osr_bringup/share/osr_bringup/config/roboclaw_params.yaml'].
+[ERROR] [rover-2]: process has died [pid 42796, exit code -2, cmd '/home/ubuntu/osr_ws/install/osr_control/lib/osr_control/rover --ros-args -r __node:=rover --params-file /home/ubuntu/osr_ws/install/osr_bringup/share/osr_bringup/config/osr_params.yaml --params-file /tmp/launch_params_lg8ivc94'].

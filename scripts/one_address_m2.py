@@ -23,9 +23,15 @@ if __name__ == "__main__":
         print("Connected to /dev/serial0.")
         print(roboclaw0.ReadVersion(address))
         print(roboclaw0.ReadEncM1(address))
+        roboclaw0.ForwardM1(address, 100)
+        sleep(.1)
+        roboclaw1.ForwardM1(address, 0)
     elif connected1:
         print("Connected to /dev/serial1.")
         print(roboclaw1.ReadVersion(address))
         print(roboclaw1.ReadEncM1(address))
+        roboclaw1.ForwardM2(address, 100)
+        sleep(.1)
+        roboclaw1.ForwardM2(address, 0)
     else:
         print("Could not open comport /dev/serial0 or /dev/serial1, make sure it has the correct permissions and is available")
