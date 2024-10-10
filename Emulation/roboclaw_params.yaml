@@ -1,0 +1,16 @@
+roboclaw_wrapper:
+  ros__parameters:
+    serial_ports:
+      - /dev/ttyV1
+      - /dev/ttyV3
+      - /dev/ttyV5
+    baud_rate: 115200
+    addresses: [128, 129, 130]
+    max_speed: 3.0
+    ticks_per_rev: 5440.0
+    wheel_radius: 0.075
+    wheel_base: 0.4826
+    encoder_ppr: 1000
+    debug_mode: true
+    publish_tf: true
+    publish_odom: true

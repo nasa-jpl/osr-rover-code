@@ -1076,6 +1076,7 @@ class Roboclaw:
 	def Open(self):
 		try:
 			self._port = serial.Serial(port=self.comport, baudrate=self.rate, timeout=1, interCharTimeout=self.timeout)
-		except:
+		except (serial.SerialException, ValueError) as e:
+			self.error = e
 			return 0
 		return 1
