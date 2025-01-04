@@ -8,35 +8,36 @@ roboclaw_wrapper:
     addresses: [128, 129, 130]
     duty_mode: true  # send duty commands to the roboclaw instead of velocity commands. This can mean a smoother drive but shouldn't be used for autonomous navigation as velocity commands aren't interpreted correclty
     velocity_qpps_to_duty_factor: 8  # hand-tuned factor to convert velocity commands to duty commands, must be integer
+    #gear_ratio from the goBilda website for the specific motor you are using
+    #ticks_per_rev needs to be the value pre-gearing, not on the output shaft. However, goBilda lists pulses per revolution (PPR) on output shaft, so to get the correct ticks_per_rev we use this formula: PPR(output shaft) / gear_ratio -> 751.8/26.9 ~= 28 The 751.8 is the listed PPR for these motors on the goBilda site.
     roboclaw_mapping:
-      # gear ratio is approx 172, exact value is 171.79 though
       drive_left_front:
         address: 128
         channel: M1
-        ticks_per_rev: 48
-        gear_ratio: 171.79
+        ticks_per_rev: 28
+        gear_ratio: 26.9
       drive_left_middle:
         address: 128
         channel: M2
-        ticks_per_rev: 48
-        gear_ratio: 171.79
+        ticks_per_rev: 28
+        gear_ratio: 26.9
       drive_left_back:
         address: 129
         channel: M2
-        ticks_per_rev: 48
-        gear_ratio: 171.79
+        ticks_per_rev: 4288
+        gear_ratio: 26.9
       drive_right_back:
         address: 129
         channel: M1
-        ticks_per_rev: 48
-        gear_ratio: 171.79
+        ticks_per_rev: 28
+        gear_ratio: 26.9
       drive_right_middle:
         address: 130
         channel: M2
-        ticks_per_rev: 48
-        gear_ratio: 171.79
+        ticks_per_rev: 28
+        gear_ratio: 26.9
       drive_right_front:
         address: 130
         channel: M1
-        ticks_per_rev: 48
-        gear_ratio: 171.79
+        ticks_per_rev: 28
+        gear_ratio: 26.9
