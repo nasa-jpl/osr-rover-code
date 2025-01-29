@@ -1,0 +1,3 @@
+adafruit-circuitpython-servokit
+adafruit-circuitpython-ina260
+RPi.GPIO
