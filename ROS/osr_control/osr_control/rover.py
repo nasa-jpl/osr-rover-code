@@ -31,7 +31,8 @@ class Rover(Node):
                 ('rover_dimensions.d4', Parameter.Type.DOUBLE),
                 ('rover_dimensions.wheel_radius', Parameter.Type.DOUBLE),
                 ('drive_no_load_rpm', Parameter.Type.DOUBLE),
-                ('enable_odometry', Parameter.Type.BOOL)
+                ('enable_odometry', Parameter.Type.BOOL),
+                ('publish_transform', Parameter.Type.BOOL)
             ]
         )
         self.d1 = self.get_parameter('rover_dimensions.d1').get_parameter_value().double_value
@@ -49,6 +50,7 @@ class Rover(Node):
             "drive_no_load_rpm").get_parameter_value().double_value
         self.max_vel = self.wheel_radius * drive_no_load_rpm / 60 * 2 * math.pi  # [m/s]
         self.should_calculate_odom = self.get_parameter("enable_odometry").get_parameter_value().bool_value
+        self.should_publish_transform = self.get_parameter("publish_transform").get_parameter_value().bool_value
         if self.should_calculate_odom:
             self.get_logger().info("Calculting wheel odometry and publishing to /odom topic")
             self.odometry = Odometry()
@@ -151,14 +153,16 @@ class Rover(Node):
             self.odometry.twist = self.curr_twist
             self.odometry.header.stamp = now.to_msg()
             self.odometry_pub.publish(self.odometry)
-            transform_msg = TransformStamped()
-            transform_msg.header.frame_id = "odom"
-            transform_msg.child_frame_id = "base_link"
-            transform_msg.header.stamp = now.to_msg()
-            transform_msg.transform.translation.x = self.odometry.pose.pose.position.x
-            transform_msg.transform.translation.y = self.odometry.pose.pose.position.y
-            transform_msg.transform.rotation = self.odometry.pose.pose.orientation
-            self.tf_pub.sendTransform(transform_msg)
+            if self.should_publish_transform: 
+                transform_msg = TransformStamped()
+                transform_msg.header.frame_id = "odom"
+                transform_msg.child_frame_id = "base_link"
+                transform_msg.header.stamp = now.to_msg()
+                transform_msg.transform.translation.x = self.odometry.pose.pose.position.x
+                transform_msg.transform.translation.y = self.odometry.pose.pose.position.y
+                transform_msg.transform.rotation = self.odometry.pose.pose.orientation
+                self.tf_pub.sendTransform(transform_msg)
+
 
     def corner_cmd_threshold(self, corner_cmd):
         try:
@@ -377,6 +381,18 @@ class Rover(Node):
             r_back_closest = self.d1 - self.angle_to_turning_radius(theta_br)
         # get a best estimate of the turning radius by taking the median value (avg sensitive to outliers)
         approx_turning_radius = sum(sorted([r_front_farthest, r_front_closest, r_back_farthest, r_back_closest])[1:3])/2.0
+
+         # Handle cases where the turning radius is zero (turn-in-place)
+        if math.isclose(approx_turning_radius, 0.0, abs_tol=1e-3):
+            self.curr_twist.twist.linear.x = 0.0  # No linear motion
+            # Angular velocity from wheel velocities. We subtract velocities because wheels are spinning in opposite directions
+            drive_angular_velocity = (self.curr_velocities['drive_left_middle'] - self.curr_velocities['drive_right_middle']) / 2.0
+            self.curr_twist.twist.angular.z = drive_angular_velocity * self.wheel_radius / self.d4  # Use width from middle wheel to center of rover
+            self.get_logger().debug("Turn-in-place detected. Angular velocity: {}".format(
+                self.curr_twist.twist.angular.z))
+            return
+
+        # Not a turn in place so cary on
         if math.isnan(approx_turning_radius):
             approx_turning_radius = self.max_radius
         self.get_logger().debug("Current approximate turning radius: {}".format(round(approx_turning_radius, 2)), throttle_duration_sec=1)
