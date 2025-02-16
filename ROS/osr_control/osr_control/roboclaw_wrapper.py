@@ -133,6 +133,7 @@ class RoboclawWrapper(Node):
         self.idle = False
         self.fast_timer = self.create_timer(fast_loop_rate, self.fast_update)
         self.slow_timer = self.create_timer(slow_loop_rate, self.slow_update)
+        self.log.debug("Initialized Roboclaw wrapper node")
 
     def parameters_callback(self, params):
         """Called when a parameter is created or updated."""
@@ -198,17 +199,22 @@ class RoboclawWrapper(Node):
         serial_port = self.get_parameter('device').get_parameter_value().string_value
         baud_rate = self.get_parameter('baud_rate').get_parameter_value().integer_value
         self.rc = Roboclaw(serial_port, baud_rate)
-        self.rc.Open()
+        serial_connected = self.rc.Open() == 1
+        if not serial_connected:
+            msg = f"Unable to connect to serial port {serial_port}."
+            self.log.fatal(msg)
+            raise Exception(msg)
         self.address = self.get_parameter('addresses').get_parameter_value().integer_array_value
 
         # initialize connection status to successful
         all_connected = True
         for address in self.address:
-            self.get_logger().debug("Attempting to talk to motor controller ''".format(address))
+            self.get_logger().debug(f"Attempting to talk to motor controller {address} through serial port {serial_port} at a {baud_rate} baud_rate.")
             version_response = self.rc.ReadVersion(address)
+            self.log.debug(f"response for RC at {address}: {version_response}")
             connected = bool(version_response[0])
             if not connected:
-                self.get_logger().error("Unable to connect to roboclaw at '{}'".format(address))
+                self.get_logger().error("Unable to connect to roboclaw at '{}' through serial port {} at a {}".format(address, serial_port, baud_rate))
                 all_connected = False
             else:
                 self.get_logger().debug("Roboclaw version for address '{}': '{}'".format(address, version_response[1]))
