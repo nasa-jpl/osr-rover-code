@@ -36,7 +36,7 @@ We'll install ROS2 (Robot Operating System) on the RPi. If you're new to ROS, we
 
 You'll need to be logged in to the RPi via ssh, or open a terminal in the desktop GUI if you're connected via a monitor and mouse/keyboard.
 
-Follow the [instructions](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html) for installing ROS2. This takes a while. Follow the instructions in the prompt. You're done when you've completed "Install ROS 2". See below for which version to install. If there are any errors during installation, post them in the `#troubleshooting` channel on Slack to ask for help, if you are not able to resolve them yourself. Just ignoring them will likely cause issues in the future.
+Follow the [instructions](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html) for installing ROS2. This takes a while. Follow the instructions in the prompt. You're done when you've completed section "Setup Environment". See below for which version to install. If there are any errors during installation, post them in the `#troubleshooting` channel on Slack to ask for help, if you are not able to resolve them yourself. Just ignoring them will likely cause issues in the future.
 
 > [!NOTE]
 > Depending on which Operating System (OS) you installed, you might need to install a [different version of ROS 2](https://www.ros.org/reps/rep-2000.html). Ubuntu and ROS 2 updates frequently and you should check which version of ROS 2 to install depending on what OS you installed! In what follows, we assume ROS 2 `Jazzy`. The OSR code should be independent of which version of ROS 2 you use.
@@ -124,23 +124,29 @@ The RPi talks to the motor controllers over serial bus.
 ### Enabling Serial and I2C
 
 ```bash
+sudo apt-get install raspi-config
 sudo raspi-config
 ```
 
-Then use the menu to enable **I2C** and **Serial** under `Interfaces`. When you enable `Serial Port`, it will ask:
+Then use the menu to enable **I2C** and **Serial** under `Interface Options`. When you enable `Serial Port`, it will ask:
 
 * Would you like a login shell to be accessible over serial? --> Select 'No' using the arrow keys and 'tab' and 'enter' keys on your keyboard
 * Would you like the serial port hardware to be enabled? --> Yes
 
-If it asks you to reboot, answer 'yes'.
+If it asks you to reboot, answer 'yes'. Then connect to the Raspberry Pi again once it has rebooted.
 
 More on raspi-config [here](https://www.raspberrypi.com/documentation/computers/configuration.html).
 
-**TIP**: If `raspi-config` isn't installed, run `sudo apt-get install raspi-config`. If that doesn't work, run `echo "deb http://archive.raspberrypi.org/debian/ buster main" >> /etc/apt/sources.list && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 7FA3303E && sudo apt-get update` to allow `apt` to find the program, then try reinstalling with `sudo apt-get install raspi-config`.
+Next, we'll add udev rules to add a symbolic link (symlink) to the serial and i2c devices and configure their permissions:
+
+```bash
+sudo cp ~/osr_ws/src/osr-rover-code/config/* /etc/udev/rules.d/
+sudo udevadm control --reload-rules && sudo udevadm trigger
+```
 
 ### Add user to tty and dialout groups
 
-Finally, add the user to the `tty` and `dialout` groups:
+Finally, add the user to the `tty` and `dialout` groups on the raspberry pi:
 
 ```bash
 sudo adduser $USER tty
@@ -149,7 +155,16 @@ sudo adduser $USER dialout
 
 You might have to create the dialout group if it doesn't already exist with `groupadd dialout`.
 
-**note**: You'll need to log out of your ssh session and log back in for this to take effect. Or you can reboot with `sudo reboot`.
+> [!NOTE]
+> You'll need to log out of your ssh session and log back in for this to take effect. Or you can reboot with `sudo reboot`.
+
+Log back in and in a terminal, verify that the serial devices are present:
+
+```bash
+ls -l /dev/serial*
+```
+
+Should at least show a line that contains `/dev/serial0 -> ttyS0`. This is the main serial device used to send information to the Roboclaws over UART / GPIO pins. If you see `/dev/serial1 -> ttyAMA0`, that is a less powerful software-defined serial device typically used for bluetooth. This varies between Raspberry Pi versions.
 
 ## Testing serial comm with the Roboclaw motors controllers
 
@@ -165,15 +180,18 @@ python3 roboclawtest.py 130
 Each of these should output something like the following, within a very short execution time:
 
 ```
-(1, 'USB Roboclaw 2x7a v4.1.34\n')
-(1, 853, 130)
+Connected to /dev/serial0.
+Address: 130
+ReadVersion: (1, 'USB Roboclaw 2x7a v4.2.8\n')
+ReadEncM1: (1, 0, 128)
+Address 130 - ReadMainBatteryVoltage: (1, 170)
 ```
 
-The version number may be later.
+The version number may be a later version. If all three work, congratulations! You're close to running the rover. Move onto [rover bringup](rover_bringup.md).
 
 If the script seems to hang, or returns only zeros inside the parantheses (0,0), then you have a problem communicating with the given roboclaw for that address. Some troubleshooting steps in this cases:
 
 - Make sure you followed the instructions in the [#Setting up serial communication] section above, and the serial devices are configured correctly on the RPi.
 - Also make sure you went through the calibration instructions from the [main repo](https://github.com/nasa-jpl/open-source-rover/blob/master/Electrical/Calibration.pdf) and set the proper address, serial comm baud rate, and "Enable Multi-Unit Mode" option for every roboclaw controller (if multi-unit mode isn't enabled on every controller, there will be serial bus contention.). If you update anything on a controller, you'll need to fully power cycle it by turning the rover off.
-- If you're still having trouble after the above steps, try unplugging every motor controller except for one, and debug exclusively with that one.
+- If you're still having trouble after the above steps, try unplugging every motor controller except for one, and debug exclusively with that one. Reboot the Raspberry Pi if you haven't already.
 - If that still doesn't work, please ask on the troubleshooting channel on our Slack group. Include as much relevant information as possible so we can help you find the issue as fast as possible.
