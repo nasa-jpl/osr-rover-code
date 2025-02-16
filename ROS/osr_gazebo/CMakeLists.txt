@@ -14,8 +14,6 @@ if(NOT WIN32)
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-find_package(ament_cmake REQUIRED)
-find_package(control_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
@@ -43,12 +41,7 @@ ament_target_dependencies(osr_controller
   nav_msgs
   tf2_geometry_msgs
   trajectory_msgs
-  control_msgs
 )
-
-if(BUILD_TESTING)
-  find_package(ament_cmake_gtest REQUIRED)
-endif()
 
 install(
   TARGETS
@@ -56,5 +49,12 @@ install(
   DESTINATION
     lib/${PROJECT_NAME}
 )
+
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  set(ament_cmake_copyright_FOUND TRUE)
+  set(ament_cmake_cpplint_FOUND TRUE)
+  ament_lint_auto_find_test_dependencies()
+endif()
 
 ament_package()
