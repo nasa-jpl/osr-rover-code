@@ -19,7 +19,7 @@ When done flashing, insert the SD card into the Raspberry Pi. When the Raspberry
 
 From another computer, try connecting to the Raspberry Pi using SSH. You should be able to do so from a terminal in Windows, Linux, or MacOS using the following syntax: `ssh user@machine`, where the user is the username you set during the SD card flashing process earlier. For example:
 
-```
+```bash
 ssh osr_user@raspberrypi.local
 # or, if you've set a static IP address or know the IP address:
 ssh alfred@192.168.1.17
@@ -51,7 +51,7 @@ Check that `ROS 2` is installed correctly. Running `ros2 topic list` from the co
 
 First we'll create a ROS workspace for the rover code. On the terminal where you've SSH'd into the Raspberry Pi or from the Raspberry Pi's terminal directly (when using the GUI, keyboard, and mouse), run the following commands:
 
-```
+```bash
 # Create a colcon workspace directory, which will contain all ROS compilation and 
 # source code files, and navigate into it
 mkdir -p ~/osr_ws/src && cd ~/osr_ws
@@ -65,21 +65,24 @@ source /opt/ros/${ROS_DISTRO}/setup.bash
 For this section, you'll be working with the version control software `git`. Now's a good time to [read up](https://try.github.io/) on how that works if you're new to it and make a GitHub account!
 In the newly created colcon workspace you just made, clone (download) this repo:
 
-```commandline
+```bash
 sudo apt install git
 cd ~/osr_ws/src
 git clone https://github.com/nasa-jpl/osr-rover-code.git
 ```
 
-Now we will install the dependencies using rosdep
+Now we will install the dependencies using rosdep. Python packages will be installed in a [virtual environment](https://docs.ros.org/en/jazzy/How-To-Guides/Using-Python-Packages.html#installing-via-a-virtual-environment).
 
-```commandline
-sudo apt install python3-rosdep python3-pip
+```bash
+sudo apt install python3-rosdep python3-pip python3-virtualenv
 cd ..
+virtualenv -p python3 ./venv
+source ./venv/bin/activate
+touch ./venv/COLCON_IGNORE
 sudo rosdep init
 rosdep update
 rosdep install --from-paths src --ignore-src --rosdistro=$ROS_DISTRO -y
-pip3 install adafruit-circuitpython-servokit smbus ina260 RPi.GPIO
+pip3 install adafruit-circuitpython-servokit ina260 RPi.GPIO
 # build the ROS packages
 colcon build --symlink-install
 ```
@@ -88,14 +91,14 @@ It should run successfully. If it doesn't, please ask on Slack or [submit an iss
 
 Now let's add the generated files to the path so ROS can find them
 
-```commandline
+```bash
 source install/setup.bash
 ```
 
-The rover has some customizable settings that will overwrite the default values. 
+The rover has some customizable settings that will overwrite the default values.
 Whether you have any changes compared to the defaults or not, you have to manually create these files:
 
-```commandline
+```bash
 cd ~/osr_ws/src/osr-rover-code/ROS/osr_bringup/config
 touch osr_params_mod.yaml roboclaw_params_mod.yaml
 ```
@@ -104,9 +107,10 @@ In the [rover bringup instructions](rover_bringup.md) we will edit these files t
 
 ### Add ROS config scripts to .bashrc
 
-The `source ....bash` lines you typed out earlier are used to manually configure your ROS environment. We can do this automatically in the future by doing:
+The `source ....bash` lines you typed out earlier are used to manually configure your ROS environment. We also want our python virtual environment to be activated. We can do this automatically in the future by doing:
 
-```
+```bash
+echo "source ~/osr_ws/venv/bin/activate" >> ~/.bashrc
 echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> ~/.bashrc 
 echo "source ~/osr_ws/install/setup.bash" >> ~/.bashrc
 ```
@@ -119,7 +123,7 @@ The RPi talks to the motor controllers over serial bus.
 
 ### Enabling Serial and I2C
 
-```
+```bash
 sudo raspi-config
 ```
 
@@ -138,7 +142,7 @@ More on raspi-config [here](https://www.raspberrypi.com/documentation/computers/
 
 Finally, add the user to the `tty` and `dialout` groups:
 
-```
+```bash
 sudo adduser $USER tty
 sudo adduser $USER dialout
 ```
