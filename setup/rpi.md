@@ -6,7 +6,7 @@ These instructions should work for both the RPi 3 and 4. You are free to use oth
 
 ## Installing an Operating System
 
-The first step is to install Ubuntu on your RPi. Other OS'es like Raspberry Pi OS might also work but might require deviation from the instructions. Always check the latest instructions from [the official installation guide](https://docs.ros.org/en/iron/How-To-Guides/Installing-on-Raspberry-Pi.html). We recommend using the [Raspberry Pi Imager](https://www.raspberrypi.com/documentation/computers/getting-started.html#using-raspberry-pi-imager) to load the OS onto an SD card. If done right, you won't need an external monitor, mouse, or keyboard to set up your RPi!
+The first step is to install Ubuntu on your RPi. Select the latest Long Term Support (LTS) version for best results. Other OS'es like Raspberry Pi OS might also work but might require deviation from the instructions, such as building ROS 2 from source. Always check the latest instructions from [the official installation guide](https://docs.ros.org/en/iron/How-To-Guides/Installing-on-Raspberry-Pi.html). We recommend using the [Raspberry Pi Imager](https://www.raspberrypi.com/documentation/computers/getting-started.html#using-raspberry-pi-imager) to load the OS onto an SD card. If done right, you won't need an external monitor, mouse, or keyboard to set up your RPi!
 
 Make sure you set the following settings while configuring the image to be flashed onto the SD card (ctrl/cmd+shift+x):
 
@@ -21,10 +21,14 @@ From another computer, try connecting to the Raspberry Pi using SSH. You should 
 
 ```
 ssh osr_user@raspberrypi.local
+# or, if you've set a static IP address or know the IP address:
 ssh alfred@192.168.1.17
 ```
 
 It should prompt for your password and then form a connection to a terminal window on the RPi!
+
+> [!TIP]
+> Your computer can remember the password for you: replace `ssh` with `ssh-copy-id` in the command above once. Once you've entered your password you should be able to log in without a password!
 
 ## Installing ROS
 
@@ -32,19 +36,20 @@ We'll install ROS2 (Robot Operating System) on the RPi. If you're new to ROS, we
 
 You'll need to be logged in to the RPi via ssh, or open a terminal in the desktop GUI if you're connected via a monitor and mouse/keyboard.
 
-Follow the [instructions](https://docs.ros.org/en/iron/Installation/Ubuntu-Install-Debians.html) for installing ROS2. 
+Follow the [instructions](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html) for installing ROS2. This takes a while. Follow the instructions in the prompt. You're done when you've completed "Install ROS 2". See below for which version to install. If there are any errors during installation, post them in the `#troubleshooting` channel on Slack to ask for help, if you are not able to resolve them yourself. Just ignoring them will likely cause issues in the future.
 
-**NOTE**: Depending on which Operating System (OS) you installed, you might need to install a [different version of ROS 2](https://www.ros.org/reps/rep-2000.html). In what follows, we assume ROS 2 `Iron`. The OSR code should be independent of which version of ROS 2 you use.
+> [!NOTE]
+> Depending on which Operating System (OS) you installed, you might need to install a [different version of ROS 2](https://www.ros.org/reps/rep-2000.html). Ubuntu and ROS 2 updates frequently and you should check which version of ROS 2 to install depending on what OS you installed! In what follows, we assume ROS 2 `Jazzy`. The OSR code should be independent of which version of ROS 2 you use.
 
-You can choose to either install the 'full version' (`sudo apt install ros-iron-desktop`) which comes with graphical packages like RViz and QT or install just the barebones version (`sudo apt install ros-iron-ros-base`). The latter allows you to install packages in the full version whenever you need them and so we recommend following this approach. You can install ROS2 and related graphical packages on a different computer on the same network and you will be able to receive all messages out of the box, as long as you're using the same ROS 2 version.
+You can choose to either install the 'full version' (`sudo apt install ros-jazzy-desktop`) which comes with graphical packages like RViz and QT or install just the barebones version (`sudo apt install ros-jazzy-ros-base`). The latter allows you to install packages in the full version whenever you need them and so we recommend following this approach. You can install ROS2 and related graphical packages on a different computer on the same network and you will be able to receive all messages out of the box, as long as you're using the same ROS 2 version. If you've installed Ubuntu Server (headless), install the bare bones version since you won't be able to run RViz on the Raspberry Pi anyways!
 
-Check that `ROS 2` is installed correctly. Running `ros2 topic list` from the command line should not say 'Command not found' and `echo $ROS_DISTRO` should show `iron` or whichever ROS 2 version you chose to install.
+Check that `ROS 2` is installed correctly. Running `ros2 topic list` from the command line should not say 'Command not found' and `echo $ROS_DISTRO` should show `jazzy` or whichever ROS 2 version you chose to install.
 
 ## Setting up ROS environment and building the rover code
 
 ### Setup ROS build environment
 
-First we'll create a ROS workspace for the rover code. 
+First we'll create a ROS workspace for the rover code. On the terminal where you've SSH'd into the Raspberry Pi or from the Raspberry Pi's terminal directly (when using the GUI, keyboard, and mouse), run the following commands:
 
 ```
 # Create a colcon workspace directory, which will contain all ROS compilation and 
@@ -69,12 +74,12 @@ git clone https://github.com/nasa-jpl/osr-rover-code.git
 Now we will install the dependencies using rosdep
 
 ```commandline
-sudo apt install python3-rosdep
+sudo apt install python3-rosdep python3-pip
 cd ..
 sudo rosdep init
 rosdep update
 rosdep install --from-paths src --ignore-src --rosdistro=$ROS_DISTRO -y
-pip3 install adafruit-circuitpython-servokit smbus ina260
+pip3 install adafruit-circuitpython-servokit smbus ina260 RPi.GPIO
 # build the ROS packages
 colcon build --symlink-install
 ```
@@ -102,7 +107,7 @@ In the [rover bringup instructions](rover_bringup.md) we will edit these files t
 The `source ....bash` lines you typed out earlier are used to manually configure your ROS environment. We can do this automatically in the future by doing:
 
 ```
-echo "source /opt/ros/iron/setup.bash" >> ~/.bashrc 
+echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> ~/.bashrc 
 echo "source ~/osr_ws/install/setup.bash" >> ~/.bashrc
 ```
 
