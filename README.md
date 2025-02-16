@@ -11,8 +11,7 @@ Please refer to README files associated with each folder for insight in how comp
 This is also the place to look when you have modifications on your rover that require the code or parameters to be
 changed.
 
-* The [ROS overview](ROS/README.md) gives an overview of the setup related to ROS and links to specific implementations
-such as how the drive and corner commands are being calculated
+* The [ROS overview](ROS/README.md) gives an overview of the setup related to ROS and links to specific implementations such as how the drive and corner commands are being calculated
 
 ## Setup
 
