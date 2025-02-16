@@ -61,7 +61,8 @@ python3 calibrate_servos.py 0 160
 
 If it's moving farther away from the center, try 140, if it's getting closer, try 165 or 170. Repeat this until the wheel is exactly at zero. When you find the value where it's centered, write it down since we'll need it later.
 
-**tip**: Make sure the servo motors are still free to spin without much friction by lifting the servo bracket until the wheel doesn't touch the ground. You can either prop it up or hold it up manually.
+> [!IMPORTANT]
+> Make sure the servo motors are still free to spin without much friction by lifting the servo bracket until the wheel doesn't touch the ground. You can either prop it up or hold it up manually.
 
 Repeat this for wheels at channel 1, 2, and 3. You should have 4 values, for example `[135, 155, 125, 162]`. Now we need to tell the software what these values are, so when you command the corner motors to turn, they will use these values as the true centers. Open the file `osr_mod_launch.py`:
 
@@ -103,9 +104,10 @@ ros2 topic echo /joy
 
 You should see a constant flood of messages being printed. Move an axis or press a button on your controller and you should see a change in the output.
 
-**Tip**: If the joysticks aren't sending through data in a separate terminal, make sure they have the appropriate permissions; `sudo chmod a+rw /dev/input/event0`. (The specific number may vary, run `ls -l /dev/input/*` to find out).
-Then try again. You might want to consider using udev rules to automate this which you will need for automatic bringup using systemd services below.
-If you need help, please post on GitHub Discussions or on the Slack forum.
+> [!TIP]
+> If the joysticks aren't sending through data in a separate terminal, make sure they have the appropriate permissions; `sudo chmod a+rw /dev/input/event0`. The specific number may vary, run `ls -l /dev/input/*` to find out. If you don't see your controller when you run this command, head to [Troubleshooting your gamepad](#troubleshooting-your-gamepad).
+> Then try again. You might want to consider using udev rules to automate this which you will need for automatic bringup using systemd services below.
+If you need help, please post on the Slack forum.
 
 Take a moment to choose which:
 
@@ -159,7 +161,8 @@ command the rover by holding the left back button (LB) down and moving the joyst
 the [RPi setup](rpi.md) by holding down the right back button (RB) instead. 
 If you have questions, please post on the Slack forum in the `#troubleshooting` channel or if you think there's a problem with documentation, [submit an issue](https://github.com/nasa-jpl/osr-rover-code/issues/new).
 
-**tip**: If you notice the rover is moving in the opposite direction as your commands, add a minus sign to the appropriate `scale_` factor in the `osr_mod_launch.py` file. `ctrl-C` to stop the currently running code, then re-run it for the changes to take effect.
+> [!NOTE]
+> If you notice the rover is moving in the opposite direction as your commands, add a minus sign to the appropriate `scale_` factor in the `osr_mod_launch.py` file. `ctrl-C` to stop the currently running code, then re-run it for the changes to take effect.
 
 ### Optional arguments
 
@@ -180,7 +183,8 @@ Start with e.g. 0.75 * scale_linear_turbo. If you think it's too slow or too fas
 The turning speed of the rover, just like a regular car, depends on how fast it's going. As a result, `scale_angular`
 should be set to `scale_linear / min_radius`. For the default configuration, the `min_radius` equals `0.45m`.
 
-**note**: At these speeds, the rover can be fast and strong enough to inflict damage or cause injury. Use caution and lower velocities to drive the rover in the presence of humans or obstacles.
+> [!CAUTION]
+> At these speeds, the rover can be fast and strong enough to inflict damage or cause injury. Use caution and lower velocities to drive the rover in the presence of humans or obstacles.
 
 ## Automatic bringup with launch script
 
@@ -232,10 +236,30 @@ sudo systemctl enable osr_startup.service
 
 At this point, your rover should be fully functional and automatically run whenever you boot it up! Congratulations and happy roving!!
 
-> **Note**: When you're working on the code, recalibrating the servo motors, or otherwise launching the code manually, don't forget to turn off (`stop`) the code running in the background via the systemd service!
+> [!IMPORTANT]
+> When you're working on the code, recalibrating the servo motors, or otherwise launching the code manually, don't forget to turn off (`stop`) the code running in the background via the systemd service!
 
 ## Trigger custom actions using your gamepad
 
 In `osr_launch.py`, you'll find a commented out node with executable [joy_extras.py](../ROS/osr_control/osr_control/joy_extras.py). This node serves as an example of how to trigger certain actions based on button clicks or axis movements on your gamepad. In the example, when a button is pressed, configured through parameter `duty_button_index`, the code will change the parameter `duty_mode` on the `roboclaw_wrapper` node. This effectively toggles between duty and velocity drive mode.
 
 You can modify this file or create a similar one and instead use the button's axes to perform any other action you'd like. When changing parameters, make sure that like the `duty_mode` parameter, the node you're changing the parameter for supports dynamically reconfiguring paramters through the `add_on_set_parameters_callback` function.
+
+## Troubleshooting your gamepad
+
+If your gamepad doesn't show up when you run `ls -l /dev/input/*`, it may not work with the linux kernel. This is common with 'knockoffs', unofficial third-party sold cheaper models. The easiest way to verify this is to borrow someone else's genuine controller, but you can also take a look at the kernel messages to see if your controller is picked up by the kernel.
+
+> [!NOTE]
+> If you're using a bluetooth controller and a RPi3 or RPi4, you likely will have issues. This is because bluetooth only works well if it can use the same interface as the UART serial port is using, which we need to talk to the roboclaws. See [#187](https://github.com/nasa-jpl/osr-rover-code/pull/187) for more.
+
+1. unplug the usb dongle or wired gamepad
+2. on your raspberry pi (through SSH), check if dmesg detects any usb events by running `sudo dmesg | grep usb`. Input your password and you should see some output.
+3. plug in the usb and rerun the command. You should see some new lines compared to the previous output. In my case, I see the following:
+   ```
+   [    4.643030] input: Horizon Hobby SPEKTRUM RECEIVER as /devices/platform/scb/fd500000.pcie/pci0000:00/0000:00:00.0/0000:01:00.0/usb1/1-1/1-1.1/1-1.1.4/1-   
+   1.1.4:1.0/0003:0483:572B.0001/input/input0
+   [    4.643570] hid-generic 0003:0483:572B.0001: input,hidraw0: USB HID v1.11 Gamepad [Horizon Hobby SPEKTRUM RECEIVER] on usb-0000:01:00.0-1.1.4/input0
+   ```
+   proving that my Spektrum USB controller was detected. If you don't see any messages, that xbox adapter probably just doesn't work with linux or you got unlucky and received a faulty one.
+
+
