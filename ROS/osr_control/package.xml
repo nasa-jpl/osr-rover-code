@@ -11,9 +11,7 @@
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>python3-serial</exec_depend>
-  <exec_depend>teleop_twist_joy</exec_depend>
   <exec_depend>osr_interfaces</exec_depend>
-  <exec_depend>python-smbus</exec_depend>
 
   <export>
     <build_type>ament_python</build_type>
