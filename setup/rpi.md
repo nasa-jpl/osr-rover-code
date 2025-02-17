@@ -82,14 +82,14 @@ touch ./venv/COLCON_IGNORE
 sudo rosdep init
 rosdep update
 rosdep install --from-paths src --ignore-src --rosdistro=$ROS_DISTRO -y
-pip3 install adafruit-circuitpython-servokit ina260 RPi.GPIO
+python3 -m pip install adafruit-circuitpython-servokit ina260 RPi.GPIO smbus
 # build the ROS packages
 colcon build --symlink-install
 ```
 
 It should run successfully. If it doesn't, please ask on Slack or [submit an issue](https://github.com/nasa-jpl/osr-rover-code/issues/new) if you believe there's a problem with the instructions.
 
-Now let's add the generated files to the path so ROS can find them
+Now let's add the generated files to the path so ROS can find them:
 
 ```bash
 source install/setup.bash

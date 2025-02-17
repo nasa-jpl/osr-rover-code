@@ -8,11 +8,11 @@ If this is the first time setting up the rover, you may want to take some precau
 
 * put the rover's body on a box so that the wheels can spin without the rover hitting something by accident and the corner assemblies can rotate freely.
   * alternatively you can take off the wheels
-* Atach the USB dongle for your remote controller (xbox or Spektrum or other)
+* Attach the USB dongle for your remote controller (xbox or Spektrum or other)
 
 ## Configuring the rover parameters
 
-If you have any differences compared to the default build, you can change many parameters spread out over three files. Rather than modifying the original files, any changes should be made to the `_mod.yaml` files you made earlier. This way your changes don't get committed to git.
+If you have any differences compared to the default build, you can change many parameters spread out over three files. Rather than modifying the original files, any changes should be made to the `_mod.yaml` files you made earlier. This way your changes don't conflict with future updates.
 
 The files follow the same structure as the default. Just include the values that you need to change as the default values for other parameters may change over time. Say for example you installed bigger wheels on the rover. The software needs to know this such that it can control what speed to command to each motor. Start by opening the file you just created:
 
@@ -22,7 +22,7 @@ nano osr_params_mod.yaml
 
 An editor (nano) should open, if not, you might have to install nano using 'sudo apt install nano'. You can also use an editor like VScode with an SSH extension so you can use a fully fledged editor while still working from a different computer.
 
-Paste in the following snippet (compare with the contents of [osr_params.yaml](../ROS/osr_bringup/config/osr_params.yaml)).
+If you wanted to update the value for the wheel radius, you would paste in the following snippet (compare with the contents of [osr_params.yaml](../ROS/osr_bringup/config/osr_params.yaml)).
 
 ```yaml
 rover:
@@ -31,7 +31,7 @@ rover:
       wheel_radius: 0.082  # [m]
 ```
 
-The software will load in these changes and apply them. Take a look at the parameters for the [roboclaws](../ROS/osr_bringup/config/roboclaw_params.yaml) as well.
+The software will load in these changes and apply them. Take a look at the parameters for the [roboclaws](../ROS/osr_bringup/config/roboclaw_params.yaml) as well. If you used `nano`, you can save and exit the editor using `ctrl+o` followed by `ctrl+x`.
 
 ## Calibrating the corner servos
 
