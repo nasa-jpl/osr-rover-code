@@ -382,17 +382,6 @@ class Rover(Node):
         # get a best estimate of the turning radius by taking the median value (avg sensitive to outliers)
         approx_turning_radius = sum(sorted([r_front_farthest, r_front_closest, r_back_farthest, r_back_closest])[1:3])/2.0
 
-         # Handle cases where the turning radius is zero (turn-in-place)
-        if math.isclose(approx_turning_radius, 0.0, abs_tol=1e-3):
-            self.curr_twist.twist.linear.x = 0.0  # No linear motion
-            # Angular velocity from wheel velocities. We subtract velocities because wheels are spinning in opposite directions
-            drive_angular_velocity = (self.curr_velocities['drive_left_middle'] - self.curr_velocities['drive_right_middle']) / 2.0
-            self.curr_twist.twist.angular.z = drive_angular_velocity * self.wheel_radius / self.d4  # Use width from middle wheel to center of rover
-            self.get_logger().debug("Turn-in-place detected. Angular velocity: {}".format(
-                self.curr_twist.twist.angular.z))
-            return
-
-        # Not a turn in place so cary on
         if math.isnan(approx_turning_radius):
             approx_turning_radius = self.max_radius
         self.get_logger().debug("Current approximate turning radius: {}".format(round(approx_turning_radius, 2)), throttle_duration_sec=1)
@@ -405,10 +394,13 @@ class Rover(Node):
         # now calculate angular velocity from its relation with linear velocity and turning radius
         try:
             self.curr_twist.twist.angular.z = self.curr_twist.twist.linear.x / self.curr_turning_radius
-        except ZeroDivisionError:
-            self.get_logger().warn("Current turning radius was calculated as zero which"
-                                   "is an illegal value. Check your wheel calibration.")
-            self.curr_twist.twist.angular.z = 0.  # turning in place is currently unsupported
+        except ZeroDivisionError:  # turn in place
+            self.curr_twist.twist.linear.x = 0.0  # No linear motion
+            # Angular velocity from wheel velocities. We subtract velocities because wheels are spinning in opposite directions
+            # divide by two to average across the two middle wheels
+            drive_angular_velocity = (self.curr_velocities['drive_left_middle'] - self.curr_velocities['drive_right_middle']) / 2.0
+            self.curr_twist.twist.angular.z = drive_angular_velocity * self.wheel_radius / self.d4  # Use width from middle wheel to center of rover
+            self.get_logger().debug(f"Turn-in-place detected. Angular velocity: {self.curr_twist.twist.angular.z}", throttle_duration_sec=1)
 
 
 def main(args=None):
