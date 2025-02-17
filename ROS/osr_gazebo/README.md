@@ -1,5 +1,8 @@
 # ROS packages for JPL Open Source Rover Gazebo Simulation
 
+> [!NOTE]
+> This package isn't compiled with colcon by default. If you want to use this, remove the [COLCON_IGNORE file](./COLCON_IGNORE)
+
 ## Overview
 The following ROS packages are included to visualize the rover in rviz and simulate its operations in Gazebo:
 
