@@ -190,23 +190,20 @@ should be set to `scale_linear / min_radius`. For the default configuration, the
 
 In this section we'll see how we can have the RPi automatically launch the rover code when it launches. That way you don't have to SSH in to run the rover and it can be controlled completely offline. Any modified parameters in `osr_mod_launch.py` and in the config folder will be found automatically.
 
-**Note: We do not recommend enabling the service until you have verified that everything
+> [!CAUTION]
+> We do not recommend enabling the service until you have verified that everything
 on your robot runs successfully manually. Once you enable the service, as soon as you power
 on the RPi it will try and run everything. This could cause issues if everything has not yet
 been fully tested and verified. Additionally, if you are doing development of your own software
 for the robot we suggest disabling the service and doing manual launch of the scripts during
-testing phases. This will help you more easily debug any issues with your code.**
+testing phases. This will help you more easily debug any issues with your code.
 
-Starting scripts on boot using ROS can be a little more difficult than starting scripts on boot normally from
-the Raspberry Pi because of the default permission settings on the RPi and the fact that that ROS cannot
-be ran as the root user. The way that we will starting our rover code automatically on boot is to create
-a service that starts our roslaunch script, and then automatically run that service on boot of the robot.
+Starting scripts on boot using ROS can be a little more difficult than starting scripts on boot normally from the Raspberry Pi because of the default permission settings on the RPi and the fact that that ROS cannot be ran as the root user. The way that we will starting our rover code automatically on boot is to create a service that starts our roslaunch script, and then automatically run that service on boot of the robot.
 [Further information](https://www.linode.com/docs/quick-answers/linux/start-service-at-boot/) on system service scripts running at boot.
 
-There are two scripts in the ”init_scripts” folder. The first is the bash file that runs the
-roslaunch file, and the other creates a system service to start that bash script. Open up a terminal on the
-raspberry Pi and execute the following commands.
-```
+There are two scripts in the [init_scripts](../init_scripts/) folder. The first is the bash file that runs the roslaunch file, and the other creates a system service to start that bash script. Open up a terminal on the Raspberry Pi and execute the following commands:
+
+```bash
 cd ~/osr_ws/src/osr-rover-code/init_scripts
 # use symbolic links so we capture updates to these files in the service
 sudo ln -s $(pwd)/launch_osr.sh /usr/local/bin/launch_osr.sh
@@ -214,6 +211,8 @@ sudo ln -s $(pwd)/osr_paths.sh /usr/local/bin/osr_paths.sh
 sudo cp osr_startup.service /etc/systemd/system/osr_startup.service
 sudo chmod 644 /etc/systemd/system/osr_startup.service
 ```
+
+Modify the service file with `sudo nano /etc/systemd/system/osr_startup.service` and replace the User and Group with your username (when in doubt, on the Pi run `echo $USER` in a terminal) instead of 'Ubuntu'.
 
 Your osr startup service is now installed on the Pi and ready to be used. The following are some commands
 related to managing this service which you might find useful:
