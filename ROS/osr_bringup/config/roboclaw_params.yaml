@@ -24,7 +24,7 @@ roboclaw_wrapper:
       drive_left_back:
         address: 129
         channel: M2
-        ticks_per_rev: 4288
+        ticks_per_rev: 28
         gear_ratio: 26.9
       drive_right_back:
         address: 129
