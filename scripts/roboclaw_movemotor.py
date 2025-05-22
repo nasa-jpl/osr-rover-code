@@ -78,7 +78,7 @@ if __name__ == "__main__":
         sleep(0.5)
     sleep(1)
     # stop motor
-    rc.ForwardM1(address, 0)
+    rc.DutyM1(address, 0)
 
     print("M2:")
     # Move M2
@@ -89,4 +89,4 @@ if __name__ == "__main__":
         sleep(0.5)
     sleep(1)
     # stop motor
-    rc.ForwardM2(address, 0)
+    rc.DutyM2(address, 0)
