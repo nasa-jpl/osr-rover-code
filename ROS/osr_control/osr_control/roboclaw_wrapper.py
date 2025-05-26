@@ -445,8 +445,8 @@ class RoboclawWrapper(Node):
     def stop_motors(self):
         """Stops all motors on Rover"""
         for i in range(3):
-            self.rc.ForwardM1(self.address[i], 0)
-            self.rc.ForwardM2(self.address[i], 0)
+            self.rc.DutyM1(self.address[i], 0)
+            self.rc.DutyM2(self.address[i], 0)
 
     def read_errors(self):
         """Checks error status of each motor controller, returns 0 if no errors reported"""
