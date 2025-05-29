@@ -144,13 +144,14 @@ sudo cp ~/osr_ws/src/osr-rover-code/config/* /etc/udev/rules.d/
 sudo udevadm control --reload-rules && sudo udevadm trigger
 ```
 
-### Add user to tty and dialout groups
+### Add user to system groups
 
-Finally, add the user to the `tty` and `dialout` groups on the raspberry pi:
+Finally, add the user to the `tty` `dialout`, and `input` groups on the raspberry pi:
 
 ```bash
 sudo adduser $USER tty
 sudo adduser $USER dialout
+sudo adduser $USER input
 ```
 
 You might have to create the dialout group if it doesn't already exist with `groupadd dialout`.
