@@ -12,7 +12,7 @@ Make sure you set the following settings while configuring the image to be flash
 
 * Select `Enable SSH` to you can connect to the rover over your local WiFi connection rather than having to attach a screen, keyboard, and mouse to the RPi each time. We recommend using a password.
 * `Set username and password`. You will need these later to log into the RPi over SSH.
-* `Configure wifi` so the RPi knows how to connect to your network when it boots up. 
+* `Configure wifi` so the RPi knows how to connect to your network when it boots up.
 * `Set locale settings` to your time zone
 
 When done flashing, insert the SD card into the Raspberry Pi. When the Raspberry Pi is powered (make sure to use a proper power supply or connect it to the rover), it should connect to the WiFi connection and be visible from your router's 'devices' page. If possible, we recommend assigning a static IP address to your RPi so you can reach it using that IP address. Otherwise you should also be able to reach it using its hostname (which you selected in the Imager process), potentially with `.local` appended to the end.
@@ -52,7 +52,7 @@ Check that `ROS 2` is installed correctly. Running `ros2 topic list` from the co
 First we'll create a ROS workspace for the rover code. On the terminal where you've SSH'd into the Raspberry Pi or from the Raspberry Pi's terminal directly (when using the GUI, keyboard, and mouse), run the following commands:
 
 ```bash
-# Create a colcon workspace directory, which will contain all ROS compilation and 
+# Create a colcon workspace directory, which will contain all ROS compilation and
 # source code files, and navigate into it
 mkdir -p ~/osr_ws/src && cd ~/osr_ws
 
@@ -74,9 +74,9 @@ git clone https://github.com/nasa-jpl/osr-rover-code.git
 Now we will install the dependencies using rosdep. Python packages will be installed in a [virtual environment](https://docs.ros.org/en/jazzy/How-To-Guides/Using-Python-Packages.html#installing-via-a-virtual-environment).
 
 ```bash
-sudo apt install python3-rosdep python3-pip python3-virtualenv
+sudo apt install python3-rosdep python3-pip
 cd ..
-virtualenv -p python3 ./venv
+python3 -m venv venv --system-site-packages
 source ./venv/bin/activate
 touch ./venv/COLCON_IGNORE
 sudo rosdep init
@@ -84,7 +84,7 @@ rosdep update
 rosdep install --from-paths src --ignore-src --rosdistro=$ROS_DISTRO -y
 python3 -m pip install adafruit-circuitpython-servokit ina260 RPi.GPIO smbus
 # build the ROS packages
-colcon build --symlink-install
+python3 -m colcon build --symlink-install
 ```
 
 It should run successfully. If it doesn't, please ask on Slack or [submit an issue](https://github.com/nasa-jpl/osr-rover-code/issues/new) if you believe there's a problem with the instructions.
@@ -111,7 +111,7 @@ The `source ....bash` lines you typed out earlier are used to manually configure
 
 ```bash
 echo "source ~/osr_ws/venv/bin/activate" >> ~/.bashrc
-echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> ~/.bashrc 
+echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> ~/.bashrc
 echo "source ~/osr_ws/install/setup.bash" >> ~/.bashrc
 ```
 
