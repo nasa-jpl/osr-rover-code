@@ -17,6 +17,10 @@ This will disconnect `/dev/ttyS0` (and `/dev/serial0`) from the mini-UART, and m
 
 See [this discussion](https://www.engineersgarage.com/microcontroller-projects/articles-raspberry-pi-serial-communication-uart-protocol-serial-linux-devices/) and [this discussion](https://spellfoundry.com/2016/05/29/configuring-gpio-serial-port-raspbian-jessie-including-pi-3-4/) for more information.
 
+- when using `/dev/serial0` for serial communications instead of `/dev/serial1`, you're using a less capable communications device. For whatever reason, this worked under ubuntu 18.04, but but seems to have a lot of trouble under ubuntu 20.04. So it's best to use `/dev/serial1`.
+
+- However, `/dev/serial1` is also connected to the bluetooth controller, so we need to disable bluetooth. 
+
 - We also need to remove `console=serial0,115200` from cmdline.txt, because it also seems to prevent the operation of `serial1` for serial comms.
 
 To find out which one you should be using, run [the test script](../scripts/roboclawtest.py). If you want to use `serial0` instead of `serial1`, you must change
