@@ -143,14 +143,15 @@ Next, we'll add udev rules to add a symbolic link (symlink) to the serial and i2
 sudo cp ~/osr_ws/src/osr-rover-code/config/* /etc/udev/rules.d/
 sudo udevadm control --reload-rules && sudo udevadm trigger
 ```
-### If using Pi 5, disable the bluetooth serial 
-If you are using a Raspberry Pi 5, add the following lines to `/boot/firmware/config.txt`:
+
+### Disable the bluetooth serial 
+Add the following lines to `/boot/firmware/config.txt`:
 ```
  enable_uart=1
  dtoverlay=disable-bt
- dtoverlay=uart0
+ dtoverlay=uart0 # (only on RPi5)
 ```
-This will connect `/dev/ttyS0` (and `/dev/serial0`) to the debug UART, and more importantly, connect `/dev/ttyAMA0` (and `/dev/serial1`) to the hardware UART on GPIO 14/15 that the roboclaws are using.
+This will connect `/dev/ttyAMA0` (and `/dev/serial1`) to the hardware UART on GPIO 14/15 that the roboclaws are using.
 
 ### Add user to system groups
 
@@ -170,10 +171,10 @@ You might have to create the dialout group if it doesn't already exist with `gro
 Log back in and in a terminal, verify that the serial devices are present:
 
 ```bash
-ls -l /dev/serial*
+ls -l /dev/ttyAMA0
 ```
 
-should at least show a line that contains `/dev/serial0 -> ttyS0` on a Pi3 or Pi4, and a line that contains `/dev/serial1 -> ttyAMA0` ona Pi5.  This is the main serial device used to send information to the Roboclaws over UART / GPIO pins. The opposite (`ttyAMA0` on Pi3/4, and `ttyS0` on Pi5 is dedicated for bluetooth. 
+should at least show a line that contains `/dev/ttyAMA0`.  This is the main serial device used to send information to the Roboclaws over UART / GPIO pins. More detail on serial setup can be found in [serial_config_info.md](serial_config_info.md)
 
 ## Testing serial comm with the Roboclaw motors controllers
 
