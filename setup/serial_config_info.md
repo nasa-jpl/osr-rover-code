@@ -1,4 +1,4 @@
-Configuration can be a bit of a pain for using the serial port on the raspberry pi with ubuntu. You can use either for communications, but if you've followed the instructions, you most likely will be using `/dev/serial1`.
+Configuration can be a bit of a pain for using the serial port on the raspberry pi with ubuntu. 
 
 # On the Pi3/Pi4
 
@@ -13,8 +13,7 @@ If you are using a Raspberry Pi 3/4, add the following lines to `/boot/firmware/
  enable_uart=1
  dtoverlay=disable-bt
 ```
-This will disconnect `/dev/ttyS0` (and `/dev/serial0`) to the debug UART, and more importantly, connect `/dev/ttyAMA0` (and `/dev/serial1`) to the hardware UART on GPIO 14/15 that the roboclaws are using.
-
+This will disconnect `/dev/ttyS0` (and `/dev/serial0`) from the mini-UART, and more importantly, connect `/dev/ttyAMA0` (and `/dev/serial1`) to the hardware UART on GPIO 14/15 that the roboclaws are using.
 
 See [this discussion](https://www.engineersgarage.com/microcontroller-projects/articles-raspberry-pi-serial-communication-uart-protocol-serial-linux-devices/) and [this discussion](https://spellfoundry.com/2016/05/29/configuring-gpio-serial-port-raspbian-jessie-including-pi-3-4/) for more information.
 
@@ -35,4 +34,4 @@ If you are using a Raspberry Pi 5, add the following lines to `/boot/firmware/co
  dtoverlay=disable-bt
  dtoverlay=uart0
 ```
-This will connect `/dev/ttyS0` (and `/dev/serial0`) to the debug UART, and more importantly, connect `/dev/ttyAMA0` (and `/dev/serial1`) to the hardware UART on GPIO 14/15 that the roboclaws are using.
+This will connect `/dev/ttyS0` (and `/dev/serial0`) to the debug UART port, and more importantly, connect `/dev/ttyAMA0` (and `/dev/serial1`) to the hardware UART on GPIO 14/15 that the roboclaws are using.
