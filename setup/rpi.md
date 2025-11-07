@@ -150,7 +150,7 @@ If you are using a Raspberry Pi 5, add the following lines to `/boot/firmware/co
  dtoverlay=disable-bt
  dtoverlay=uart0
 ```
-This will connect /dev/ttyS0 (and /dev/serial0) to the debug UART, and more importantly, connect /dev/ttyAMA0 (and /dev/serial1) to the hardware UART on GPIO 14/15 that the roboclaws are using.
+This will connect `/dev/ttyS0` (and `/dev/serial0`) to the debug UART, and more importantly, connect `/dev/ttyAMA0` (and `/dev/serial1`) to the hardware UART on GPIO 14/15 that the roboclaws are using.
 
 ### Add user to system groups
 
@@ -173,7 +173,7 @@ Log back in and in a terminal, verify that the serial devices are present:
 ls -l /dev/serial*
 ```
 
-Should at least show a line that contains `/dev/serial0 -> ttyS0`. This is the main serial device used to send information to the Roboclaws over UART / GPIO pins. If you see `/dev/serial1 -> ttyAMA0`, that is a less powerful software-defined serial device typically used for bluetooth. This varies between Raspberry Pi versions.
+should at least show a line that contains `/dev/serial0 -> ttyS0` on a Pi3 or Pi4, and a line that contains `/dev/serial1 -> ttyAMA0` ona Pi5.  This is the main serial device used to send information to the Roboclaws over UART / GPIO pins. The opposite (`ttyAMA0` on Pi3/4, and `ttyS0` on Pi5 is dedicated for bluetooth. 
 
 ## Testing serial comm with the Roboclaw motors controllers
 
