@@ -143,6 +143,14 @@ Next, we'll add udev rules to add a symbolic link (symlink) to the serial and i2
 sudo cp ~/osr_ws/src/osr-rover-code/config/* /etc/udev/rules.d/
 sudo udevadm control --reload-rules && sudo udevadm trigger
 ```
+### If using Pi 5, disable the bluetooth serial 
+If you are using a Raspberry Pi 5, add the following lines to `/boot/firmware/config.txt`:
+```
+ enable_uart=1
+ dtoverlay=disable-bt
+ dtoverlay=uart0
+```
+This will connect /dev/ttyS0 (and /dev/serial0) to the debug UART, and more importantly, connect /dev/ttyAMA0 (and /dev/serial1) to the hardware UART on GPIO 14/15 that the roboclaws are using.
 
 ### Add user to system groups
 
