@@ -158,18 +158,14 @@ This will start up the ROS 2 nodes to run the rover with the changes you made in
 
 Any errors or warnings will be displayed there in case something went wrong.  
 
-### Note
-It's pretty normal for the roboclaws to issue one or two Current Error messages on startup, which look like this:
-  ```
-  [roboclaw_wrapper-1] [ERROR] [timestamp] [roboclaw_wrapper]: Motor controller 128 reported error code 0x20003000 (hex: 0x20003000),
-  [roboclaw_wrapper-1] M1 Current Error
-  [roboclaw_wrapper-1] M2 Current Error
-  ```
-  As long as they are not continuous, they are not a problem.
-
-
-- The ROS1::noetic version of gazebo simulation exists at https://github.com/dongjineee/rover_gazebo.
-
+> [!NOTE]
+> It's pretty normal for the roboclaws to issue one or two Current Error messages on startup, which look like this:
+>  ```
+>  [roboclaw_wrapper-1] [ERROR] [timestamp] [roboclaw_wrapper]: Motor controller 128 reported error code 0x20003000 (hex: 0x20003000),
+>  [roboclaw_wrapper-1] M1 Current Error
+>  [roboclaw_wrapper-1] M2 Current Error
+>  ```
+>  As long as they are not continuous, they are not a problem.
 
 If you're using the Xbox wireless controller,
 command the rover by holding the left back button (LB) down and moving the joysticks. You can boost as described in
