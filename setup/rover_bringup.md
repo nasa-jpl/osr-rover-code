@@ -156,7 +156,18 @@ ros2 launch osr_bringup osr_mod_launch.py
 
 This will start up the ROS 2 nodes to run the rover with the changes you made in the previous steps.
 
-Any errors or warnings will be displayed there in case something went wrong. If you're using the Xbox wireless controller,
+Any errors or warnings will be displayed there in case something went wrong.  
+
+> [!NOTE]
+> It's pretty normal for the roboclaws to issue one or two Current Error messages on startup, which look like this:
+>  ```
+>  [roboclaw_wrapper-1] [ERROR] [timestamp] [roboclaw_wrapper]: Motor controller 128 reported error code 0x20003000 (hex: 0x20003000),
+>  [roboclaw_wrapper-1] M1 Current Error
+>  [roboclaw_wrapper-1] M2 Current Error
+>  ```
+>  As long as they are not continuous, they are not a problem.
+
+If you're using the Xbox wireless controller,
 command the rover by holding the left back button (LB) down and moving the joysticks. You can boost as described in
 the [RPi setup](rpi.md) by holding down the right back button (RB) instead. 
 If you have questions, please post on the Slack forum in the `#troubleshooting` channel or if you think there's a problem with documentation, [submit an issue](https://github.com/nasa-jpl/osr-rover-code/issues/new).
