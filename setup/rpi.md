@@ -2,7 +2,7 @@
 
 In this section, we’ll go over setting up the Raspberry Pi (RPi) and setting up all the code that will run the rover. Our rover uses ROS (Robotic Operating System); we will set these up below.
 
-These instructions should work for both the RPi 3 and 4. You are free to use other versions of RPi, ROS, or OS, but setting these up is not covered here and it is not guaranteed that those will work.
+These instructions should work for RPi 3, 4, and 5. You are free to use other versions of RPi, ROS, or OS, but setting these up is not covered here and it is not guaranteed that those will work.
 
 ## Installing an Operating System
 
@@ -144,6 +144,15 @@ sudo cp ~/osr_ws/src/osr-rover-code/config/* /etc/udev/rules.d/
 sudo udevadm control --reload-rules && sudo udevadm trigger
 ```
 
+### Disable the bluetooth serial 
+Add the following lines to `/boot/firmware/config.txt`:
+```
+ enable_uart=1
+ dtoverlay=disable-bt
+ dtoverlay=uart0 # (only on RPi5)
+```
+This will connect `/dev/ttyAMA0` (and `/dev/serial1`) to the hardware UART on GPIO 14/15 that the roboclaws are using.
+
 ### Add user to system groups
 
 Finally, add the user to the `tty` `dialout`, and `input` groups on the raspberry pi:
@@ -162,10 +171,10 @@ You might have to create the dialout group if it doesn't already exist with `gro
 Log back in and in a terminal, verify that the serial devices are present:
 
 ```bash
-ls -l /dev/serial*
+ls -l /dev/ttyAMA0
 ```
 
-Should at least show a line that contains `/dev/serial0 -> ttyS0`. This is the main serial device used to send information to the Roboclaws over UART / GPIO pins. If you see `/dev/serial1 -> ttyAMA0`, that is a less powerful software-defined serial device typically used for bluetooth. This varies between Raspberry Pi versions.
+should at least show a line that contains `/dev/ttyAMA0`.  This is the main serial device used to send information to the Roboclaws over UART / GPIO pins. More detail on serial setup can be found in [serial_config_info.md](serial_config_info.md)
 
 ## Testing serial comm with the Roboclaw motors controllers
 
@@ -193,6 +202,6 @@ The version number may be a later version. If all three work, congratulations! Y
 If the script seems to hang, or returns only zeros inside the parantheses (0,0), then you have a problem communicating with the given roboclaw for that address. Some troubleshooting steps in this cases:
 
 - Make sure you followed the instructions in the [#Setting up serial communication] section above, and the serial devices are configured correctly on the RPi.
-- Also make sure you went through the calibration instructions from the [main repo](https://github.com/nasa-jpl/open-source-rover/blob/master/Electrical/Calibration.pdf) and set the proper address, serial comm baud rate, and "Enable Multi-Unit Mode" option for every roboclaw controller (if multi-unit mode isn't enabled on every controller, there will be serial bus contention.). If you update anything on a controller, you'll need to fully power cycle it by turning the rover off.
+- Also make sure you went through the calibration instructions from the [main repo](https://github.com/nasa-jpl/open-source-rover/tree/master/electrical/pcb#61-roboclaw-testing-and-verification) and set the proper address, serial comm baud rate, and "Enable Multi-Unit Mode" option for every roboclaw controller (if multi-unit mode isn't enabled on every controller, there will be serial bus contention.). If you update anything on a controller, you'll need to fully power cycle it by turning the rover off.
 - If you're still having trouble after the above steps, try unplugging every motor controller except for one, and debug exclusively with that one. Reboot the Raspberry Pi if you haven't already.
 - If that still doesn't work, please ask on the troubleshooting channel on our Slack group. Include as much relevant information as possible so we can help you find the issue as fast as possible.
