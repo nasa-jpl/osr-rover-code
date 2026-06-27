@@ -3,13 +3,14 @@ from functools import partial
 
 import rclpy
 from rclpy.parameter import Parameter
+from rclpy.parameter_event_handler import ParameterEventHandler
 from rclpy.node import Node
 import tf2_ros
 
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import Twist, TwistWithCovariance, TransformStamped
 from nav_msgs.msg import Odometry
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, UInt8MultiArray
 from osr_interfaces.msg import CommandDrive, CommandCorner
 
 
@@ -32,13 +33,23 @@ class Rover(Node):
                 ('rover_dimensions.wheel_radius', Parameter.Type.DOUBLE),
                 ('drive_no_load_rpm', Parameter.Type.DOUBLE),
                 ('enable_odometry', Parameter.Type.BOOL),
-                ('publish_transform', Parameter.Type.BOOL)
+                ('publish_transform', Parameter.Type.BOOL),
+                ('leds_enabled', False)
             ]
         )
         self.d1 = self.get_parameter('rover_dimensions.d1').get_parameter_value().double_value
         self.d2 = self.get_parameter('rover_dimensions.d2').get_parameter_value().double_value
         self.d3 = self.get_parameter('rover_dimensions.d3').get_parameter_value().double_value
         self.d4 = self.get_parameter('rover_dimensions.d4').get_parameter_value().double_value
+
+        # add a dynamic parameter callback handler
+        self.handler = ParameterEventHandler(self)
+
+        self.callback_handle = self.handler.add_parameter_callback(
+            parameter_name="leds_enabled",
+            node_name="rover",
+            callback=self.parameter_change_cb,
+        )
 
         self.min_radius = 0.45  # [m]
         self.max_radius = 6.4  # [m]
@@ -77,6 +88,14 @@ class Rover(Node):
 
         self.corner_cmd_pub = self.create_publisher(CommandCorner, "/cmd_corner", 1)
         self.drive_cmd_pub = self.create_publisher(CommandDrive, "/cmd_drive", 1)
+        self.leds_pub = self.create_publisher(UInt8MultiArray, "/led_intensity", 1)
+
+    def parameter_change_cb(self, p: rclpy.parameter.Parameter) -> None:
+        self.get_logger().info(f"Received an update to parameter: {p.name}: {rclpy.parameter.parameter_value_to_python(p.value)}")
+        if p.name == "leds_enabled":
+            self.leds_enabled = p.value
+            msg = UInt8MultiArray(data=[100, 100]) if p.value.bool_value else UInt8MultiArray(data=[0, 0])
+            self.leds_pub.publish(msg)
 
     def cmd_cb(self, twist_msg, intuitive=False):
         """

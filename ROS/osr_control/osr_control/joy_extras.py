@@ -15,13 +15,18 @@ class JoyButtonSubscriber(Node):
         self.declare_parameter('duty_button_index', 0)  # Default button index is 0
         self.duty_button_index = self.get_parameter('duty_button_index').value
         self.last_duty_mode_value = False
+        self.front_led_on = False
         self.last_received_time = None        
         self.cb_group = ReentrantCallbackGroup()
         self.roboclaw_node_set_param_client = self.create_client(SetParameters, '/roboclaw_wrapper/set_parameters', 
                                                                  callback_group=self.cb_group)
         while not self.roboclaw_node_set_param_client.wait_for_service(timeout_sec=5.0):
             self.log.info('Service /roboclaw_wrapper/set_parameters not available, waiting again...', skip_first=True)
-        
+        self.rover_node_set_param_client = self.create_client(SetParameters, '/rover/set_parameters', 
+                                                            callback_group=self.cb_group)
+        while not self.rover_node_set_param_client.wait_for_service(timeout_sec=5.0):
+            self.log.info('Service /rover/set_parameters not available, waiting again...', skip_first=True)
+
         self.subscription = self.create_subscription(
             Joy,
             'joy',
@@ -45,6 +50,18 @@ class JoyButtonSubscriber(Node):
             self.last_duty_mode_value = not self.last_duty_mode_value
             await self.set_parameter_value_on_other_node(self.roboclaw_node_set_param_client, param)
             self.last_received_time = current_time
+
+        led_switch_on = msg.axes[1] > 0.3
+        if led_switch_on and not self.front_led_on:
+            self.log.info("Turning front LEDs on")
+            param = Parameter(name="leds_enabled", value=True).to_parameter_msg()
+            await self.set_parameter_value_on_other_node(self.rover_node_set_param_client, param)
+            self.front_led_on = True
+        elif not led_switch_on and self.front_led_on:
+            self.log.info("Turning front LEDs off")
+            param = Parameter(name="leds_enabled", value=False).to_parameter_msg()
+            await self.set_parameter_value_on_other_node(self.rover_node_set_param_client, param)
+            self.front_led_on = False
 
     async def set_parameter_value_on_other_node(self, node_set_param_client, param):
         request = SetParameters.Request()
