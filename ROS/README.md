@@ -1,5 +1,7 @@
 # ROS related code
 
+The supported ROS 2 distribution for the rover stack is **Jazzy**. See the top-level [README](../README.md) and [RPi setup](../setup/rpi.md) for install instructions.
+
 ## Colcon Packages
 
 There are 4 colcon packages contained in this repo. Each of these packages performs a specific purpose in the ROS 
@@ -8,8 +10,9 @@ structure, which are covered below
   * `osr_control`: core code that talks to motor drivers and listens to commands 
   * `osr_interfaces`: custom message definitions
   * `osr_bringup`: configuration and launch files for starting the rover
+  * `osr_gazebo`: optional Gazebo Classic simulation / RViz (not built by default; see its README for distro notes)
 
-Please refer to the docstrings wihin each file to gain understanding of the internals as that is the most
+Please refer to the docstrings within each file to gain understanding of the internals as that is the most
 up-to-date and complete source of information.
 
 ### osr_control

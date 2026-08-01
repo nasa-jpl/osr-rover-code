@@ -148,7 +148,7 @@ If your INA260 is not at 0x45 but some other address (just make sure it doesn't 
 
 Now you're all set up to launch the full rover software stack!
 
-In a sourced terminal (`source /opt/ros/foxy/setup.bash && source ~/osr_ws/install/setup.bash`, unless you added these to your `~/.bashrc` file) already before, run
+In a sourced terminal (`source /opt/ros/jazzy/setup.bash && source ~/osr_ws/install/setup.bash`, unless you already added these to your `~/.bashrc`), run
 
 ```commandline
 ros2 launch osr_bringup osr_mod_launch.py

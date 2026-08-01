@@ -11,26 +11,31 @@ The following ROS packages are included to visualize the rover in rviz and simul
 
 ## Dependencies
 
-### Linux
-- **Operating System**: Ubuntu 22.04.06 LTS
-- **ROS Distributions**: Iron, Humble
-- **Gazebo Version**: 11.14.0
+The main OSR stack targets **ROS 2 Jazzy**. This simulation package is an exception: it still depends on **Gazebo Classic** (`gazebo_ros` / `gazebo_ros2_control`), which is not supported on Jazzy (Jazzy pairs with Gazebo Harmonic). Until this package is migrated to `ros_gz`, use it on **ROS 2 Humble** with Gazebo Classic.
+
+### Linux (simulation)
+- **Operating System**: Ubuntu 22.04 LTS (Jammy)
+- **ROS Distribution**: Humble
+- **Gazebo**: Classic 11.x
+
+> [!IMPORTANT]
+> Do not expect `osr_gazebo` to build or run on Jazzy without migrating away from Gazebo Classic. RViz-only visualization may still work on Jazzy if you only need the URDF/meshes.
 
 ## ROS Package Installation
-Before installing the required packages, replace `${ros-distro}` in the commands below with the appropriate ROS distribution name (`iron`, `humble`).
+On a Humble machine, install the dependencies:
 
 ```bash
 sudo apt install python3-colcon-common-extensions
-sudo apt-get install ros-${ros-distro}-rviz2
-sudo apt-get install ros-${ros-distro}-controller-manager
-sudo apt-get install ros-${ros-distro}-robot-state-publisher
-sudo apt-get install ros-${ros-distro}-joint-state-publisher
-sudo apt-get install ros-${ros-distro}-joint-state-publisher-gui 
-sudo apt-get install ros-${ros-distro}-gazebo-ros-pkgs
-sudo apt-get install ros-${ros-distro}-trajectory-msgs
-sudo apt-get install ros-${ros-distro}-velocity-controllers
-sudo apt-get install ros-${ros-distro}-joint-trajectory-controller
-sudo apt-get install ros-${ros-distro}-gazebo-ros2-control-demos
+sudo apt-get install ros-humble-rviz2
+sudo apt-get install ros-humble-controller-manager
+sudo apt-get install ros-humble-robot-state-publisher
+sudo apt-get install ros-humble-joint-state-publisher
+sudo apt-get install ros-humble-joint-state-publisher-gui
+sudo apt-get install ros-humble-gazebo-ros-pkgs
+sudo apt-get install ros-humble-trajectory-msgs
+sudo apt-get install ros-humble-velocity-controllers
+sudo apt-get install ros-humble-joint-trajectory-controller
+sudo apt-get install ros-humble-gazebo-ros2-control-demos
 ```
 
 ## Installation
@@ -38,9 +43,9 @@ sudo apt-get install ros-${ros-distro}-gazebo-ros2-control-demos
 ### Create and configure a workspace
 Source your ROS installation:
 ```bash
-source /opt/ros/${ros-distro}/setup.bash
+source /opt/ros/humble/setup.bash
 ```
-build the osr-gazebo packages:
+Build the osr-gazebo package:
 ```bash
 cd ~/osr-rover-code/ROS/osr_gazebo
 colcon build
@@ -77,8 +82,9 @@ Keyboard controller
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
 ```
 ## Note
-- The control does not have specified linear and angular velocities. Therefore, it's necessary to add the maximum and minimum values for `cmd_vel` in the `motor_controller.cpp`.
-- The ROS1::noetic version of gazebo simulation exists at https://github.com/dongjineee/rover_gazebo.
+- The control does not have specified linear and angular velocities. Therefore, it's necessary to add the maximum and minimum values for `cmd_vel` in the controller source (`osr_controller.cpp`).
+- A ROS 1 (Noetic) Gazebo simulation exists at https://github.com/dongjineee/rover_gazebo.
+- Migrating this package to Gazebo Harmonic / `ros_gz` so it matches the Jazzy rover stack is a known follow-up.
 
 ## The method to convert from Onshape to URDF
 
