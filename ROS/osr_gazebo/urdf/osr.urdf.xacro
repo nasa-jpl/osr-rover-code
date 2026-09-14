@@ -288,7 +288,7 @@
             <parent link="rocker_bogie_link_${prefix}_2"/>
             <origin rpy="0 0 0" xyz="0.170113 -0.000335 0.076721"/>
             <child link="front_wheel_link_${prefix}"/>
-            <limit effort="100000.0" velocity="10" lower="-0.523599" upper="0.523599"/>
+            <limit effort="100000.0" velocity="10" lower="-1.15" upper="1.15"/>
             <axis xyz="0 0 1"/>
         </joint>
 
@@ -354,7 +354,7 @@
             <parent link="rocker_bogie_link_${prefix}_1"/>
             <origin rpy="0 0 0" xyz="-0.311763 0 -0.030379"/>
             <child link="rear_wheel_link_${prefix}"/>
-            <limit effort="100000.0" velocity="3" lower="-0.523599" upper="0.523599"/>
+            <limit effort="100000.0" velocity="3" lower="-1.15" upper="1.15"/>
             <axis xyz="0 0 1"/>
         </joint>
 
