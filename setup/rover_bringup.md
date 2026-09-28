@@ -10,6 +10,18 @@ If this is the first time setting up the rover, you may want to take some precau
   * alternatively you can take off the wheels
 * Attach the USB dongle for your remote controller (xbox or Spektrum or other)
 
+## Setup for Spektrum
+* If you got the Spektrum WS2000, look up (and follow) instructions for how to *bind* it to your RC controller.
+* In order to avoid the WS2000 going into low power mode, do the following:
+  - `lsusb | grep SPEKTRUM`, and note the two fields after ID.  Mine was
+
+    ```Bus 004 Device 002: ID 0483:572b STMicroelectronics SPEKTRUM RECEIVER```
+  - edit `/etc/udev/rules.d/50-spektrum.rules`, and add the following line, replacing the idVendor and idProduct with what you found in `lsusb`.
+
+    ```
+    ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="0483", ATTR{idProduct}=="572b", TEST=="power/control", ATTR{power/control}="on"
+    ```
+
 ## Configuring the rover parameters
 
 If you have any differences compared to the default build, you can change many parameters spread out over three files. Rather than modifying the original files, any changes should be made to the `_mod.yaml` files you made earlier. This way your changes don't conflict with future updates.
@@ -73,6 +85,7 @@ nano ~/osr_ws/src/osr-rover-code/ROS/osr_bringup/launch/osr_mod_launch.py
 Look for the line that says `parameters=[{'centered_pulse_widths': [165, 134, 135, 160]}]`. Replace the values using the 4 values you just found. Save and exit using ctrl+o then ctrl+x. The corner servo motors are calibrated and ready to go! Next we'll configure the gamepad to control the rover.
 
 ## Mapping remote controller buttons and axes to rover movement
+Plug in your joystick or gamepad to the USB port, or pair it with the Pi.  
 
 Not all controllers are the same and so we'll want to configure which remote controller axis and button does what. We'll be configuring how fast the rover can go, which axis makes it move forwards and backwards, which axis makes it move left and right, and which axis makes it spin in place.
 
