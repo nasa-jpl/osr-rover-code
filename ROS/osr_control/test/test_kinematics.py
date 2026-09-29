@@ -102,3 +102,32 @@ def test_intuitive_zero_linear_radius_is_clipped(kin):
     radius = kin.twist_to_turning_radius(
         0.0, 1e-6, intuitive_mode=True)
     assert abs(radius) == pytest.approx(kin.max_radius)
+
+
+def test_non_finite_twist_is_rejected(kin):
+    for bad in (float("nan"), float("inf"), float("-inf")):
+        with pytest.raises(ValueError):
+            kin.twist_to_turning_radius(bad, 1.0)
+        with pytest.raises(ValueError):
+            kin.twist_to_turning_radius(1.0, bad)
+        with pytest.raises(ValueError):
+            kin.calculate_rotate_in_place_cmd(bad)
+        with pytest.raises(ValueError):
+            kin.calculate_drive_velocities(bad, kin.max_radius)
+
+
+def test_nan_radius_is_rejected(kin):
+    with pytest.raises(ValueError):
+        kin.calculate_corner_positions(float("nan"))
+    with pytest.raises(ValueError):
+        kin.calculate_drive_velocities(0.5, float("nan"))
+
+
+def test_infinite_radius_still_drives_straight(kin):
+    radius = kin.twist_to_turning_radius(0.5, 0.0)
+    assert math.isinf(radius)
+
+    cmd = kin.calculate_drive_velocities(0.5, radius)
+    omega = 0.5 / DEFAULT.wheel_radius
+    assert cmd.left_front_vel == pytest.approx(omega)
+    assert cmd.right_front_vel == pytest.approx(-omega)

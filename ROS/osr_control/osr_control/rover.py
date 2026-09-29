@@ -126,23 +126,30 @@ class Rover(Node):
 
         :param intuitive: determines the mode
         """
-        if twist_msg.angular.y and not twist_msg.linear.x:
-            corner_cmd, drive_cmd = self.kin.calculate_rotate_in_place_cmd(twist_msg.angular.y)
-            corner_cmd_msg = self._to_corner_msg(corner_cmd)
-            drive_cmd_msg = self._to_drive_msg(drive_cmd)
-        else:
-            desired_turning_radius = self.kin.twist_to_turning_radius(
-                twist_msg.linear.x, twist_msg.angular.z, intuitive_mode=intuitive)
-            self.get_logger().debug(
-                "desired turning radius: {}".format(desired_turning_radius), throttle_duration_sec=1)
-            corner_cmd_msg = self._to_corner_msg(
-                self.kin.calculate_corner_positions(desired_turning_radius))
+        try:
+            if twist_msg.angular.y and not twist_msg.linear.x:
+                corner_cmd, drive_cmd = self.kin.calculate_rotate_in_place_cmd(twist_msg.angular.y)
+                corner_cmd_msg = self._to_corner_msg(corner_cmd)
+                drive_cmd_msg = self._to_drive_msg(drive_cmd)
+            else:
+                desired_turning_radius = self.kin.twist_to_turning_radius(
+                    twist_msg.linear.x, twist_msg.angular.z, intuitive_mode=intuitive)
+                self.get_logger().debug(
+                    "desired turning radius: {}".format(desired_turning_radius), throttle_duration_sec=1)
+                corner_cmd_msg = self._to_corner_msg(
+                    self.kin.calculate_corner_positions(desired_turning_radius))
 
-            velocity = self.kin.body_speed_for_radius(twist_msg.linear.x, desired_turning_radius)
-            self.get_logger().debug("velocity drive cmd: {} m/s".format(velocity), throttle_duration_sec=1)
+                velocity = self.kin.body_speed_for_radius(twist_msg.linear.x, desired_turning_radius)
+                self.get_logger().debug("velocity drive cmd: {} m/s".format(velocity), throttle_duration_sec=1)
 
-            drive_cmd_msg = self._to_drive_msg(
-                self.kin.calculate_drive_velocities(velocity, desired_turning_radius))
+                drive_cmd_msg = self._to_drive_msg(
+                    self.kin.calculate_drive_velocities(velocity, desired_turning_radius))
+        except ValueError as err:
+            # Ignoring the message keeps the node up; without this the exception reaches rclpy
+            # and the node exits, and respawn brings it back only to be killed by the next one.
+            self.get_logger().warn(
+                "ignoring twist command: {}".format(err), throttle_duration_sec=1)
+            return
 
         self.get_logger().debug("drive cmd:\n{}".format(drive_cmd_msg), throttle_duration_sec=1)
         self.get_logger().debug("corner cmd:\n{}".format(corner_cmd_msg), throttle_duration_sec=1)

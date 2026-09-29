@@ -14,6 +14,24 @@ from dataclasses import dataclass
 from typing import Optional, Tuple
 
 
+def _require_finite(name: str, value: float) -> float:
+    """Reject NaN and infinity before they reach the clamps.
+
+    Comparisons against NaN are all false, so `max(lo, min(hi, value))` returns a bound
+    rather than rejecting the input, and a NaN twist becomes a confident turn command.
+    """
+    if not math.isfinite(value):
+        raise ValueError("{} must be finite, got {}".format(name, value))
+    return value
+
+
+def _require_not_nan(name: str, value: float) -> float:
+    """Reject NaN only. An infinite turning radius is the straight-ahead case."""
+    if math.isnan(value):
+        raise ValueError("{} must be a number, got {}".format(name, value))
+    return value
+
+
 @dataclass(frozen=True)
 class RoverDimensions:
     d1: float
@@ -92,6 +110,8 @@ class RoverKinematics:
         intuitive_mode: bool = False,
     ) -> float:
         """Convert commanded twist into a turning radius [m]."""
+        _require_finite("linear_x", linear_x)
+        _require_finite("angular_z", angular_z)
         try:
             if intuitive_mode and linear_x < 0:
                 radius = linear_x / -angular_z
@@ -115,6 +135,7 @@ class RoverKinematics:
 
     def calculate_corner_positions(self, radius: float) -> CornerCommand:
         """Corner angles [rad] for a turning radius. Positive radius = turn left."""
+        _require_not_nan("radius", radius)
         if abs(radius) >= self.max_radius:
             return CornerCommand()
 
@@ -137,6 +158,8 @@ class RoverKinematics:
 
     def calculate_drive_velocities(self, speed: float, current_radius: float) -> DriveCommand:
         """Wheel angular velocities [rad/s] for body speed [m/s] and turning radius [m]."""
+        _require_finite("speed", speed)
+        _require_not_nan("current_radius", current_radius)
         speed = max(-self.max_vel, min(self.max_vel, speed))
         if speed == 0:
             return DriveCommand()
@@ -184,6 +207,7 @@ class RoverKinematics:
 
     def calculate_rotate_in_place_cmd(self, angular_y: float) -> Tuple[CornerCommand, DriveCommand]:
         """Corner angles and drive speeds for rotating in place (angular about body z via pitch twist)."""
+        _require_finite("angular_y", angular_y)
         corner = CornerCommand(
             left_front_pos=math.atan(self.d3 / self.d1),
             left_back_pos=-math.atan(self.d3 / self.d1),
@@ -205,6 +229,7 @@ class RoverKinematics:
 
     def body_speed_for_radius(self, commanded_linear_x: float, turning_radius: float) -> float:
         """Clamp commanded body speed so corner wheels stay within max_vel."""
+        _require_finite("commanded_linear_x", commanded_linear_x)
         max_vel = abs(turning_radius) / (abs(turning_radius) + self.d1) * self.max_vel
         if math.isnan(max_vel):
             max_vel = self.max_vel
