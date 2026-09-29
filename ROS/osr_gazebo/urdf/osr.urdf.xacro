@@ -363,21 +363,28 @@
     <xacro:wheel_link prefix="L" dir="1" origin="1.57"/>
     <xacro:wheel_link prefix="R" dir="-1" origin="-3.14"/>
 
+    <!-- Wheel-ground friction. It has to be set through <gazebo reference>:
+         a <surface> block inside a URDF <collision> is dropped when the URDF is
+         converted to SDF, so it never reaches the simulator. -->
+    <xacro:property name="wheel_mu1" value="0.7"/>
+    <xacro:property name="wheel_mu2" value="0.7"/>
+    <xacro:macro name="wheel_friction" params="link">
+        <gazebo reference="${link}">
+            <mu1>${wheel_mu1}</mu1>
+            <mu2>${wheel_mu2}</mu2>
+        </gazebo>
+    </xacro:macro>
+
     <xacro:macro name="wheel" params="prefix dir origin prefix_1">
+        <xacro:wheel_friction link="front_wheel_link_${prefix}"/>
+        <xacro:wheel_friction link="middle_wheel_link_${prefix}"/>
+        <xacro:wheel_friction link="rear_wheel_link_${prefix}"/>
         <link name="front_wheel_link_${prefix}">
             <collision>
                 <origin rpy="-1.57 0 ${origin}" xyz="0 0 0.0"/>
                 <geometry>
                     <mesh filename="file://$(find osr_gazebo)/meshes/wheel.stl"/>
                 </geometry>
-                <surface>
-                    <friction>
-                        <ode>
-                            <mu>0.7</mu>
-                            <mu2>0.3</mu2>
-                        </ode>
-                    </friction>
-                </surface>
             </collision>
 
             <visual>
@@ -410,14 +417,6 @@
                 <geometry>
                     <mesh filename="file://$(find osr_gazebo)/meshes/wheel.stl"/>
                 </geometry>
-                <surface>
-                    <friction>
-                        <ode>
-                            <mu>0.7</mu>
-                            <mu2>0.3</mu2>
-                        </ode>
-                    </friction>
-                </surface>
             </collision>
 
             <visual>
@@ -449,14 +448,6 @@
                 <geometry>
                     <mesh filename="file://$(find osr_gazebo)/meshes/wheel.stl"/>
                 </geometry>
-                <surface>
-                    <friction>
-                        <ode>
-                            <mu>0.7</mu>
-                            <mu2>0.3</mu2>
-                        </ode>
-                    </friction>
-                </surface>
             </collision>
 
             <visual>
