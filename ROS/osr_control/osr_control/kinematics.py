@@ -186,9 +186,9 @@ class RoverKinematics:
         """Corner angles and drive speeds for rotating in place (angular about body z via pitch twist)."""
         corner = CornerCommand(
             left_front_pos=math.atan(self.d3 / self.d1),
-            left_back_pos=-math.atan(self.d3 / self.d1),
+            left_back_pos=-math.atan(self.d2 / self.d1),
             right_back_pos=math.atan(self.d2 / self.d1),
-            right_front_pos=-math.atan(self.d2 / self.d1),
+            right_front_pos=-math.atan(self.d3 / self.d1),
         )
         front_wheel_vel = math.hypot(self.d1, self.d3) * angular_y / self.wheel_radius
         back_wheel_vel = math.hypot(self.d1, self.d2) * angular_y / self.wheel_radius
