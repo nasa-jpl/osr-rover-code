@@ -30,8 +30,11 @@ wires up the right flags automatically:
 
 ```bash
 pip install rocker
-rocker --nvidia --x11 osr-rover-sim
+rocker --nvidia runtime --x11 osr-rover-sim
 ```
+
+Gazebo's OpenGL rendering needs the full NVIDIA container runtime, so pass `runtime` explicitly
+rather than relying on `--nvidia`'s auto-detection.
 
 Inside the container:
 
