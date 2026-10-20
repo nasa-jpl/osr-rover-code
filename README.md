@@ -33,9 +33,6 @@ pip install rocker
 rocker --nvidia runtime --x11 osr-rover-sim
 ```
 
-Gazebo's OpenGL rendering needs the full NVIDIA container runtime, so pass `runtime` explicitly
-rather than relying on `--nvidia`'s auto-detection.
-
 Inside the container:
 
 ```bash
