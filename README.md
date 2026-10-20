@@ -33,12 +33,6 @@ pip install rocker
 rocker --nvidia --x11 osr-rover-sim
 ```
 
-> [!NOTE]
-> `--nvidia` must not be the last flag before the image name: it takes an optional value
-> (`auto`/`runtime`/`gpus`), so `rocker --x11 --nvidia osr-rover-sim` fails with
-> `error: argument --nvidia: invalid choice: 'osr-rover-sim'` because argparse swallows the
-> image name as that value.
-
 Inside the container:
 
 ```bash
