@@ -1,3 +1,5 @@
+# For running the simulation stack - not intended to run the software controlling the real OSR
+
 # osr_gazebo depends on Gazebo Classic, which is only supported on ROS 2 Humble
 ARG ROS_VERSION=humble
 FROM osrf/ros:${ROS_VERSION}-desktop
