@@ -36,7 +36,6 @@ rocker --nvidia runtime --x11 osr-rover-sim
 Inside the container:
 
 ```bash
-source install/setup.bash
 ros2 launch osr_gazebo empty_world.launch.py
 ```
 
