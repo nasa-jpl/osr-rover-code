@@ -63,10 +63,13 @@ def test_turning_left_inner_wheels_slower(kin):
 
 def test_rotate_in_place_corner_symmetry(kin):
     corners, drive = kin.calculate_rotate_in_place_cmd(0.2)
-    assert corners.left_front_pos == pytest.approx(math.atan(DEFAULT.d3 / DEFAULT.d1))
-    assert corners.left_back_pos == pytest.approx(-corners.left_front_pos)
-    assert corners.right_back_pos == pytest.approx(math.atan(DEFAULT.d2 / DEFAULT.d1))
-    assert corners.right_front_pos == pytest.approx(-corners.right_back_pos)
+    # Front corners sit d3 ahead of center, back corners d2 behind it.
+    front = math.atan(DEFAULT.d3 / DEFAULT.d1)
+    back = math.atan(DEFAULT.d2 / DEFAULT.d1)
+    assert corners.left_front_pos == pytest.approx(front)
+    assert corners.right_front_pos == pytest.approx(-front)
+    assert corners.left_back_pos == pytest.approx(-back)
+    assert corners.right_back_pos == pytest.approx(back)
     assert drive.left_front_vel == pytest.approx(drive.right_front_vel)
     assert drive.left_middle_vel == pytest.approx(drive.right_middle_vel)
 
