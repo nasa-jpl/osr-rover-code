@@ -363,9 +363,7 @@
     <xacro:wheel_link prefix="L" dir="1" origin="1.57"/>
     <xacro:wheel_link prefix="R" dir="-1" origin="-3.14"/>
 
-    <!-- Wheel-ground friction. It has to be set through <gazebo reference>:
-         a <surface> block inside a URDF <collision> is dropped when the URDF is
-         converted to SDF, so it never reaches the simulator. -->
+    <!-- Wheel-ground friction -->
     <xacro:property name="wheel_mu1" value="0.7"/>
     <xacro:property name="wheel_mu2" value="0.7"/>
     <xacro:macro name="wheel_friction" params="link">
