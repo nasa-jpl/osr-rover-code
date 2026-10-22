@@ -25,13 +25,14 @@ docker build -t osr-rover-sim .
 
 To run a node or launch file with a graphical window (e.g. Gazebo, RViz), the container needs
 access to your display. The easiest way to get that without hand-rolling X11/GPU flags yourself is
-[`rocker`](https://github.com/osrf/rocker), which detects your setup (including an NVIDIA GPU) and
-wires up the right flags automatically:
+[`rocker`](https://github.com/osrf/rocker), which wires up the right flags for you:
 
 ```bash
 pip install rocker
 rocker --nvidia runtime --x11 osr-rover-sim
 ```
+
+Only include `--nvidia runtime` if your machine has an NVIDIA GPU; omit it otherwise.
 
 Inside the container:
 
