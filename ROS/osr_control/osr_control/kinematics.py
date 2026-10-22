@@ -204,8 +204,11 @@ class RoverKinematics:
         return corner, drive
 
     def body_speed_for_radius(self, commanded_linear_x: float, turning_radius: float) -> float:
-        """Clamp commanded body speed so corner wheels stay within max_vel."""
-        max_vel = abs(turning_radius) / (abs(turning_radius) + self.d1) * self.max_vel
+        """Clamp commanded body speed so every drive wheel stays within max_vel."""
+        radius = abs(turning_radius)
+        # Outermost wheel path, using the same distances as calculate_drive_velocities
+        farthest = max(math.hypot(radius + self.d1, self.d3), radius + self.d4)
+        max_vel = radius / farthest * self.max_vel
         if math.isnan(max_vel):
             max_vel = self.max_vel
         limited = min(max_vel, abs(commanded_linear_x))

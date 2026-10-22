@@ -87,12 +87,21 @@ def test_body_speed_for_radius_clamps_reverse(kin):
     commanded = -10.0
     limited = kin.body_speed_for_radius(commanded, kin.min_radius)
     forward_cap = kin.body_speed_for_radius(10.0, kin.min_radius)
-    expected_cap = (
-        abs(kin.min_radius) / (abs(kin.min_radius) + kin.d1) * kin.max_vel)
+    farthest = max(math.hypot(kin.min_radius + kin.d1, kin.d3),
+                   kin.min_radius + kin.d4)
+    expected_cap = kin.min_radius / farthest * kin.max_vel
     assert limited < 0
     assert limited == pytest.approx(-expected_cap)
     assert abs(limited) == pytest.approx(forward_cap)
     assert abs(limited) < abs(commanded)
+
+
+@pytest.mark.parametrize("radius", [0.45, 0.6, 1.0, 3.0, -0.45, -1.0])
+def test_body_speed_keeps_every_wheel_within_max_vel(kin, radius):
+    speed = kin.body_speed_for_radius(10.0, radius)
+    cmd = kin.calculate_drive_velocities(speed, radius)
+    fastest = max(abs(v) for v in vars(cmd).values()) * DEFAULT.wheel_radius
+    assert fastest == pytest.approx(kin.max_vel)
 
 
 def test_intuitive_zero_linear_radius_is_clipped(kin):
