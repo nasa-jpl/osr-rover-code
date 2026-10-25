@@ -758,11 +758,11 @@ class Roboclaw:
 
 	def SetM1VelocityPID(self,address,p,i,d,qpps):
 #		return self._write4444(address,self.Cmd.SETM1PID,long(d*65536),long(p*65536),long(i*65536),qpps)
-		return self._write4444(address,self.Cmd.SETM1PID,d*65536,p*65536,i*65536,qpps)
+		return self._write4444(address,self.Cmd.SETM1PID,int(d*65536),int(p*65536),int(i*65536),int(qpps))
 
 	def SetM2VelocityPID(self,address,p,i,d,qpps):
 #		return self._write4444(address,self.Cmd.SETM2PID,long(d*65536),long(p*65536),long(i*65536),qpps)
-		return self._write4444(address,self.Cmd.SETM2PID,d*65536,p*65536,i*65536,qpps)
+		return self._write4444(address,self.Cmd.SETM2PID,int(d*65536),int(p*65536),int(i*65536),int(qpps))
 
 	def ReadISpeedM1(self,address):
 		return self._read4_1(address,self.Cmd.GETM1ISPEED)
@@ -902,11 +902,11 @@ class Roboclaw:
 
 	def SetM1PositionPID(self,address,kp,ki,kd,kimax,deadzone,min,max):
 #		return self._write4444444(address,self.Cmd.SETM1POSPID,long(kd*1024),long(kp*1024),long(ki*1024),kimax,deadzone,min,max)
-		return self._write4444444(address,self.Cmd.SETM1POSPID,kd*1024,kp*1024,ki*1024,kimax,deadzone,min,max)
+		return self._write4444444(address,self.Cmd.SETM1POSPID,int(kd*1024),int(kp*1024),int(ki*1024),kimax,deadzone,min,max)
 
 	def SetM2PositionPID(self,address,kp,ki,kd,kimax,deadzone,min,max):
 #		return self._write4444444(address,self.Cmd.SETM2POSPID,long(kd*1024),long(kp*1024),long(ki*1024),kimax,deadzone,min,max)
-		return self._write4444444(address,self.Cmd.SETM2POSPID,kd*1024,kp*1024,ki*1024,kimax,deadzone,min,max)
+		return self._write4444444(address,self.Cmd.SETM2POSPID,int(kd*1024),int(kp*1024),int(ki*1024),kimax,deadzone,min,max)
 
 	def ReadM1PositionPID(self,address):
 		data = self._read_n(address,self.Cmd.READM1POSPID,7)

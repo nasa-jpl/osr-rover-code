@@ -26,6 +26,7 @@ class RoboclawWrapper(Node):
         self.address = []
         self.current_enc_vals = None
         self.drive_cmd_buffer = None
+        self.drive_velocity_pid = None
 
         self.add_on_set_parameters_callback(self.parameters_callback)
         self.declare_parameters(
@@ -40,6 +41,7 @@ class RoboclawWrapper(Node):
                 ('velocity_timeout', Parameter.Type.DOUBLE),
                 ('duty_mode', Parameter.Type.BOOL),
                 ('velocity_qpps_to_duty_factor', Parameter.Type.INTEGER),
+                ('drive_velocity_pid', Parameter.Type.DOUBLE_ARRAY),
                 ('roboclaw_mapping.drive_left_front.address', Parameter.Type.INTEGER),
                 ('roboclaw_mapping.drive_left_front.channel', Parameter.Type.STRING),
                 ('roboclaw_mapping.drive_left_front.ticks_per_rev', Parameter.Type.INTEGER),
@@ -105,6 +107,10 @@ class RoboclawWrapper(Node):
         for address in self.address:
             self.rc.ReadNVM(address)
 
+        # applied after the NVM read above so it isn't overwritten by stored gains
+        if self.drive_velocity_pid is not None:
+            self.set_drive_velocity_pid(self.drive_velocity_pid)
+
         # Even though the actual method takes longs (2*32-1), roboclaw blog says 2**15 is 100%
         accel_max = 2**15-1
         self.roboclaw_overflow = 2**15-1
@@ -142,7 +148,30 @@ class RoboclawWrapper(Node):
             if param.name == "duty_mode":
                 self.duty_mode = param.value
                 self.get_logger().info(f"Duty mode is {'enabled' if param.value else 'disabled'}")
+            if param.name == "drive_velocity_pid":
+                pid = list(param.value)
+                if len(pid) != 4:
+                    return SetParametersResult(successful=False,
+                                               reason="drive_velocity_pid must be [p, i, d, qpps]")
+                self.drive_velocity_pid = pid
+                # before the roboclaws are connected, __init__ applies it
+                if self.rc is not None:
+                    self.set_drive_velocity_pid(pid)
         return SetParametersResult(successful=True, reason="OK")
+
+    def set_drive_velocity_pid(self, pid):
+        """Send velocity PID gains [p, i, d, qpps] to every drive motor channel"""
+        p, i, d, qpps = pid
+        for motor_name, properties in self.roboclaw_mapping.items():
+            if properties["channel"] == "M1":
+                ok = self.rc.SetM1VelocityPID(properties["address"], p, i, d, int(qpps))
+            elif properties["channel"] == "M2":
+                ok = self.rc.SetM2VelocityPID(properties["address"], p, i, d, int(qpps))
+            else:
+                raise AttributeError("Received unknown channel '{}'. Expected M1 or M2".format(properties["channel"]))
+            if not ok:
+                self.log.warn(f"Failed to set velocity PID for {motor_name}")
+        self.log.info(f"Set drive velocity PID to p={p}, i={i}, d={d}, qpps={int(qpps)}")
 
     def fast_update(self):
         """Read from and write to roboclaws"""
