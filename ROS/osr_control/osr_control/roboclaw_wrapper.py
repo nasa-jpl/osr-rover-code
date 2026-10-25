@@ -8,7 +8,8 @@ from rcl_interfaces.msg import SetParametersResult
 
 from osr_control.roboclaw import Roboclaw
 
-from sensor_msgs.msg import JointState
+from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
+from sensor_msgs.msg import BatteryState, JointState
 from osr_interfaces.msg import CommandDrive, Status
 
 
@@ -123,6 +124,10 @@ class RoboclawWrapper(Node):
         self.drive_cmd_sub = self.create_subscription(CommandDrive, "/cmd_drive", self.drive_cmd_cb, 1)
         self.enc_pub = self.create_publisher(JointState, "/drive_state", 1)
         self.status_pub = self.create_publisher(Status, "/status", 1)
+        # same information as /status in standard message types, for tools like
+        # rqt_robot_monitor and diagnostic_aggregator
+        self.diagnostics_pub = self.create_publisher(DiagnosticArray, "/diagnostics", 1)
+        self.battery_pub = self.create_publisher(BatteryState, "/battery_state", 1)
 
         self.status = Status()
         fast_loop_rate = 0.125  # seconds
@@ -189,6 +194,52 @@ class RoboclawWrapper(Node):
         self.status.current = self.read_currents()
         self.status.error_status = self.read_errors()
         self.status_pub.publish(self.status)
+
+        stamp = self.get_clock().now().to_msg()
+        diagnostics = self.build_diagnostics(self.status)
+        diagnostics.header.stamp = stamp
+        self.diagnostics_pub.publish(diagnostics)
+        battery = self.build_battery_state(self.status.battery)
+        battery.header.stamp = stamp
+        self.battery_pub.publish(battery)
+
+    def build_diagnostics(self, status):
+        """Turn a Status message into one DiagnosticStatus per motor controller"""
+        diagnostics = DiagnosticArray()
+        for i, address in enumerate(self.address):
+            err_int = int(status.error_status[i], 16)
+            err_string, has_error = self.decode_error(err_int)
+            diag = DiagnosticStatus()
+            diag.name = f"roboclaw_wrapper: RoboClaw {address}"
+            diag.hardware_id = str(address)
+            if has_error:
+                diag.level = DiagnosticStatus.ERROR
+            elif err_int != 0:
+                diag.level = DiagnosticStatus.WARN
+            else:
+                diag.level = DiagnosticStatus.OK
+            diag.message = err_string.strip().replace("\n", ", ") if err_int else "OK"
+            diag.values = [
+                KeyValue(key="Error code", value=hex(err_int)),
+                KeyValue(key="Temperature (C)", value=f"{status.temp[i]:.1f}"),
+                KeyValue(key="M1 current (A)", value=f"{status.current[2*i]:.2f}"),
+                KeyValue(key="M2 current (A)", value=f"{status.current[2*i + 1]:.2f}"),
+            ]
+            diagnostics.status.append(diag)
+        return diagnostics
+
+    def build_battery_state(self, voltage):
+        """BatteryState with the main battery voltage; other fields are not measured"""
+        battery = BatteryState()
+        battery.voltage = float(voltage)
+        battery.present = True
+        battery.current = float('nan')
+        battery.charge = float('nan')
+        battery.capacity = float('nan')
+        battery.design_capacity = float('nan')
+        battery.percentage = float('nan')
+        battery.temperature = float('nan')
+        return battery
 
     def establish_roboclaw_connections(self):
         """
