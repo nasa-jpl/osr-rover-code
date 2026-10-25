@@ -352,11 +352,15 @@ class RoboclawWrapper(Node):
         return val[1]
 
     def read_encoder_current(self, address, channel):
-        """Wrapper around self.rc.ReadCurrents to simplify code"""
+        """Wrapper around self.rc.ReadCurrents to simplify code
+
+        :return: motor current in Ampere
+        """
+        # ReadCurrents returns (success, M1 current, M2 current) in units of 10 mA
         if channel == "M1":
-            return self.rc.ReadCurrents(address)[0]
+            return self.rc.ReadCurrents(address)[1] / 100.0
         elif channel == "M2":
-            return self.rc.ReadCurrents(address)[1]
+            return self.rc.ReadCurrents(address)[2] / 100.0
         else:
             raise AttributeError("Received unknown channel '{}'. Expected M1 or M2".format(channel))
 
@@ -436,7 +440,7 @@ class RoboclawWrapper(Node):
         currents = [None] * 6
         for i in range(3):
             currs = self.rc.ReadCurrents(self.address[i])
-            # reported by roboclaw in 10ths of an Ampere
+            # reported by roboclaw in units of 10 mA
             currents[2*i] = currs[1] / 100.0
             currents[(2*i) + 1] = currs[2] / 100.0
         
