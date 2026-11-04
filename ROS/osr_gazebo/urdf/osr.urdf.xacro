@@ -26,14 +26,37 @@
     <xacro:include filename="$(find osr_gazebo)/urdf/gazebo.urdf.xacro"/>
     <xacro:include filename="$(find osr_gazebo)/urdf/insert_transmission.urdf.xacro"/>
 
+    <!-- Collision shapes. Gazebo Classic uses the detailed CAD meshes for collisions
+         (unchanged from upstream). In Harmonic, colliding ~1 million mesh triangles
+         with the ground every physics step made the sim run at about half real time,
+         so there the drive wheels collide as simple cylinders, the body as a box, and
+         the other links (rocker-bogie, steering brackets) have no collision shape: on
+         flat ground only the wheels touch anything. Visuals still use the meshes.
+         Cylinder sized from wheel.stl: radius 82 mm, width 101 mm, centered 7.5 mm
+         off the link origin along the axle. -->
+    <xacro:property name="wheel_collision_radius" value="0.082"/>
+    <xacro:property name="wheel_collision_width" value="0.101"/>
+    <xacro:property name="wheel_collision_offset" value="-0.0075"/>
+
     <link name="base_footprint"/>
     <link name="base_link">
-        <collision>
-            <origin rpy="0 0 0" xyz="0 0 0.0"/>
-            <geometry>
-                <mesh filename="file://$(find osr_gazebo)/meshes/body.stl"/>
-            </geometry>
-        </collision>
+        <xacro:if value="${sim == 'classic'}">
+            <collision>
+                        <origin rpy="0 0 0" xyz="0 0 0.0"/>
+                        <geometry>
+                            <mesh filename="file://$(find osr_gazebo)/meshes/body.stl"/>
+                        </geometry>
+                    </collision>
+        </xacro:if>
+        <xacro:if value="${sim == 'harmonic'}">
+            <!-- Box matching the body's outer dimensions -->
+            <collision>
+                <origin rpy="0 0 0" xyz="0 0 0.0115"/>
+                <geometry>
+                    <box size="0.356 0.254 0.141"/>
+                </geometry>
+            </collision>
+        </xacro:if>
 
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0.0"/>
@@ -60,12 +83,14 @@
 
 
     <link name="box_rotate">
-        <collision>
-            <origin rpy="0 0 -3.14" xyz="0 0 0.0"/>
-            <geometry>
-                <mesh filename="file://$(find osr_gazebo)/meshes/box_link.stl"/>
-            </geometry>
-        </collision>
+        <xacro:if value="${sim == 'classic'}">
+            <collision>
+                        <origin rpy="0 0 -3.14" xyz="0 0 0.0"/>
+                        <geometry>
+                            <mesh filename="file://$(find osr_gazebo)/meshes/box_link.stl"/>
+                        </geometry>
+                    </collision>
+        </xacro:if>
 
         <visual>
             <origin rpy="0 0 -3.14" xyz="0 0 0"/>
@@ -91,12 +116,14 @@
 
     <xacro:macro name="arm_rotate" params="prefix dir">
         <link name="arm_rotate_${prefix}">
-            <collision>
-                <origin rpy="0 0.2 0" xyz="0 0 0"/>
-                <geometry>
-                    <mesh filename="file://$(find osr_gazebo)/meshes/arm.stl"/>
-                </geometry>
-            </collision>
+            <xacro:if value="${sim == 'classic'}">
+                <collision>
+                                <origin rpy="0 0.2 0" xyz="0 0 0"/>
+                                <geometry>
+                                    <mesh filename="file://$(find osr_gazebo)/meshes/arm.stl"/>
+                                </geometry>
+                            </collision>
+            </xacro:if>
 
             <visual>
                 <origin rpy="0 0.2 0" xyz="0 0 0"/>
@@ -126,12 +153,14 @@
 
     <xacro:macro name="turn_bukles" params="prefix dir origin">
         <link name="turn_bukles_link_${prefix}">
-            <collision>
-                <origin rpy="0 0 ${origin}" xyz="0 0 0.0"/>
-                <geometry>
-                    <mesh filename="file://$(find osr_gazebo)/meshes/turn_${prefix}.stl"/>
-                </geometry>
-            </collision>
+            <xacro:if value="${sim == 'classic'}">
+                <collision>
+                                <origin rpy="0 0 ${origin}" xyz="0 0 0.0"/>
+                                <geometry>
+                                    <mesh filename="file://$(find osr_gazebo)/meshes/turn_${prefix}.stl"/>
+                                </geometry>
+                            </collision>
+            </xacro:if>
 
             <visual>
                 <origin rpy="0 0 ${origin}" xyz="0 0 0.0"/>
@@ -161,12 +190,14 @@
 
     <xacro:macro name="body_axis_link" params="prefix dir">
         <link name="body_axis_link_${prefix}">
-            <collision>
-                <origin rpy="0 0 1.57" xyz="0 0 0.0"/>
-                <geometry>
-                    <mesh filename="file://$(find osr_gazebo)/meshes/body_axis.stl"/>
-                </geometry>
-            </collision>
+            <xacro:if value="${sim == 'classic'}">
+                <collision>
+                                <origin rpy="0 0 1.57" xyz="0 0 0.0"/>
+                                <geometry>
+                                    <mesh filename="file://$(find osr_gazebo)/meshes/body_axis.stl"/>
+                                </geometry>
+                            </collision>
+            </xacro:if>
             <visual>
                 <origin rpy="0 0 1.57" xyz="0 0 0.0"/>
                 <geometry>
@@ -194,12 +225,14 @@
 
     <xacro:macro name="rocker_bogie_link" params="prefix dir">
         <link name="rocker_bogie_link_${prefix}_1">
-            <collision>
-                <origin rpy="0 0 0" xyz="0 0 0.0"/>
-                <geometry>
-                    <mesh filename="file://$(find osr_gazebo)/meshes/rockerbogie_middle_1.stl"/>
-                </geometry>
-            </collision>
+            <xacro:if value="${sim == 'classic'}">
+                <collision>
+                                <origin rpy="0 0 0" xyz="0 0 0.0"/>
+                                <geometry>
+                                    <mesh filename="file://$(find osr_gazebo)/meshes/rockerbogie_middle_1.stl"/>
+                                </geometry>
+                            </collision>
+            </xacro:if>
 
             <visual>
                 <origin rpy="0 0 0" xyz="0 0 0.0"/>
@@ -226,12 +259,14 @@
         </joint>
 
         <link name="rocker_bogie_link_${prefix}_2">
-            <collision>
-                <origin rpy="0 0 0" xyz="0 0 0.0"/>
-                <geometry>
-                    <mesh filename="file://$(find osr_gazebo)/meshes/rockerbogie_front_1.stl"/>
-                </geometry>
-            </collision>
+            <xacro:if value="${sim == 'classic'}">
+                <collision>
+                                <origin rpy="0 0 0" xyz="0 0 0.0"/>
+                                <geometry>
+                                    <mesh filename="file://$(find osr_gazebo)/meshes/rockerbogie_front_1.stl"/>
+                                </geometry>
+                            </collision>
+            </xacro:if>
 
             <visual>
                 <origin rpy="0 0 0" xyz="0 0 0.0"/>
@@ -264,12 +299,14 @@
 
     <xacro:macro name="wheel_link" params="prefix dir origin">
         <link name="front_wheel_link_${prefix}">
-            <collision>
-                <origin rpy="0 0 ${dir*-1.57}" xyz="0 0 0.0"/>
-                <geometry>
-                    <mesh filename="file://$(find osr_gazebo)/meshes/wheel_link_left_2.stl"/>
-                </geometry>
-            </collision>
+            <xacro:if value="${sim == 'classic'}">
+                <collision>
+                                <origin rpy="0 0 ${dir*-1.57}" xyz="0 0 0.0"/>
+                                <geometry>
+                                    <mesh filename="file://$(find osr_gazebo)/meshes/wheel_link_left_2.stl"/>
+                                </geometry>
+                            </collision>
+            </xacro:if>
 
             <visual>
                 <origin rpy="0 0 ${dir*-1.57}" xyz="0 0 0.0"/>
@@ -296,12 +333,14 @@
         </joint>
 
         <link name="middle_wheel_link_${prefix}">
-            <collision>
-                <origin rpy="${origin} 0 ${-dir*1.57}" xyz="0 0 0.0"/>
-                <geometry>
-                    <mesh filename="file://$(find osr_gazebo)/meshes/wheel_middle_left.stl"/>
-                </geometry>
-            </collision>
+            <xacro:if value="${sim == 'classic'}">
+                <collision>
+                                <origin rpy="${origin} 0 ${-dir*1.57}" xyz="0 0 0.0"/>
+                                <geometry>
+                                    <mesh filename="file://$(find osr_gazebo)/meshes/wheel_middle_left.stl"/>
+                                </geometry>
+                            </collision>
+            </xacro:if>
 
             <visual>
                 <origin rpy="${origin} 0 ${-dir*1.57}" xyz="0 0 0.0"/>
@@ -328,12 +367,14 @@
         </joint>
 
         <link name="rear_wheel_link_${prefix}">
-            <collision>
-                <origin rpy="0 0 ${-dir*1.57}" xyz="0 0 0.0"/>
-                <geometry>
-                    <mesh filename="file://$(find osr_gazebo)/meshes/wheel_link_left_2.stl"/>
-                </geometry>
-            </collision>
+            <xacro:if value="${sim == 'classic'}">
+                <collision>
+                                <origin rpy="0 0 ${-dir*1.57}" xyz="0 0 0.0"/>
+                                <geometry>
+                                    <mesh filename="file://$(find osr_gazebo)/meshes/wheel_link_left_2.stl"/>
+                                </geometry>
+                            </collision>
+            </xacro:if>
 
             <visual>
                 <origin rpy="0 0 ${-dir*1.57}" xyz="0 0 0.0"/>
@@ -381,12 +422,23 @@
         <xacro:wheel_friction link="middle_wheel_link_${prefix}"/>
         <xacro:wheel_friction link="rear_wheel_link_${prefix}"/>
         <link name="front_wheel_link_${prefix}">
-            <collision>
-                <origin rpy="-1.57 0 ${origin}" xyz="0 0 0.0"/>
-                <geometry>
-                    <mesh filename="file://$(find osr_gazebo)/meshes/wheel.stl"/>
-                </geometry>
-            </collision>
+            <xacro:if value="${sim == 'classic'}">
+                <collision>
+                                <origin rpy="-1.57 0 ${origin}" xyz="0 0 0.0"/>
+                                <geometry>
+                                    <mesh filename="file://$(find osr_gazebo)/meshes/wheel.stl"/>
+                                </geometry>
+                            </collision>
+            </xacro:if>
+            <xacro:if value="${sim == 'harmonic'}">
+                <!-- Simple cylinder instead of the detailed tire mesh (see note at top) -->
+                <collision>
+                    <origin rpy="1.5708 0 0" xyz="0 ${wheel_collision_offset * cos(origin)} 0"/>
+                    <geometry>
+                        <cylinder radius="${wheel_collision_radius}" length="${wheel_collision_width}"/>
+                    </geometry>
+                </collision>
+            </xacro:if>
 
             <visual>
                 <origin rpy="-1.57 0 ${origin}" xyz="0 0 0.0"/>
@@ -413,12 +465,23 @@
         </joint>
 
         <link name="middle_wheel_link_${prefix}">
-            <collision>
-                <origin rpy="-1.57 0 ${origin}" xyz="0 0 0.0"/>
-                <geometry>
-                    <mesh filename="file://$(find osr_gazebo)/meshes/wheel.stl"/>
-                </geometry>
-            </collision>
+            <xacro:if value="${sim == 'classic'}">
+                <collision>
+                                <origin rpy="-1.57 0 ${origin}" xyz="0 0 0.0"/>
+                                <geometry>
+                                    <mesh filename="file://$(find osr_gazebo)/meshes/wheel.stl"/>
+                                </geometry>
+                            </collision>
+            </xacro:if>
+            <xacro:if value="${sim == 'harmonic'}">
+                <!-- Simple cylinder instead of the detailed tire mesh (see note at top) -->
+                <collision>
+                    <origin rpy="1.5708 0 0" xyz="0 ${wheel_collision_offset * cos(origin)} 0"/>
+                    <geometry>
+                        <cylinder radius="${wheel_collision_radius}" length="${wheel_collision_width}"/>
+                    </geometry>
+                </collision>
+            </xacro:if>
 
             <visual>
                 <origin rpy="-1.57 0 ${origin}" xyz="0 0 0.0"/>
@@ -444,12 +507,23 @@
         </joint>
 
         <link name="rear_wheel_link_${prefix}">
-            <collision>
-                <origin rpy="-1.57 0 ${origin}" xyz="0 0 0.0"/>
-                <geometry>
-                    <mesh filename="file://$(find osr_gazebo)/meshes/wheel.stl"/>
-                </geometry>
-            </collision>
+            <xacro:if value="${sim == 'classic'}">
+                <collision>
+                                <origin rpy="-1.57 0 ${origin}" xyz="0 0 0.0"/>
+                                <geometry>
+                                    <mesh filename="file://$(find osr_gazebo)/meshes/wheel.stl"/>
+                                </geometry>
+                            </collision>
+            </xacro:if>
+            <xacro:if value="${sim == 'harmonic'}">
+                <!-- Simple cylinder instead of the detailed tire mesh (see note at top) -->
+                <collision>
+                    <origin rpy="1.5708 0 0" xyz="0 ${wheel_collision_offset * cos(origin)} 0"/>
+                    <geometry>
+                        <cylinder radius="${wheel_collision_radius}" length="${wheel_collision_width}"/>
+                    </geometry>
+                </collision>
+            </xacro:if>
 
             <visual>
                 <origin rpy="-1.57 0 ${origin}" xyz="0 0 0.0"/>
