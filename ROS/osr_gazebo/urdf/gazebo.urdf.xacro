@@ -2,6 +2,10 @@
 
 <robot xmlns:xacro="http://wiki.ros.org/xacro">
 
+  <!-- Gazebo Classic plugins (gazebo_ros2_control, Classic IMU plugin).
+       Harmonic equivalents are added separately; until then a Harmonic run
+       loads only the physical model. -->
+  <xacro:if value="${'$(arg sim)' == 'classic'}">
   <ros2_control name="GazeboSystem" type="system">
     <hardware>
       <plugin>gazebo_ros2_control/GazeboSystem</plugin>
@@ -151,5 +155,7 @@
         </sensor>
     </gazebo>
 
+
+  </xacro:if>
 
 </robot>
