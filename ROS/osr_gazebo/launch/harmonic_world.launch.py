@@ -14,6 +14,8 @@ Drive it with the keyboard (in a second terminal):
   ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r cmd_vel:=cmd_vel_intuitive
 or with a gamepad connected to this computer:
   ros2 launch osr_gazebo harmonic_world.launch.py joystick:=true
+Use the detailed CAD meshes for collisions instead of simple shapes (much slower):
+  ros2 launch osr_gazebo harmonic_world.launch.py collision:=mesh
 """
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
@@ -27,9 +29,11 @@ from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
     xacro_file = PathJoinSubstitution([FindPackageShare('osr_gazebo'), 'urdf', 'osr.urdf.xacro'])
-    # Expand the xacro template into plain URDF, selecting the Harmonic variant
+    # Expand the xacro template into plain URDF, selecting the Harmonic variant and the
+    # collision shape fidelity (collision:=simple by default, collision:=mesh for CAD meshes)
     robot_description = ParameterValue(
-        Command(['xacro ', xacro_file, ' sim:=harmonic']), value_type=str)
+        Command(['xacro ', xacro_file, ' sim:=harmonic collision:=',
+                 LaunchConfiguration('collision')]), value_type=str)
 
     # Gazebo Harmonic with its built-in empty world; -r starts the physics running
     gazebo = IncludeLaunchDescription(
@@ -143,6 +147,10 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('joystick', default_value='false',
                               description='Start joy + teleop_twist_joy for a gamepad'),
+        DeclareLaunchArgument('collision', default_value='simple',
+                              choices=['simple', 'mesh'],
+                              description='Collision shapes: simple (cylinders and a box, full '
+                                          'speed) or mesh (detailed CAD meshes, much slower)'),
         gazebo, robot_state_publisher, spawn, clock_bridge, controllers,
         rover, adapter, joy, teleop,
     ])

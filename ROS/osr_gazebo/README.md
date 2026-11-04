@@ -69,6 +69,12 @@ Or with a gamepad connected to the simulation computer (hold the enable button, 
 ros2 launch osr_gazebo harmonic_world.launch.py joystick:=true
 ```
 
+To collide with the detailed CAD meshes instead of simple shapes (slower, see [Known differences](#known-differences-from-gazebo-classic)):
+
+```bash
+ros2 launch osr_gazebo harmonic_world.launch.py collision:=mesh
+```
+
 Check the controllers with `ros2 control list_controllers`.
 
 ### Troubleshooting
@@ -77,7 +83,7 @@ Check the controllers with `ros2 control list_controllers`.
 
 ### Known differences
 
-- **Collision shapes**: Harmonic uses simple shapes for collisions (cylinders for the six drive wheels, a box for the body, none for the other links) instead of the detailed meshes, which kept the simulation at roughly half real time. Visuals still use the meshes. On flat ground only the wheels make contact; rough terrain would need boxes for the rocker-bogie links.
+- **Collision shapes**: by default Harmonic uses simple shapes for collisions (cylinders for the six drive wheels, a box for the body, none for the other links) instead of the detailed meshes, which kept the simulation at roughly half real time. Visuals still use the meshes. On flat ground only the wheels make contact; rough terrain would need boxes for the rocker-bogie links. To collide with the detailed CAD meshes instead, as Gazebo Classic does, launch with `collision:=mesh` (expect it to run well below real time).
 - **Wheel size**: the wheel mesh is 164 mm × 101 mm, which appears to be the previously recommended Traxxas tires. The current parts list uses goBILDA Wasteland Wheels (144 mm × 52 mm), and `osr_params.yaml` uses `wheel_radius: 0.075`. The Harmonic launch overrides `wheel_radius` to 0.082 so commanded speeds match the simulated wheel.
 - No IMU sensor yet (the Classic IMU plugin is not ported).
 
