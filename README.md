@@ -16,11 +16,13 @@ changed.
 ## Simulation
 
 A `Dockerfile` is provided to build and run the ROS2 stack, including the
-[Gazebo Classic simulation](ROS/osr_gazebo/README.md), without installing anything on your host
-besides Docker.
+[Gazebo simulation](ROS/osr_gazebo/README.md), without installing anything on your host
+besides Docker. By default it builds ROS 2 Humble with Gazebo Classic; pass
+`ROS_VERSION=jazzy` for ROS 2 Jazzy with Gazebo Harmonic.
 
 ```bash
-docker build -t osr-rover-sim .
+docker build -t osr-rover-sim .                                    # Humble + Gazebo Classic
+docker build --build-arg ROS_VERSION=jazzy -t osr-rover-sim-jazzy .  # Jazzy + Gazebo Harmonic
 ```
 
 To run a node or launch file with a graphical window (e.g. Gazebo, RViz), the container needs
@@ -33,11 +35,13 @@ rocker --nvidia runtime --x11 osr-rover-sim
 ```
 
 Only include `--nvidia runtime` if your machine has an NVIDIA GPU; omit it otherwise.
+On Intel or AMD graphics, add `--devices /dev/dri` instead so Gazebo Harmonic can use the GPU.
 
 Inside the container:
 
 ```bash
-ros2 launch osr_gazebo empty_world.launch.py
+ros2 launch osr_gazebo empty_world.launch.py      # Humble image
+ros2 launch osr_gazebo harmonic_world.launch.py   # Jazzy image
 ```
 
 ## Setup
