@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<package format="2">
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
   <name>osr_gazebo</name>
   <version>0.1.1</version>
   <description>osr_gazebo</description>
@@ -13,11 +14,12 @@
   <exec_depend>ament_index_python</exec_depend>
   <exec_depend>effort_controllers</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
-  <exec_depend>gazebo_ros2_control</exec_depend>
-  <exec_depend>gazebo_ros</exec_depend>
-  <exec_depend>ros_gz_sim</exec_depend>
-  <exec_depend>ros_gz_bridge</exec_depend>
-  <exec_depend>gz_ros2_control</exec_depend>
+  <!-- Simulator: Gazebo Classic on Humble, Gazebo Harmonic on newer distros (Jazzy) -->
+  <exec_depend condition="$ROS_DISTRO == humble">gazebo_ros2_control</exec_depend>
+  <exec_depend condition="$ROS_DISTRO == humble">gazebo_ros</exec_depend>
+  <exec_depend condition="$ROS_DISTRO != humble">ros_gz_sim</exec_depend>
+  <exec_depend condition="$ROS_DISTRO != humble">ros_gz_bridge</exec_depend>
+  <exec_depend condition="$ROS_DISTRO != humble">gz_ros2_control</exec_depend>
   <exec_depend>controller_manager</exec_depend>
   <exec_depend>hardware_interface</exec_depend>
   <exec_depend>joint_trajectory_controller</exec_depend>
