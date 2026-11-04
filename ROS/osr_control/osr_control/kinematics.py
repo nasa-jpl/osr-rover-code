@@ -216,6 +216,21 @@ class RoverKinematics:
             return 0.0
         return math.copysign(limited, commanded_linear_x)
 
+    def body_twist_from_middle_wheels(
+        self, left_middle_vel: float, right_middle_vel: float
+    ) -> Tuple[float, float]:
+        """Body (linear x [m/s], angular z [rad/s]) from middle drive wheel speeds [rad/s].
+
+        Inputs use the motor convention of DriveCommand / drive_state: the right side is
+        mirrored, so it is negative when the rover rolls forward. The middle wheels don't
+        steer and sit at +/- d4 from the centerline, so they act as a differential drive.
+        This holds for straight driving, arcs and rotating in place alike, and needs no
+        turning radius estimate (which is unstable near straight and near zero radius).
+        """
+        left = left_middle_vel * self.wheel_radius
+        right = -right_middle_vel * self.wheel_radius  # flip to forward-positive
+        return (left + right) / 2.0, (right - left) / (2.0 * self.d4)
+
     def angle_to_turning_radius(self, angle: float) -> float:
         """Virtual mid-front wheel angle → turning radius [m]."""
         try:

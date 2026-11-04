@@ -231,19 +231,12 @@ class Rover(Node):
             throttle_duration_sec=1)
         self.curr_turning_radius = approx_turning_radius
 
-        drive_angular_velocity = (
-            self.curr_velocities['drive_left_middle'] + self.curr_velocities['drive_right_middle']) / 2.
-        self.curr_twist.twist.linear.x = drive_angular_velocity * self.wheel_radius
-        try:
-            self.curr_twist.twist.angular.z = self.curr_twist.twist.linear.x / self.curr_turning_radius
-        except ZeroDivisionError:
-            self.curr_twist.twist.linear.x = 0.0
-            drive_angular_velocity = (
-                self.curr_velocities['drive_left_middle'] - self.curr_velocities['drive_right_middle']) / 2.0
-            self.curr_twist.twist.angular.z = drive_angular_velocity * self.wheel_radius / self.d4
-            self.get_logger().debug(
-                f"Turn-in-place detected. Angular velocity: {self.curr_twist.twist.angular.z}",
-                throttle_duration_sec=1)
+        # Body twist from the middle wheels (differential drive), see
+        # RoverKinematics.body_twist_from_middle_wheels
+        linear_x, angular_z = self.kin.body_twist_from_middle_wheels(
+            self.curr_velocities['drive_left_middle'], self.curr_velocities['drive_right_middle'])
+        self.curr_twist.twist.linear.x = linear_x
+        self.curr_twist.twist.angular.z = angular_z
 
 
 def main(args=None):
