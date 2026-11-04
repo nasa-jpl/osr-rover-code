@@ -77,6 +77,10 @@ def generate_launch_description():
 
     # The real rover's control node: turns a Twist into wheel speeds and corner
     # angles. Odometry is off because the sim has no encoder feedback wired in.
+    # Dimensions come from the robot's osr_params.yaml, except the wheel radius,
+    # which must match the simulated wheel (82 mm, the collision cylinder in
+    # osr.urdf.xacro) so commanded speeds come out right whatever wheels the
+    # physical rover uses.
     rover = Node(
         package='osr_control',
         executable='rover',
@@ -84,7 +88,12 @@ def generate_launch_description():
         output='screen',
         parameters=[
             PathJoinSubstitution([FindPackageShare('osr_bringup'), 'config', 'osr_params.yaml']),
-            {'enable_odometry': False, 'publish_transform': False, 'use_sim_time': True},
+            {
+                'rover_dimensions.wheel_radius': 0.082,
+                'enable_odometry': False,
+                'publish_transform': False,
+                'use_sim_time': True,
+            },
         ],
     )
 
