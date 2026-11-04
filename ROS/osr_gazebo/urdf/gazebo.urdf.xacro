@@ -2,13 +2,18 @@
 
 <robot xmlns:xacro="http://wiki.ros.org/xacro">
 
-  <!-- Gazebo Classic plugins (gazebo_ros2_control, Classic IMU plugin).
-       Harmonic equivalents are added separately; until then a Harmonic run
-       loads only the physical model. -->
-  <xacro:if value="${'$(arg sim)' == 'classic'}">
+  <!-- ros2_control describes what each joint can be commanded with. The joint list is
+       the same for both simulators; only the hardware plugin that plays "the robot"
+       differs: gazebo_ros2_control for Gazebo Classic, gz_ros2_control for Harmonic. -->
+  <xacro:property name="sim" value="$(arg sim)"/>
   <ros2_control name="GazeboSystem" type="system">
     <hardware>
-      <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+      <xacro:if value="${sim == 'classic'}">
+        <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+      </xacro:if>
+      <xacro:if value="${sim == 'harmonic'}">
+        <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+      </xacro:if>
     </hardware>
     <joint name="middle_wheel_joint_left">
       <command_interface name="velocity">
@@ -128,12 +133,23 @@
 
   </ros2_control>
 
-  <gazebo>
-    <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
-      <parameters>$(find osr_gazebo)/config/controller_velocity.yaml</parameters>
-    </plugin>
-  </gazebo>
+  <xacro:if value="${sim == 'classic'}">
+    <gazebo>
+      <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+        <parameters>$(find osr_gazebo)/config/controller_velocity.yaml</parameters>
+      </plugin>
+    </gazebo>
+  </xacro:if>
+  <xacro:if value="${sim == 'harmonic'}">
+    <gazebo>
+      <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+        <parameters>$(find osr_gazebo)/config/controllers_harmonic.yaml</parameters>
+      </plugin>
+    </gazebo>
+  </xacro:if>
 
+  <!-- Gazebo Classic IMU plugin; a Harmonic IMU sensor is a later step -->
+  <xacro:if value="${sim == 'classic'}">
     <gazebo reference="imu_link">
         <gravity>true</gravity>
         <sensor name="imu_sensor" type="imu">
@@ -154,8 +170,7 @@
         <pose>0 0 0 0 0 0</pose>
         </sensor>
     </gazebo>
-
-
   </xacro:if>
+
 
 </robot>

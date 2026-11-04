@@ -1,8 +1,8 @@
 """Spawn the rover in an empty Gazebo Harmonic world (ROS 2 Jazzy).
 
-Stage 2 of the Gazebo Classic -> Harmonic port: physics model only, no motor
-control yet. Starts Gazebo, publishes the robot description, spawns the rover,
-and bridges Gazebo's clock into ROS.
+Starts Gazebo, publishes the robot description, spawns the rover, bridges
+Gazebo's clock into ROS, and starts the ros2_control controllers that drive the
+wheels and steering (via the gz_ros2_control plugin in the robot description).
 """
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
@@ -51,4 +51,16 @@ def generate_launch_description():
         arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'],
     )
 
-    return LaunchDescription([gazebo, robot_state_publisher, spawn, clock_bridge])
+    # Start the controllers once the rover (and its controller_manager) exists.
+    # spawner waits for the controller_manager, so no extra sequencing is needed.
+    #  - joint_state_broadcaster: publishes joint positions on /joint_states
+    #  - wheel_controller: wheel speeds from /wheel_controller/commands
+    #  - servo_controller: steering angles from /servo_controller/joint_trajectory
+    controllers = Node(
+        package='controller_manager',
+        executable='spawner',
+        output='screen',
+        arguments=['joint_state_broadcaster', 'wheel_controller', 'servo_controller'],
+    )
+
+    return LaunchDescription([gazebo, robot_state_publisher, spawn, clock_bridge, controllers])

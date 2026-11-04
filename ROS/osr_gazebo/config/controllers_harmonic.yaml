@@ -1,0 +1,42 @@
+# ros2_control controllers for the Gazebo Harmonic simulation (gz_ros2_control).
+# Same controllers as the Classic config, but each controller claims only the
+# command interface it actually uses: in gz_ros2_control a joint is driven by
+# whichever interface is claimed, so claiming both position and velocity on the
+# steering joints would make them fight.
+controller_manager:
+  ros__parameters:
+    update_rate: 100  # Hz
+
+    wheel_controller:
+      type: velocity_controllers/JointGroupVelocityController
+
+    servo_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+# Drive wheels: commanded by speed [rad/s], one value per joint in this order
+wheel_controller:
+  ros__parameters:
+    joints:
+      - middle_wheel_joint_right
+      - middle_wheel_joint_left
+      - front_wheel_joint_right
+      - front_wheel_joint_left
+      - rear_wheel_joint_right
+      - rear_wheel_joint_left
+
+# Corner steering: commanded by angle [rad], like the real servos
+servo_controller:
+  ros__parameters:
+    joints:
+      - front_wheel_joint_R
+      - front_wheel_joint_L
+      - rear_wheel_joint_R
+      - rear_wheel_joint_L
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+      - velocity

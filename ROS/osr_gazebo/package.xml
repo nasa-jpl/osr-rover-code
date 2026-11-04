@@ -17,6 +17,8 @@
   <exec_depend>gazebo_ros</exec_depend>
   <exec_depend>ros_gz_sim</exec_depend>
   <exec_depend>ros_gz_bridge</exec_depend>
+  <exec_depend>gz_ros2_control</exec_depend>
+  <exec_depend>controller_manager</exec_depend>
   <exec_depend>hardware_interface</exec_depend>
   <exec_depend>joint_trajectory_controller</exec_depend>
   <exec_depend>launch</exec_depend>
