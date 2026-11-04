@@ -114,3 +114,34 @@ def test_intuitive_zero_linear_radius_is_clipped(kin):
     radius = kin.twist_to_turning_radius(
         0.0, 1e-6, intuitive_mode=True)
     assert abs(radius) == pytest.approx(kin.max_radius)
+
+
+# --- forward kinematics: commanded drive speeds -> body twist (odometry) ---
+
+def _twist_for_command(kin, linear_x, angular_z):
+    """Run a Twist through the inverse kinematics, then back through the odometry."""
+    radius = kin.twist_to_turning_radius(linear_x, angular_z, intuitive_mode=False)
+    speed = kin.body_speed_for_radius(linear_x, radius)
+    drive = kin.calculate_drive_velocities(speed, radius)
+    return speed, radius, kin.body_twist_from_middle_wheels(drive.left_middle_vel, drive.right_middle_vel)
+
+
+def test_odometry_straight(kin):
+    speed, _, (v, w) = _twist_for_command(kin, 0.3, 0.0)
+    assert v == pytest.approx(speed)
+    assert w == pytest.approx(0.0)
+
+
+@pytest.mark.parametrize("linear_x, angular_z", [(0.3, 0.5), (0.3, -0.5), (-0.3, 0.5), (0.2, 1.0)])
+def test_odometry_arcs(kin, linear_x, angular_z):
+    speed, radius, (v, w) = _twist_for_command(kin, linear_x, angular_z)
+    assert v == pytest.approx(speed)
+    assert w == pytest.approx(speed / radius)
+
+
+def test_odometry_rotate_in_place(kin):
+    _, drive = kin.calculate_rotate_in_place_cmd(0.5)
+    v, w = kin.body_twist_from_middle_wheels(drive.left_middle_vel, drive.right_middle_vel)
+    assert v == pytest.approx(0.0)
+    # all motors positive: left wheels forward, mirrored right wheels backward -> clockwise
+    assert w == pytest.approx(-0.5)
