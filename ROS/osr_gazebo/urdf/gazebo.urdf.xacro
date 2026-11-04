@@ -131,6 +131,20 @@
       <state_interface name="effort"/>
     </joint>
 
+    <!-- Passive bogie pivots: not driven, but their angles must be reported so
+         robot_state_publisher can place the bogie and everything mounted on it
+         (front and middle wheels) in TF. State interfaces only, no command. -->
+    <xacro:if value="${sim == 'harmonic'}">
+      <joint name="rocker_bogie_joint_L_2">
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+      <joint name="rocker_bogie_joint_R_2">
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+    </xacro:if>
+
   </ros2_control>
 
   <xacro:if value="${sim == 'classic'}">
