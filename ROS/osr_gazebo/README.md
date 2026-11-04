@@ -1,5 +1,8 @@
 # ROS packages for JPL Open Source Rover Gazebo Simulation
 
+> [!NOTE]
+> This package isn't compiled with colcon by default, so the rover's Raspberry Pi doesn't need the simulator dependencies. To use it, remove the [COLCON_IGNORE file](./COLCON_IGNORE) on your simulation computer.
+
 ## Overview
 Visualization and simulation for the OSR, in two flavors:
 
@@ -41,6 +44,7 @@ From the workspace root (so `osr_control` / `osr_interfaces` / `osr_bringup` are
 ```bash
 source /opt/ros/jazzy/setup.bash
 cd ~/osr_ws
+rm -f src/osr-rover-code/ROS/osr_gazebo/COLCON_IGNORE
 colcon build --packages-select osr_interfaces osr_control osr_bringup osr_gazebo
 source install/setup.bash
 ```
@@ -77,7 +81,7 @@ Check the controllers with `ros2 control list_controllers`.
 - **Wheel size**: the wheel mesh is 164 mm × 101 mm, which appears to be the previously recommended Traxxas tires. The current parts list uses goBILDA Wasteland Wheels (144 mm × 52 mm), and `osr_params.yaml` uses `wheel_radius: 0.075`. The Harmonic launch overrides `wheel_radius` to 0.082 so commanded speeds match the simulated wheel.
 - No IMU sensor yet (the Classic IMU plugin is not ported).
 
-## Gazebo Classic (ROS 2 Humble)
+## Gazebo Classic (ROS 2 Humble, Ubuntu 22.04 only)
 
 ### Linux (simulation)
 - **Operating System**: Ubuntu 22.04 LTS (Jammy)
@@ -85,7 +89,7 @@ Check the controllers with `ros2 control list_controllers`.
 - **Gazebo**: Classic 11.x
 - **Also required**: `osr_control`, `osr_interfaces`, `osr_bringup` (built in the same workspace)
 
-### ROS Package Installation
+### ROS Package Installation (Humble only)
 
 ```bash
 sudo apt install python3-colcon-common-extensions
@@ -101,13 +105,14 @@ sudo apt-get install ros-humble-joint-trajectory-controller
 sudo apt-get install ros-humble-gazebo-ros2-control-demos
 ```
 
-### Installation
+### Installation (Humble only)
 
 Build from the ROS workspace root (so `osr_control` / `osr_interfaces` / `osr_bringup` are available):
 
 ```bash
 source /opt/ros/humble/setup.bash
 cd ~/osr_ws   # workspace that contains this repo's ROS/ packages
+rm -f src/osr-rover-code/ROS/osr_gazebo/COLCON_IGNORE
 colcon build --packages-select osr_interfaces osr_control osr_bringup osr_gazebo
 source install/setup.bash
 ```
