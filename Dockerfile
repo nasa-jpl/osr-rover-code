@@ -36,6 +36,10 @@ USER $USERNAME
 # explicitly set HOME variable since otherwise ${HOME} only applies to RUN, CMD, and ENTRYPOINT commands and would otherwise evaluate to '/'
 ENV HOME=/home/${USERNAME}
 
+# Create the workspace as the user first: the legacy (non-BuildKit) builder makes the
+# missing parent directories of a COPY destination owned by root even with --chown,
+# which made creating the venv below fail with "Permission denied"
+RUN mkdir -p ${HOME}/osr_ws/src
 COPY --chown=$USERNAME:$USERNAME ./ ${HOME}/osr_ws/src/osr-rover-code
 
 WORKDIR ${HOME}/osr_ws
