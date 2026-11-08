@@ -14,12 +14,10 @@
   <exec_depend>ament_index_python</exec_depend>
   <exec_depend>effort_controllers</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
-  <!-- Simulator: Gazebo Classic on Humble, Gazebo Harmonic on newer distros (Jazzy) -->
-  <exec_depend condition="$ROS_DISTRO == humble">gazebo_ros2_control</exec_depend>
-  <exec_depend condition="$ROS_DISTRO == humble">gazebo_ros</exec_depend>
-  <exec_depend condition="$ROS_DISTRO != humble">ros_gz_sim</exec_depend>
-  <exec_depend condition="$ROS_DISTRO != humble">ros_gz_bridge</exec_depend>
-  <exec_depend condition="$ROS_DISTRO != humble">gz_ros2_control</exec_depend>
+    <!-- Simulator: Gazebo Harmonic (ROS 2 Jazzy) -->
+  <exec_depend>ros_gz_sim</exec_depend>
+  <exec_depend>ros_gz_bridge</exec_depend>
+  <exec_depend>gz_ros2_control</exec_depend>
   <exec_depend>controller_manager</exec_depend>
   <exec_depend>hardware_interface</exec_depend>
   <exec_depend>joint_trajectory_controller</exec_depend>

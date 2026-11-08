@@ -1,11 +1,8 @@
 <?xml version="1.0" ?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="rover">
-    <!-- Which simulator this description is for: "classic" (Gazebo Classic / Humble)
-         or "harmonic" (Gazebo Harmonic / Jazzy). Selects the simulator-specific plugins. -->
-    <xacro:arg name="sim" default="classic"/>
-    <!-- Collision shape fidelity in Harmonic: "simple" (default; cylinders and a box, runs
-         at full speed) or "mesh" (the detailed CAD meshes, as in Gazebo Classic; much slower,
-         for anyone who needs contact on the exact shapes). Classic always uses the meshes. -->
+    <!-- Collision shape fidelity: "simple" (default; cylinders and a box, runs at full
+         speed) or "mesh" (the detailed CAD meshes; much slower, for anyone who needs
+         contact on the exact shapes). -->
     <xacro:arg name="collision" default="simple"/>
     <material name="black">
         <color rgba="0.1 0.1 0.1 1.0"/>
@@ -30,10 +27,10 @@
     <xacro:include filename="$(find osr_gazebo)/urdf/gazebo.urdf.xacro"/>
     <xacro:include filename="$(find osr_gazebo)/urdf/insert_transmission.urdf.xacro"/>
 
-    <!-- Collision shapes. Gazebo Classic uses the detailed CAD meshes for collisions
-         (unchanged from upstream); Harmonic can too with collision:=mesh. In Harmonic, colliding ~1 million mesh triangles
-         with the ground every physics step made the sim run at about half real time,
-         so there the drive wheels collide as simple cylinders, the body as a box, and
+    <!-- Collision shapes. collision:=mesh uses the detailed CAD meshes (as the Gazebo
+         Classic simulation did), but colliding ~1 million mesh triangles with the
+         ground every physics step makes the sim run at about half real time, so by
+         default the drive wheels collide as simple cylinders, the body as a box, and
          the other links (rocker-bogie, steering brackets) have no collision shape: on
          flat ground only the wheels touch anything. Visuals still use the meshes.
          Cylinder sized from wheel.stl: radius 82 mm, width 101 mm, centered 7.5 mm
@@ -42,7 +39,7 @@
     <xacro:if value="${collision not in ['simple', 'mesh']}">
         <xacro:if value="${xacro.fatal('collision must be simple or mesh, got: ' + collision)}"/>
     </xacro:if>
-    <xacro:property name="mesh_collision" value="${sim == 'classic' or collision == 'mesh'}"/>
+    <xacro:property name="mesh_collision" value="${collision == 'mesh'}"/>
     <xacro:property name="wheel_collision_radius" value="0.082"/>
     <xacro:property name="wheel_collision_width" value="0.101"/>
     <xacro:property name="wheel_collision_offset" value="-0.0075"/>

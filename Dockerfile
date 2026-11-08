@@ -1,8 +1,7 @@
 # For running the simulation stack - not intended to run the software controlling the real OSR
 
-# ROS_VERSION selects the simulator: humble -> Gazebo Classic (default),
-# jazzy -> Gazebo Harmonic (docker build --build-arg ROS_VERSION=jazzy ...)
-ARG ROS_VERSION=humble
+# The simulation (osr_gazebo) runs on Gazebo Harmonic, which needs ROS 2 Jazzy
+ARG ROS_VERSION=jazzy
 FROM osrf/ros:${ROS_VERSION}-desktop
 
 SHELL ["/bin/bash", "-c"]
@@ -22,7 +21,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 ARG USERNAME=vscode
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
-# Ubuntu 24.04 images (Jazzy) ship a default "ubuntu" user that already owns UID/GID 1000;
+# Ubuntu 24.04 images ship a default "ubuntu" user that already owns UID/GID 1000;
 # remove it so the user below can take that UID
 RUN if id -u ubuntu >/dev/null 2>&1; then userdel -r ubuntu; fi
 RUN groupadd --gid $USER_GID $USERNAME \
@@ -47,7 +46,7 @@ WORKDIR ${HOME}/osr_ws
 # keep colcon from trying to build it
 RUN python3 -m venv venv --system-site-packages \
     && touch ./venv/COLCON_IGNORE
-# Simulation packages (osr_gazebo): Gazebo Classic on Humble, Gazebo Harmonic on Jazzy
+# Simulation packages (osr_gazebo): Gazebo Harmonic
 RUN sudo apt-get update && sudo apt-get install --no-install-recommends -y \
     python3-colcon-common-extensions \
     ros-${ROS_VERSION}-rviz2 \
@@ -58,16 +57,9 @@ RUN sudo apt-get update && sudo apt-get install --no-install-recommends -y \
     ros-${ROS_VERSION}-trajectory-msgs \
     ros-${ROS_VERSION}-velocity-controllers \
     ros-${ROS_VERSION}-joint-trajectory-controller \
-    && if [ "${ROS_VERSION}" = "humble" ]; then \
-        sudo apt-get install --no-install-recommends -y \
-        ros-${ROS_VERSION}-gazebo-ros-pkgs \
-        ros-${ROS_VERSION}-gazebo-ros2-control-demos; \
-    else \
-        sudo apt-get install --no-install-recommends -y \
-        ros-${ROS_VERSION}-ros-gz \
-        ros-${ROS_VERSION}-gz-ros2-control \
-        ros-${ROS_VERSION}-ros2controlcli; \
-    fi
+    ros-${ROS_VERSION}-ros-gz \
+    ros-${ROS_VERSION}-gz-ros2-control \
+    ros-${ROS_VERSION}-ros2controlcli
 # osr_gazebo ships with a COLCON_IGNORE since it's optional (see its README);
 # remove it so rosdep installs its dependencies and the simulation is built
 # and ready to run out of the box

@@ -22,7 +22,7 @@ from osr_interfaces.msg import CommandCorner, CommandDrive
 
 
 class GazeboCommandAdapter(Node):
-    # Matches wheel_controller joints order in controller_velocity.yaml
+    # Matches wheel_controller joints order in controller.yaml
     WHEEL_JOINT_ORDER = (
         'middle_wheel_joint_right',
         'middle_wheel_joint_left',
