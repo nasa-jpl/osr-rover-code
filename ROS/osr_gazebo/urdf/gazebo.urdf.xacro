@@ -2,9 +2,11 @@
 
 <robot xmlns:xacro="http://wiki.ros.org/xacro">
 
+  <!-- ros2_control describes what each joint can be commanded with; gz_ros2_control
+       plays "the robot" in Gazebo Harmonic. -->
   <ros2_control name="GazeboSystem" type="system">
     <hardware>
-      <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+      <plugin>gz_ros2_control/GazeboSimSystem</plugin>
     </hardware>
     <joint name="middle_wheel_joint_left">
       <command_interface name="velocity">
@@ -122,34 +124,26 @@
       <state_interface name="effort"/>
     </joint>
 
+    <!-- Passive bogie pivots: not driven, but their angles must be reported so
+         robot_state_publisher can place the bogie and everything mounted on it
+         (front and middle wheels) in TF. State interfaces only, no command. -->
+    <joint name="rocker_bogie_joint_L_2">
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="rocker_bogie_joint_R_2">
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+
+
   </ros2_control>
 
+
   <gazebo>
-    <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
-      <parameters>$(find osr_gazebo)/config/controller_velocity.yaml</parameters>
+    <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <parameters>$(find osr_gazebo)/config/controllers.yaml</parameters>
     </plugin>
   </gazebo>
-
-    <gazebo reference="imu_link">
-        <gravity>true</gravity>
-        <sensor name="imu_sensor" type="imu">
-        <always_on>true</always_on>
-        <update_rate>100</update_rate>
-        <visualize>true</visualize>
-        <topic>"imu"</topic>
-        <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
-            <topicName>imu</topicName>
-            <bodyName>imu_link</bodyName>
-            <updateRateHZ>100.0</updateRateHZ>
-            <gaussianNoise>0.0</gaussianNoise>
-            <xyzOffset>0 0 0</xyzOffset>
-            <rpyOffset>0 0 0</rpyOffset>
-            <frameName>imu_link</frameName>
-            <initialOrientationAsReference>false</initialOrientationAsReference>
-        </plugin>
-        <pose>0 0 0 0 0 0</pose>
-        </sensor>
-    </gazebo>
-
 
 </robot>

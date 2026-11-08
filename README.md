@@ -16,8 +16,8 @@ changed.
 ## Simulation
 
 A `Dockerfile` is provided to build and run the ROS2 stack, including the
-[Gazebo Classic simulation](ROS/osr_gazebo/README.md), without installing anything on your host
-besides Docker.
+[Gazebo simulation](ROS/osr_gazebo/README.md), without installing anything on your host
+besides Docker. It builds ROS 2 Jazzy with Gazebo Harmonic.
 
 ```bash
 docker build -t osr-rover-sim .
@@ -33,6 +33,7 @@ rocker --nvidia runtime --x11 osr-rover-sim
 ```
 
 Only include `--nvidia runtime` if your machine has an NVIDIA GPU; omit it otherwise.
+On Intel or AMD graphics, add `--devices /dev/dri` instead so Gazebo can use the GPU.
 
 Inside the container:
 
